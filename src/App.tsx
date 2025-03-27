@@ -41,6 +41,39 @@ function App() {
   const [expireDateElectrode1, setExpireDateElectrode1] = useState('');
   const [expireDateElectrode2, setExpireDateElectrode2] = useState('');
 
+  // Fonction pour formater le matricule (lettre-chiffres)
+  const handleMatriculeChange = (value: string) => {
+    // Garder seulement les lettres et les chiffres
+    const sanitizedValue = value.replace(/[^a-zA-Z0-9]/g, '');
+    
+    if (sanitizedValue.length === 0) {
+      setMatricule('');
+      return;
+    }
+    
+    // Extraire la première lettre
+    const firstChar = sanitizedValue.charAt(0).toUpperCase();
+    
+    // Si la valeur ne contient qu'une lettre
+    if (sanitizedValue.length === 1) {
+      setMatricule(firstChar);
+      return;
+    }
+    
+    // Extraire les chiffres (jusqu'à 4)
+    const numbers = sanitizedValue.substring(1).replace(/[^0-9]/g, '').substring(0, 4);
+    
+    // Si aucun chiffre n'est encore saisi
+    if (numbers.length === 0) {
+      setMatricule(firstChar);
+      return;
+    }
+    
+    // Formater avec tiret
+    const formattedValue = `${firstChar}-${numbers.padStart(4, '0')}`;
+    setMatricule(formattedValue);
+  };
+
   // Items pour le formulaire MRSA
   const [mrsaItems, setMrsaItems] = useState<CheckItem[]>([
     // Câbles et raccords
@@ -597,6 +630,7 @@ function App() {
                               <input 
                                 type="checkbox" 
                                 checked={item.checked}
+                                onClick={(e) => e.stopPropagation()}
                                 onChange={() => handleMrsaCheckChange(item.id)}
                                 className="w-5 h-5"
                                 required
@@ -620,10 +654,10 @@ function App() {
                           type="text"
                           id="matricule"
                           value={matricule}
-                          onChange={(e) => setMatricule(e.target.value)}
+                          onChange={(e) => handleMatriculeChange(e.target.value)}
                           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           required
-                          placeholder="Entrez votre matricule"
+                          placeholder="Ex: N-0100"
                         />
                       </div>
                     </div>
@@ -828,6 +862,7 @@ function App() {
                               <input 
                                 type="checkbox" 
                                 checked={item.checked}
+                                onClick={(e) => e.stopPropagation()}
                                 onChange={() => handleVehiculeCheckChange(item.id)}
                                 className="w-5 h-5"
                                 required={item.id !== 'trousse7'} // Pas obligatoire pour kit glycémie
@@ -867,6 +902,7 @@ function App() {
                               <input 
                                 type="checkbox" 
                                 checked={item.checked}
+                                onClick={(e) => e.stopPropagation()}
                                 onChange={() => handleVehiculeCheckChange(item.id)}
                                 className="w-5 h-5"
                                 required
@@ -890,10 +926,10 @@ function App() {
                           type="text"
                           id="matriculeVehicule"
                           value={matricule}
-                          onChange={(e) => setMatricule(e.target.value)}
+                          onChange={(e) => handleMatriculeChange(e.target.value)}
                           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                           required
-                          placeholder="Entrez votre matricule"
+                          placeholder="Ex: N-0100"
                         />
                       </div>
                     </div>
