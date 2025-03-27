@@ -92,26 +92,16 @@ function App() {
       return;
     }
     
-    // S'assurer que le premier chiffre est toujours 9
-    let formattedValue;
-    if (sanitizedValue.charAt(0) !== '9') {
-      // Si le premier caractère n'est pas 9, on force un 9 au début
-      formattedValue = '9';
-      // On ajoute le reste des chiffres (jusqu'à 3 de plus pour un total de 4)
-      if (sanitizedValue.length > 0) {
-        formattedValue += sanitizedValue.substring(0, 3);
-      }
+    // Limiter à 4 chiffres maximum
+    const truncatedValue = sanitizedValue.substring(0, 4);
+    
+    // Si l'utilisateur a terminé sa saisie (4 chiffres), on s'assure que ça commence par 9
+    if (truncatedValue.length === 4 && truncatedValue.charAt(0) !== '9') {
+      setNumeroVehicule('9' + truncatedValue.substring(1));
     } else {
-      // Si ça commence déjà par 9, on garde jusqu'à 4 chiffres
-      formattedValue = sanitizedValue.substring(0, 4);
+      // Pendant la saisie, on garde ce que l'utilisateur entre
+      setNumeroVehicule(truncatedValue);
     }
-    
-    // S'assurer qu'on a toujours 4 chiffres (compléter avec des zéros si nécessaire)
-    while (formattedValue.length < 4) {
-      formattedValue += '0';
-    }
-    
-    setNumeroVehicule(formattedValue);
   };
 
   // Items pour le formulaire MRSA
