@@ -35,6 +35,7 @@ function App() {
   // Valeurs pour les cylindres
   const [cylindre1PSI, setCylindre1PSI] = useState('');
   const [cylindre2PSI, setCylindre2PSI] = useState('');
+  const [grosCylindrePSI, setGrosCylindrePSI] = useState('');
   
   // Valeurs pour les dates d'expiration des électrodes
   const [expireDateElectrode1, setExpireDateElectrode1] = useState('');
@@ -216,7 +217,7 @@ function App() {
         return "Veuillez indiquer le niveau PSI du cylindre 2";
       }
       
-      if (item.id === 'armoire15' && !cylindre1PSI) {
+      if (item.id === 'armoire15' && !grosCylindrePSI) {
         return "Veuillez indiquer le niveau PSI du gros cylindre d'oxygène";
       }
     }
@@ -324,6 +325,7 @@ function App() {
         dateHeureFormat: currentDateTime,
         cylindre1PSI,
         cylindre2PSI,
+        grosCylindrePSI,
         glycemie: {
           normal: glycemieNormal,
           high: glycemieHigh,
@@ -350,6 +352,7 @@ function App() {
         setPointDeService('');
         setCylindre1PSI('');
         setCylindre2PSI('');
+        setGrosCylindrePSI('');
         setGlycemieNormal('');
         setGlycemieHigh('');
         setGlycemieLow('');
@@ -851,8 +854,8 @@ function App() {
                                 <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                                   <input
                                     type="number"
-                                    value={cylindre1PSI}
-                                    onChange={(e) => setCylindre1PSI(e.target.value)}
+                                    value={grosCylindrePSI}
+                                    onChange={(e) => setGrosCylindrePSI(e.target.value)}
                                     className="p-1 border border-gray-300 rounded w-32"
                                     placeholder="Niveau PSI"
                                     required
