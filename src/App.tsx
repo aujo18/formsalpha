@@ -27,14 +27,6 @@ function App() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
-  const [showEmailConfig, setShowEmailConfig] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [adminLoginError, setAdminLoginError] = useState<string | null>(null);
-  
-  // Mot de passe administrateur (à remplacer par une méthode plus sécurisée en production)
-  const ADMIN_PASSWORD = 'admin123'; // À remplacer par un mot de passe plus fort
   
   // Référence aux formulaires
   const form1Ref = useRef<HTMLFormElement>(null);
@@ -57,6 +49,11 @@ function App() {
   // Valeurs pour les dates d'expiration des électrodes
   const [expireDateElectrode1, setExpireDateElectrode1] = useState('');
   const [expireDateElectrode2, setExpireDateElectrode2] = useState('');
+  
+  // Clés d'API pour EmailJS - intégrées directement dans le code
+  const emailjsServiceId = 'service_op8kvgli';
+  const emailjsTemplateId = 'template_ifzi0wm';
+  const emailjsPublicKey = 'cMhKyGbQG-coeizSG';
   
   // Items pour le formulaire MRSA
   const [mrsaItems, setMrsaItems] = useState<CheckItem[]>([
@@ -133,39 +130,6 @@ function App() {
     { id: 'armoire19', label: 'Attelles sous vide/pompe, abrasif, attelle en carton, lave-vitre', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
     { id: 'armoire20', label: 'Trousse VPI (Ébola)', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false }
   ]);
-  
-  // Clés d'API pour EmailJS
-  const [emailjsServiceId, setEmailjsServiceId] = useState('');
-  const [emailjsTemplateId, setEmailjsTemplateId] = useState('');
-  const [emailjsPublicKey, setEmailjsPublicKey] = useState('');
-  const [emailConfigured, setEmailConfigured] = useState(false);
-  
-  // Au démarrage, charger les identifiants EmailJS depuis le localStorage s'ils existent
-  React.useEffect(() => {
-    const savedServiceId = localStorage.getItem('emailjs_service_id');
-    const savedTemplateId = localStorage.getItem('emailjs_template_id');
-    const savedPublicKey = localStorage.getItem('emailjs_public_key');
-    
-    if (savedServiceId && savedTemplateId && savedPublicKey) {
-      setEmailjsServiceId(savedServiceId);
-      setEmailjsTemplateId(savedTemplateId);
-      setEmailjsPublicKey(savedPublicKey);
-      setEmailConfigured(true);
-    }
-  }, []);
-  
-  // Fonction pour enregistrer la configuration EmailJS
-  const saveEmailJSConfig = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Enregistrer dans le localStorage
-    localStorage.setItem('emailjs_service_id', emailjsServiceId);
-    localStorage.setItem('emailjs_template_id', emailjsTemplateId);
-    localStorage.setItem('emailjs_public_key', emailjsPublicKey);
-    
-    setEmailConfigured(true);
-    setShowEmailConfig(false);
-  };
   
   // Obtenir la date et l'heure actuelles au format lisible
   const getCurrentDateTime = () => {
@@ -615,11 +579,6 @@ function App() {
   // Fonction pour envoyer le PDF par e-mail
   const sendPdfByEmail = async (pdfBlob: Blob, formType: string) => {
     try {
-      // Vérifier que la configuration EmailJS est disponible
-      if (!emailjsServiceId || !emailjsTemplateId || !emailjsPublicKey) {
-        throw new Error("La configuration EmailJS est incomplète. Veuillez configurer vos identifiants.");
-      }
-      
       // Convertir le PDF en base64
       const reader = new FileReader();
       const pdfBase64Promise = new Promise<string>((resolve) => {
@@ -812,35 +771,6 @@ function App() {
     }
   };
 
-  // Fonction pour vérifier le mot de passe administrateur
-  const handleAdminLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (adminPassword === ADMIN_PASSWORD) {
-      setIsAdminLoggedIn(true);
-      setShowAdminLogin(false);
-      setShowEmailConfig(true);
-      setAdminLoginError(null);
-    } else {
-      setAdminLoginError('Mot de passe incorrect');
-    }
-  };
-  
-  // Fonction pour démarrer le processus de configuration
-  const startEmailConfig = () => {
-    if (isAdminLoggedIn) {
-      setShowEmailConfig(true);
-    } else {
-      setShowAdminLogin(true);
-    }
-  };
-  
-  // Fonction pour se déconnecter
-  const adminLogout = () => {
-    setIsAdminLoggedIn(false);
-    setAdminPassword('');
-  };
-
   // Page d'accueil avec les deux options de formulaire
   if (currentForm === null) {
     return (
@@ -850,40 +780,7 @@ function App() {
             <Ambulance className="mr-2" size={32} />
             <h1 className="text-2xl font-bold">Application TAP</h1>
           </div>
-          <div className="flex items-center">
-            {isAdminLoggedIn && (
-              <span className="mr-3 bg-green-700 text-xs font-semibold py-1 px-2 rounded-full">Admin</span>
-            )}
-            <button 
-              onClick={startEmailConfig}
-              className="bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-lg text-sm flex items-center"
-            >
-              <Mail className="mr-1" size={16} />
-              Configurer Email
-            </button>
-            {isAdminLoggedIn && (
-              <button 
-                onClick={adminLogout}
-                className="ml-2 bg-red-700 hover:bg-red-800 text-white py-2 px-3 rounded-lg text-sm"
-              >
-                Déconnexion
-              </button>
-            )}
-          </div>
         </header>
-        
-        {/* Message de configuration d'EmailJS */}
-        {!emailConfigured && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 className="font-semibold flex items-center text-amber-700">
-              <AlertCircle className="mr-2" size={20} />
-              Configuration d'email requise
-            </h3>
-            <p className="mt-2 text-amber-700">
-              Pour permettre l'envoi d'emails, veuillez configurer vos identifiants EmailJS en cliquant sur "Configurer Email".
-            </p>
-          </div>
-        )}
         
         <div className="grid md:grid-cols-2 gap-6">
           <button 
@@ -914,139 +811,6 @@ function App() {
         <footer className="mt-8 text-center text-gray-500 text-sm">
           <p>© 2025 Application TAP - Tous droits réservés</p>
         </footer>
-        
-        {/* Modal de connexion administrateur */}
-        {showAdminLogin && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Connexion Administrateur</h3>
-                <button onClick={() => setShowAdminLogin(false)} className="text-gray-500 hover:text-gray-700">
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <form onSubmit={handleAdminLogin}>
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mot de passe administrateur
-                  </label>
-                  <input
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    required
-                    placeholder="Entrez le mot de passe"
-                  />
-                  {adminLoginError && (
-                    <p className="mt-2 text-sm text-red-600">{adminLoginError}</p>
-                  )}
-                </div>
-                
-                <div className="flex justify-end space-x-4">
-                  <button 
-                    type="button"
-                    onClick={() => setShowAdminLogin(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                  >
-                    Annuler
-                  </button>
-                  <button 
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Se connecter
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-        
-        {/* Modal de configuration EmailJS */}
-        {showEmailConfig && isAdminLoggedIn && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Configuration EmailJS</h3>
-                <button onClick={() => setShowEmailConfig(false)} className="text-gray-500 hover:text-gray-700">
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <form onSubmit={saveEmailJSConfig}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Service ID
-                  </label>
-                  <input
-                    type="text"
-                    value={emailjsServiceId}
-                    onChange={(e) => setEmailjsServiceId(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    required
-                    placeholder="ex: service_abc123"
-                  />
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Template ID
-                  </label>
-                  <input
-                    type="text"
-                    value={emailjsTemplateId}
-                    onChange={(e) => setEmailjsTemplateId(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    required
-                    placeholder="ex: template_xyz789"
-                  />
-                </div>
-                
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Public Key
-                  </label>
-                  <input
-                    type="text"
-                    value={emailjsPublicKey}
-                    onChange={(e) => setEmailjsPublicKey(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    required
-                    placeholder="ex: user_AbCdEf123456"
-                  />
-                </div>
-                
-                <div className="mt-2 text-sm text-gray-500 mb-6">
-                  <p>Pour obtenir ces informations:</p>
-                  <ol className="list-decimal ml-5 mt-1 space-y-1">
-                    <li>Créez un compte sur <a href="https://www.emailjs.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">EmailJS</a></li>
-                    <li>Créez un service email (Gmail, Outlook, etc.)</li>
-                    <li>Créez un modèle (template) qui supporte les pièces jointes</li>
-                    <li>Copiez les identifiants dans les champs ci-dessus</li>
-                  </ol>
-                </div>
-                
-                <div className="flex justify-end space-x-4">
-                  <button 
-                    type="button"
-                    onClick={() => setShowEmailConfig(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
-                  >
-                    Annuler
-                  </button>
-                  <button 
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Enregistrer
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -1064,7 +828,7 @@ function App() {
             {submissionMessage || "Votre inspection a été traitée et un PDF a été généré avec succès."}
           </p>
           
-          {!submissionMessage?.includes("email a été envoyé") && !emailConfigured && (
+          {!submissionMessage?.includes("email a été envoyé") && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-6">
               <p className="text-amber-700 text-sm">
                 <AlertCircle size={16} className="inline mr-1" />
