@@ -549,7 +549,11 @@ function App() {
                         )}
                         
                         {items.map((item) => (
-                          <tr key={item.id}>
+                          <tr 
+                            key={item.id} 
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
+                            onClick={() => handleMrsaCheckChange(item.id)}
+                          >
                             <td className="border border-gray-300 p-2 text-sm">
                               {item.label}
                               
@@ -742,7 +746,11 @@ function App() {
                     {category === 'TROUSSES' && (
                       <>
                         {items.map((item) => (
-                          <tr key={item.id}>
+                          <tr 
+                            key={item.id}
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
+                            onClick={() => handleVehiculeCheckChange(item.id)}
+                          >
                             <td className="border border-gray-300 p-2 text-sm">
                               {item.label}
                               
@@ -830,7 +838,11 @@ function App() {
                     {category === 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)' && (
                       <>
                         {items.map((item) => (
-                          <tr key={item.id}>
+                          <tr 
+                            key={item.id}
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
+                            onClick={() => handleVehiculeCheckChange(item.id)}
+                          >
                             <td className="border border-gray-300 p-2 text-sm">
                               {item.label}
                               
