@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 // Interface pour les éléments à vérifier avec leur état de vérification
 interface CheckItem {
@@ -22,6 +24,13 @@ function App() {
   const [submissionDateTime, setSubmissionDateTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
+  const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
+  
+  // Référence aux formulaires
+  const form1Ref = useRef<HTMLFormElement>(null);
+  const form2Ref = useRef<HTMLFormElement>(null);
   
   // URLs des webhooks Make.com
   const WEBHOOK_URL_MRSA = 'https://hook.us1.make.com/6npqjkskt1d71ir3aypy7h6434s98b8u'; // URL du webhook MRSA
@@ -40,69 +49,6 @@ function App() {
   // Valeurs pour les dates d'expiration des électrodes
   const [expireDateElectrode1, setExpireDateElectrode1] = useState('');
   const [expireDateElectrode2, setExpireDateElectrode2] = useState('');
-
-  // Fonction pour formater le matricule (lettre-chiffres)
-  const handleMatriculeChange = (value: string) => {
-    // Supprimer tous les caractères qui ne sont pas des lettres, des chiffres ou un tiret
-    let sanitizedValue = value.replace(/[^a-zA-Z0-9-]/g, '');
-    
-    // Si la chaîne est vide, ne rien faire
-    if (sanitizedValue.length === 0) {
-      setMatricule('');
-      return;
-    }
-    
-    // Extraire la première lettre et la mettre en majuscule
-    const firstChar = sanitizedValue.charAt(0).toUpperCase();
-    
-    // Si la valeur n'a qu'un caractère, c'est juste la lettre
-    if (sanitizedValue.length === 1) {
-      setMatricule(firstChar);
-      return;
-    }
-    
-    // Si le second caractère n'est pas un tiret, l'ajouter
-    if (sanitizedValue.charAt(1) !== '-') {
-      sanitizedValue = firstChar + '-' + sanitizedValue.substring(1);
-    } else {
-      sanitizedValue = firstChar + sanitizedValue.substring(1);
-    }
-    
-    // Limiter à une lettre, un tiret et 4 chiffres maximum
-    const regex = /^([A-Z])-?(\d{0,4}).*$/;
-    const match = sanitizedValue.match(regex);
-    
-    if (match) {
-      const letter = match[1];
-      const numbers = match[2];
-      setMatricule(`${letter}-${numbers}`);
-    } else {
-      setMatricule(sanitizedValue);
-    }
-  };
-
-  // Fonction pour formater le numéro de véhicule (4 chiffres commençant par 9)
-  const handleVehiculeNumberChange = (value: string) => {
-    // Garder seulement les chiffres
-    const sanitizedValue = value.replace(/[^0-9]/g, '');
-    
-    // Si la chaîne est vide, ne rien faire
-    if (sanitizedValue.length === 0) {
-      setNumeroVehicule('');
-      return;
-    }
-    
-    // Limiter à 4 chiffres maximum
-    const truncatedValue = sanitizedValue.substring(0, 4);
-    
-    // Si l'utilisateur a terminé sa saisie (4 chiffres), on s'assure que ça commence par 9
-    if (truncatedValue.length === 4 && truncatedValue.charAt(0) !== '9') {
-      setNumeroVehicule('9' + truncatedValue.substring(1));
-    } else {
-      // Pendant la saisie, on garde ce que l'utilisateur entre
-      setNumeroVehicule(truncatedValue);
-    }
-  };
 
   // Items pour le formulaire MRSA
   const [mrsaItems, setMrsaItems] = useState<CheckItem[]>([
@@ -293,8 +239,221 @@ function App() {
     return null;
   };
 
+  // Fonction pour formater le matricule (lettre-chiffres)
+  const handleMatriculeChange = (value: string) => {
+    // Supprimer tous les caractères qui ne sont pas des lettres, des chiffres ou un tiret
+    let sanitizedValue = value.replace(/[^a-zA-Z0-9-]/g, '');
+    
+    // Si la chaîne est vide, ne rien faire
+    if (sanitizedValue.length === 0) {
+      setMatricule('');
+      return;
+    }
+    
+    // Extraire la première lettre et la mettre en majuscule
+    const firstChar = sanitizedValue.charAt(0).toUpperCase();
+    
+    // Si la valeur n'a qu'un caractère, c'est juste la lettre
+    if (sanitizedValue.length === 1) {
+      setMatricule(firstChar);
+      return;
+    }
+    
+    // Si le second caractère n'est pas un tiret, l'ajouter
+    if (sanitizedValue.charAt(1) !== '-') {
+      sanitizedValue = firstChar + '-' + sanitizedValue.substring(1);
+    } else {
+      sanitizedValue = firstChar + sanitizedValue.substring(1);
+    }
+    
+    // Limiter à une lettre, un tiret et 4 chiffres maximum
+    const regex = /^([A-Z])-?(\d{0,4}).*$/;
+    const match = sanitizedValue.match(regex);
+    
+    if (match) {
+      const letter = match[1];
+      const numbers = match[2];
+      setMatricule(`${letter}-${numbers}`);
+    } else {
+      setMatricule(sanitizedValue);
+    }
+  };
+
+  // Fonction pour formater le numéro de véhicule (4 chiffres commençant par 9)
+  const handleVehiculeNumberChange = (value: string) => {
+    // Garder seulement les chiffres
+    const sanitizedValue = value.replace(/[^0-9]/g, '');
+    
+    // Si la chaîne est vide, ne rien faire
+    if (sanitizedValue.length === 0) {
+      setNumeroVehicule('');
+      return;
+    }
+    
+    // Limiter à 4 chiffres maximum
+    const truncatedValue = sanitizedValue.substring(0, 4);
+    
+    // Si l'utilisateur a terminé sa saisie (4 chiffres), on s'assure que ça commence par 9
+    if (truncatedValue.length === 4 && truncatedValue.charAt(0) !== '9') {
+      setNumeroVehicule('9' + truncatedValue.substring(1));
+    } else {
+      // Pendant la saisie, on garde ce que l'utilisateur entre
+      setNumeroVehicule(truncatedValue);
+    }
+  };
+
+  // Fonction pour générer un PDF de l'inspection MRSA
+  const generateMrsaPDF = () => {
+    const doc = new jsPDF();
+    
+    // Titre du document
+    doc.setFontSize(18);
+    doc.text('Inspection MRSA', 105, 15, { align: 'center' });
+    
+    // Informations générales
+    doc.setFontSize(12);
+    doc.text(`Matricule: ${matricule}`, 14, 30);
+    doc.text(`Numéro du moniteur: ${numeroMoniteur}`, 14, 38);
+    doc.text(`Point de service: ${pointDeService}`, 14, 46);
+    doc.text(`Date et heure: ${getCurrentDateTime()}`, 14, 54);
+    
+    // Tableau d'inspection
+    let tableData: any[] = [];
+    let categories: string[] = [];
+    let currentCategory = '';
+    
+    mrsaItems.forEach(item => {
+      if (item.category !== currentCategory) {
+        categories.push(item.category || 'Autre');
+        currentCategory = item.category || 'Autre';
+        // Ajouter une ligne de catégorie
+        tableData.push([{ content: item.category, colSpan: 2, styles: { fontStyle: 'bold', fillColor: [200, 220, 255] } }]);
+      }
+      
+      let itemText = item.label;
+      if (item.id === 'electrode1' && item.expireDate) {
+        itemText += ` (Expiration: ${expireDateElectrode1})`;
+      } else if (item.id === 'electrode2' && item.expireDate) {
+        itemText += ` (Expiration: ${expireDateElectrode2})`;
+      }
+      
+      tableData.push([itemText, item.checked ? '✓' : '']);
+    });
+    
+    // @ts-ignore
+    doc.autoTable({
+      startY: 60,
+      head: [['Élément', 'Vérifié']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [66, 135, 245], textColor: 255 },
+      margin: { top: 60 },
+    });
+    
+    // Pied de page
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`Inspection MRSA - Page ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    return doc;
+  };
+  
+  // Fonction pour générer un PDF de l'inspection Véhicule
+  const generateVehiculePDF = () => {
+    const doc = new jsPDF();
+    
+    // Titre du document
+    doc.setFontSize(18);
+    doc.text('Inspection Véhicule', 105, 15, { align: 'center' });
+    
+    // Informations générales
+    doc.setFontSize(12);
+    doc.text(`Matricule: ${matricule}`, 14, 30);
+    doc.text(`Numéro du véhicule: ${numeroVehicule}`, 14, 38);
+    doc.text(`Point de service: ${pointDeService}`, 14, 46);
+    doc.text(`Date et heure: ${getCurrentDateTime()}`, 14, 54);
+    
+    // Tableau d'inspection
+    let tableData: any[] = [];
+    let categories: string[] = [];
+    let currentCategory = '';
+    
+    vehiculeItems.forEach(item => {
+      if (item.category !== currentCategory) {
+        categories.push(item.category || 'Autre');
+        currentCategory = item.category || 'Autre';
+        // Ajouter une ligne de catégorie
+        tableData.push([{ content: item.category, colSpan: 2, styles: { fontStyle: 'bold', fillColor: [255, 240, 200] } }]);
+      }
+      
+      let itemText = item.label;
+      // Ajouter des informations supplémentaires pour les cylindres et la glycémie
+      if (item.id === 'trousse3' && cylindre1PSI) {
+        itemText += ` (PSI: ${cylindre1PSI})`;
+      } else if (item.id === 'trousse4' && cylindre2PSI) {
+        itemText += ` (PSI: ${cylindre2PSI})`;
+      } else if (item.id === 'armoire15' && grosCylindrePSI) {
+        itemText += ` (PSI: ${grosCylindrePSI})`;
+      } else if (item.id === 'trousse7' && (glycemieNormal || glycemieHigh || glycemieLow)) {
+        itemText += ` (Normal: ${glycemieNormal || '-'}, High: ${glycemieHigh || '-'}, Low: ${glycemieLow || '-'})`;
+      }
+      
+      tableData.push([itemText, item.checked ? '✓' : '']);
+    });
+    
+    // @ts-ignore
+    doc.autoTable({
+      startY: 60,
+      head: [['Élément', 'Vérifié']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [66, 180, 80], textColor: 255 },
+      margin: { top: 60 },
+    });
+    
+    // Pied de page
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`Inspection Véhicule - Page ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    return doc;
+  };
+  
+  // Fonction pour envoyer le PDF par e-mail
+  const sendPdfByEmail = (pdfBlob: Blob, formType: string) => {
+    const formData = new FormData();
+    formData.append('to', 'nicolas.cuerrier@tap.cambi.ca');
+    formData.append('subject', `Inspection ${formType} - ${getCurrentDateTime()}`);
+    formData.append('message', `Veuillez trouver ci-joint le rapport d'inspection ${formType} réalisée le ${getCurrentDateTime()} par ${matricule}.`);
+    formData.append('attachment', pdfBlob, `inspection_${formType.toLowerCase()}_${Date.now()}.pdf`);
+    
+    // Vous pouvez utiliser votre propre service de messagerie ici
+    // Cette partie est simulée car nous n'avons pas de backend pour envoyer des emails
+    
+    // Simulation de l'envoi d'email (à remplacer par votre logique d'envoi)
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 2000);
+    });
+  };
+
   const handleSubmitForm1 = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Afficher la boîte de dialogue de confirmation
+    setShowConfirmation(true);
+  };
+  
+  const confirmSubmitForm1 = async () => {
+    // Fermer la boîte de dialogue de confirmation
+    setShowConfirmation(false);
     
     // Valider le formulaire
     const validationError = validateMrsaForm();
@@ -310,53 +469,36 @@ function App() {
       const currentDateTime = getCurrentDateTime();
       setSubmissionDateTime(currentDateTime);
       
-      // Construction des données à envoyer à make.com
-      const formData = {
-        matricule,
-        numeroMoniteur,
-        pointDeService,
-        dateHeure: new Date().toISOString(),
-        dateHeureFormat: currentDateTime,
-        type: 'inspection-mrsa',
-        items: mrsaItems.map(item => ({
+      // Générer le PDF
+      const doc = generateMrsaPDF();
+      const pdfBlob = doc.output('blob');
+      
+      // Créer une URL pour le téléchargement
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setGeneratedPdfUrl(pdfUrl);
+      
+      // Simuler l'envoi par email (à implémenter avec votre service d'email)
+      await sendPdfByEmail(pdfBlob, 'MRSA');
+      
+      setSubmissionMessage("Le PDF a été généré et un email a été envoyé à nicolas.cuerrier@tap.cambi.ca");
+      setSubmitted(true);
+      
+      // Réinitialiser le formulaire
+      setMatricule('');
+      setNumeroMoniteur('');
+      setPointDeService('');
+      setExpireDateElectrode1('');
+      setExpireDateElectrode2('');
+      setMrsaItems(prevItems => 
+        prevItems.map(item => ({
           ...item,
-          // Inclure les dates d'expiration pour les électrodes
-          expireDate: item.id === 'electrode1' ? expireDateElectrode1 : 
-                      item.id === 'electrode2' ? expireDateElectrode2 : 
-                      undefined
+          checked: false,
+          expireDate: ''
         }))
-      };
-      
-      // Envoi des données au webhook Make.com
-      const response = await fetch(WEBHOOK_URL_MRSA, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      
-      if (response.ok) {
-        setSubmitted(true);
-        // Réinitialiser le formulaire
-        setMatricule('');
-        setNumeroMoniteur('');
-        setPointDeService('');
-        setExpireDateElectrode1('');
-        setExpireDateElectrode2('');
-        setMrsaItems(prevItems => 
-          prevItems.map(item => ({
-            ...item,
-            checked: false,
-            expireDate: ''
-          }))
-        );
-      } else {
-        throw new Error(`Erreur lors de l'envoi du formulaire: ${response.status} ${response.statusText}`);
-      }
+      );
     } catch (error) {
-      console.error('Erreur lors de l\'envoi du formulaire:', error);
-      setError(`Échec de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      console.error('Erreur lors de la génération du PDF:', error);
+      setError(`Échec de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -364,6 +506,14 @@ function App() {
 
   const handleSubmitForm2 = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Afficher la boîte de dialogue de confirmation
+    setShowConfirmation(true);
+  };
+  
+  const confirmSubmitForm2 = async () => {
+    // Fermer la boîte de dialogue de confirmation
+    setShowConfirmation(false);
     
     // Valider le formulaire
     const validationError = validateVehiculeForm();
@@ -379,58 +529,39 @@ function App() {
       const currentDateTime = getCurrentDateTime();
       setSubmissionDateTime(currentDateTime);
       
-      // Construction des données à envoyer à make.com
-      const formData = {
-        matricule,
-        numeroVehicule,
-        pointDeService,
-        dateHeure: new Date().toISOString(),
-        dateHeureFormat: currentDateTime,
-        cylindre1PSI,
-        cylindre2PSI,
-        grosCylindrePSI,
-        glycemie: {
-          normal: glycemieNormal,
-          high: glycemieHigh,
-          low: glycemieLow
-        },
-        type: 'inspection-vehicule',
-        items: vehiculeItems
-      };
+      // Générer le PDF
+      const doc = generateVehiculePDF();
+      const pdfBlob = doc.output('blob');
       
-      // Envoi des données au webhook Make.com
-      const response = await fetch(WEBHOOK_URL_VEHICULE, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      // Créer une URL pour le téléchargement
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setGeneratedPdfUrl(pdfUrl);
       
-      if (response.ok) {
-        setSubmitted(true);
-        // Réinitialiser le formulaire
-        setMatricule('');
-        setNumeroVehicule('');
-        setPointDeService('');
-        setCylindre1PSI('');
-        setCylindre2PSI('');
-        setGrosCylindrePSI('');
-        setGlycemieNormal('');
-        setGlycemieHigh('');
-        setGlycemieLow('');
-        setVehiculeItems(prevItems => 
-          prevItems.map(item => ({
-            ...item,
-            checked: false
-          }))
-        );
-      } else {
-        throw new Error(`Erreur lors de l'envoi du formulaire: ${response.status} ${response.statusText}`);
-      }
+      // Simuler l'envoi par email (à implémenter avec votre service d'email)
+      await sendPdfByEmail(pdfBlob, 'Véhicule');
+      
+      setSubmissionMessage("Le PDF a été généré et un email a été envoyé à nicolas.cuerrier@tap.cambi.ca");
+      setSubmitted(true);
+      
+      // Réinitialiser le formulaire
+      setMatricule('');
+      setNumeroVehicule('');
+      setPointDeService('');
+      setCylindre1PSI('');
+      setCylindre2PSI('');
+      setGrosCylindrePSI('');
+      setGlycemieNormal('');
+      setGlycemieHigh('');
+      setGlycemieLow('');
+      setVehiculeItems(prevItems => 
+        prevItems.map(item => ({
+          ...item,
+          checked: false
+        }))
+      );
     } catch (error) {
-      console.error('Erreur lors de l\'envoi du formulaire:', error);
-      setError(`Échec de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      console.error('Erreur lors de la génération du PDF:', error);
+      setError(`Échec de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -492,21 +623,37 @@ function App() {
       <div className="min-h-screen bg-gray-100 p-4 md:p-8 flex flex-col items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full text-center">
           <div className="bg-green-100 p-4 rounded-full mx-auto w-20 h-20 flex items-center justify-center mb-4">
-            <Send size={32} className="text-green-600" />
+            <CheckCircle2 size={32} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold mb-4">Inspection envoyée avec succès!</h2>
+          <h2 className="text-2xl font-bold mb-4">Inspection terminée avec succès!</h2>
           <p className="text-gray-600 mb-6">
-            Votre formulaire d'inspection a été envoyé pour traitement et génération du PDF. Une copie sera envoyée par email et stockée dans le cloud.
+            {submissionMessage || "Votre formulaire d'inspection a été traité avec succès."}
           </p>
           <p className="text-sm text-gray-500 mb-8">
-            Soumis le {submissionDateTime}
+            Terminé le {submissionDateTime}
           </p>
+          
+          {generatedPdfUrl && (
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <a 
+                href={generatedPdfUrl}
+                download={`inspection_${currentForm === 'form1' ? 'mrsa' : 'vehicule'}_${Date.now()}.pdf`}
+                className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <Download className="mr-2" size={20} />
+                Télécharger le PDF
+              </a>
+            </div>
+          )}
+          
           <button 
             onClick={() => {
               setSubmitted(false);
               setCurrentForm(null);
+              setGeneratedPdfUrl(null);
+              setSubmissionMessage(null);
             }}
-            className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors w-full"
+            className="bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors w-full"
           >
             Retour à l'accueil
           </button>
@@ -529,7 +676,7 @@ function App() {
           </button>
         </header>
         
-        <form onSubmit={handleSubmitForm1} className="bg-white rounded-xl shadow-md p-4 mb-20">
+        <form ref={form1Ref} onSubmit={handleSubmitForm1} className="bg-white rounded-xl shadow-md p-4 mb-20">
           <div className="flex flex-col mb-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
             <div className="md:w-1/3">
               <label htmlFor="numeroMoniteur" className="block text-sm font-medium text-gray-700 mb-1">
@@ -712,7 +859,7 @@ function App() {
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                  Envoi en cours...
+                  Traitement en cours...
                 </>
               ) : (
                 <>
@@ -723,6 +870,40 @@ function App() {
             </button>
           </div>
         </form>
+        
+        {/* Boîte de dialogue de confirmation */}
+        {showConfirmation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Confirmation</h3>
+                <button onClick={() => setShowConfirmation(false)} className="text-gray-500 hover:text-gray-700">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="mb-6">
+                <div className="flex items-start mb-4">
+                  <AlertCircle className="text-amber-500 mr-3 mt-0.5" size={24} />
+                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Un PDF sera généré et envoyé par email.</p>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button 
+                  onClick={() => setShowConfirmation(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={confirmSubmitForm1}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Confirmer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -741,7 +922,7 @@ function App() {
           </button>
         </header>
         
-        <form onSubmit={handleSubmitForm2} className="bg-white rounded-xl shadow-md p-4 mb-20">
+        <form ref={form2Ref} onSubmit={handleSubmitForm2} className="bg-white rounded-xl shadow-md p-4 mb-20">
           <div className="flex flex-col mb-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
             <div className="md:w-1/3">
               <label htmlFor="numeroVehicule" className="block text-sm font-medium text-gray-700 mb-1">
@@ -984,7 +1165,7 @@ function App() {
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                  Envoi en cours...
+                  Traitement en cours...
                 </>
               ) : (
                 <>
@@ -995,6 +1176,40 @@ function App() {
             </button>
           </div>
         </form>
+        
+        {/* Boîte de dialogue de confirmation */}
+        {showConfirmation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Confirmation</h3>
+                <button onClick={() => setShowConfirmation(false)} className="text-gray-500 hover:text-gray-700">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="mb-6">
+                <div className="flex items-start mb-4">
+                  <AlertCircle className="text-amber-500 mr-3 mt-0.5" size={24} />
+                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Un PDF sera généré et envoyé par email.</p>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button 
+                  onClick={() => setShowConfirmation(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={confirmSubmitForm2}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Confirmer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
