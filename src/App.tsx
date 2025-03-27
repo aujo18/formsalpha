@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 // Interface pour les éléments à vérifier avec leur état de vérification
 interface CheckItem {
@@ -317,36 +316,94 @@ function App() {
     doc.text(`Point de service: ${pointDeService}`, 14, 46);
     doc.text(`Date et heure: ${getCurrentDateTime()}`, 14, 54);
     
-    // Tableau d'inspection
-    let tableData: any[] = [];
-    let categories: string[] = [];
+    // Créer un tableau manuellement (sans autoTable)
+    let yPosition = 60;
+    
+    // En-tête du tableau
+    doc.setFillColor(66, 135, 245);
+    doc.setTextColor(255, 255, 255);
+    doc.rect(14, yPosition, 130, 10, 'F');
+    doc.rect(144, yPosition, 52, 10, 'F');
+    doc.text("Élément", 16, yPosition + 7);
+    doc.text("Vérifié", 160, yPosition + 7);
+    yPosition += 10;
+    
+    // Réinitialiser la couleur du texte
+    doc.setTextColor(0, 0, 0);
+    
+    // Lignes de données
     let currentCategory = '';
     
     mrsaItems.forEach(item => {
+      // Nouvelle catégorie
       if (item.category !== currentCategory) {
-        categories.push(item.category || 'Autre');
         currentCategory = item.category || 'Autre';
-        // Ajouter une ligne de catégorie
-        tableData.push([{ content: item.category, colSpan: 2, styles: { fontStyle: 'bold', fillColor: [200, 220, 255] } }]);
+        
+        // Dessiner la ligne de catégorie
+        doc.setFillColor(200, 220, 255);
+        doc.rect(14, yPosition, 182, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text(currentCategory, 16, yPosition + 6);
+        doc.setFont('helvetica', 'normal');
+        yPosition += 8;
+        
+        // Vérifier si on a besoin d'une nouvelle page
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20;
+        }
       }
       
+      // Sous-catégorie si nécessaire
+      if (item.subcategory && (mrsaItems.find(i => i.category === item.category && i.subcategory === item.subcategory) === item)) {
+        doc.setFillColor(240, 240, 240);
+        doc.rect(14, yPosition, 182, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text(item.subcategory, 16, yPosition + 6);
+        doc.setFont('helvetica', 'normal');
+        yPosition += 8;
+        
+        // Vérifier si on a besoin d'une nouvelle page
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      }
+      
+      // Préparer le texte de l'élément
       let itemText = item.label;
-      if (item.id === 'electrode1' && item.expireDate) {
+      if (item.id === 'electrode1' && expireDateElectrode1) {
         itemText += ` (Expiration: ${expireDateElectrode1})`;
-      } else if (item.id === 'electrode2' && item.expireDate) {
+      } else if (item.id === 'electrode2' && expireDateElectrode2) {
         itemText += ` (Expiration: ${expireDateElectrode2})`;
       }
       
-      tableData.push([itemText, item.checked ? '✓' : '']);
-    });
-    
-    autoTable(doc, {
-      startY: 60,
-      head: [['Élément', 'Vérifié']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [66, 135, 245], textColor: 255 },
-      margin: { top: 60 },
+      // Couper le texte si nécessaire
+      const maxWidth = 125;
+      let lines = doc.splitTextToSize(itemText, maxWidth);
+      
+      // Dessiner la ligne d'élément
+      const lineHeight = lines.length * 7;
+      doc.rect(14, yPosition, 130, lineHeight + 5, 'S');
+      doc.rect(144, yPosition, 52, lineHeight + 5, 'S');
+      
+      // Ajouter le texte
+      for (let i = 0; i < lines.length; i++) {
+        doc.text(lines[i], 16, yPosition + 5 + (i * 7));
+      }
+      
+      // Ajouter la marque de vérification
+      if (item.checked) {
+        doc.text("✓", 165, yPosition + 5 + (lineHeight/2) - 3);
+      }
+      
+      yPosition += lineHeight + 5;
+      
+      // Vérifier si on a besoin d'une nouvelle page
+      if (yPosition > 280) {
+        doc.addPage();
+        yPosition = 20;
+      }
     });
     
     // Pied de page
@@ -375,19 +432,45 @@ function App() {
     doc.text(`Point de service: ${pointDeService}`, 14, 46);
     doc.text(`Date et heure: ${getCurrentDateTime()}`, 14, 54);
     
-    // Tableau d'inspection
-    let tableData: any[] = [];
-    let categories: string[] = [];
+    // Créer un tableau manuellement (sans autoTable)
+    let yPosition = 60;
+    
+    // En-tête du tableau
+    doc.setFillColor(66, 180, 80);
+    doc.setTextColor(255, 255, 255);
+    doc.rect(14, yPosition, 130, 10, 'F');
+    doc.rect(144, yPosition, 52, 10, 'F');
+    doc.text("Élément", 16, yPosition + 7);
+    doc.text("Vérifié", 160, yPosition + 7);
+    yPosition += 10;
+    
+    // Réinitialiser la couleur du texte
+    doc.setTextColor(0, 0, 0);
+    
+    // Lignes de données
     let currentCategory = '';
     
     vehiculeItems.forEach(item => {
+      // Nouvelle catégorie
       if (item.category !== currentCategory) {
-        categories.push(item.category || 'Autre');
         currentCategory = item.category || 'Autre';
-        // Ajouter une ligne de catégorie
-        tableData.push([{ content: item.category, colSpan: 2, styles: { fontStyle: 'bold', fillColor: [255, 240, 200] } }]);
+        
+        // Dessiner la ligne de catégorie
+        doc.setFillColor(255, 240, 200);
+        doc.rect(14, yPosition, 182, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text(currentCategory, 16, yPosition + 6);
+        doc.setFont('helvetica', 'normal');
+        yPosition += 8;
+        
+        // Vérifier si on a besoin d'une nouvelle page
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20;
+        }
       }
       
+      // Préparer le texte de l'élément
       let itemText = item.label;
       // Ajouter des informations supplémentaires pour les cylindres et la glycémie
       if (item.id === 'trousse3' && cylindre1PSI) {
@@ -400,16 +483,32 @@ function App() {
         itemText += ` (Normal: ${glycemieNormal || '-'}, High: ${glycemieHigh || '-'}, Low: ${glycemieLow || '-'})`;
       }
       
-      tableData.push([itemText, item.checked ? '✓' : '']);
-    });
-    
-    autoTable(doc, {
-      startY: 60,
-      head: [['Élément', 'Vérifié']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: { fillColor: [66, 180, 80], textColor: 255 },
-      margin: { top: 60 },
+      // Couper le texte si nécessaire
+      const maxWidth = 125;
+      let lines = doc.splitTextToSize(itemText, maxWidth);
+      
+      // Dessiner la ligne d'élément
+      const lineHeight = lines.length * 7;
+      doc.rect(14, yPosition, 130, lineHeight + 5, 'S');
+      doc.rect(144, yPosition, 52, lineHeight + 5, 'S');
+      
+      // Ajouter le texte
+      for (let i = 0; i < lines.length; i++) {
+        doc.text(lines[i], 16, yPosition + 5 + (i * 7));
+      }
+      
+      // Ajouter la marque de vérification
+      if (item.checked) {
+        doc.text("✓", 165, yPosition + 5 + (lineHeight/2) - 3);
+      }
+      
+      yPosition += lineHeight + 5;
+      
+      // Vérifier si on a besoin d'une nouvelle page
+      if (yPosition > 280) {
+        doc.addPage();
+        yPosition = 20;
+      }
     });
     
     // Pied de page
