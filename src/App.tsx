@@ -559,7 +559,7 @@ function App() {
                               
                               {/* Ajouter champ de date d'expiration pour les électrodes */}
                               {item.id === 'electrode1' && item.checked && (
-                                <div className="mt-2">
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                                   <label htmlFor="expireDateElectrode1" className="block text-xs font-medium text-gray-700 mb-1">
                                     Date d'expiration:
                                   </label>
@@ -575,7 +575,7 @@ function App() {
                               )}
                               
                               {item.id === 'electrode2' && item.checked && (
-                                <div className="mt-2">
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                                   <label htmlFor="expireDateElectrode2" className="block text-xs font-medium text-gray-700 mb-1">
                                     Date d'expiration:
                                   </label>
@@ -756,7 +756,7 @@ function App() {
                               
                               {/* Ajouter un champ pour le Cylindre 1 PSI seulement si checked */}
                               {item.id === 'trousse3' && item.checked && (
-                                <div className="mt-2">
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                                   <input
                                     type="number"
                                     value={cylindre1PSI}
@@ -770,7 +770,7 @@ function App() {
                               
                               {/* Ajouter un champ pour le Cylindre 2 PSI seulement si checked */}
                               {item.id === 'trousse4' && item.checked && (
-                                <div className="mt-2">
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                                   <input
                                     type="number"
                                     value={cylindre2PSI}
@@ -784,7 +784,7 @@ function App() {
                               
                               {/* Ajouter des champs pour la glycémie seulement si checked */}
                               {item.id === 'trousse7' && item.checked && (
-                                <div className="mt-2 space-y-2">
+                                <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex items-center">
                                     <span className="w-16 text-xs">NORMAL:</span>
                                     <input
@@ -848,7 +848,7 @@ function App() {
                               
                               {/* Ajouter un champ pour le niveau PSI du gros cylindre seulement si checked */}
                               {item.id === 'armoire15' && item.checked && (
-                                <div className="mt-2">
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                                   <input
                                     type="number"
                                     value={cylindre1PSI}
