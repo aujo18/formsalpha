@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Interface pour les éléments à vérifier avec leur état de vérification
 interface CheckItem {
@@ -340,8 +340,7 @@ function App() {
       tableData.push([itemText, item.checked ? '✓' : '']);
     });
     
-    // @ts-ignore
-    doc.autoTable({
+    autoTable(doc, {
       startY: 60,
       head: [['Élément', 'Vérifié']],
       body: tableData,
@@ -404,8 +403,7 @@ function App() {
       tableData.push([itemText, item.checked ? '✓' : '']);
     });
     
-    // @ts-ignore
-    doc.autoTable({
+    autoTable(doc, {
       startY: 60,
       head: [['Élément', 'Vérifié']],
       body: tableData,
