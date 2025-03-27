@@ -595,65 +595,75 @@ function App() {
       
       // Convertir le PDF en base64
       const reader = new FileReader();
-      const pdfBase64Promise = new Promise<string>((resolve) => {
+      const pdfBase64Promise = new Promise<string>((resolve, reject) => {
         reader.onload = () => {
           const base64data = reader.result?.toString().split(',')[1];
-          resolve(base64data || '');
+          if (base64data) {
+            console.log("PDF converti en base64 avec succès, taille:", base64data.length);
+            resolve(base64data);
+          } else {
+            reject(new Error("Échec de la conversion du PDF en base64"));
+          }
         };
         reader.onerror = () => {
-          console.error("Erreur lors de la lecture du PDF en base64:", reader.error);
-          resolve('');
+          console.error("Erreur lors de la lecture du PDF:", reader.error);
+          reject(reader.error);
         };
         reader.readAsDataURL(pdfBlob);
       });
       
       const pdfBase64 = await pdfBase64Promise;
       
-      if (!pdfBase64) {
-        throw new Error("Échec de la conversion du PDF en base64");
-      }
-      
-      console.log("PDF converti en base64 avec succès");
-      console.log("Taille du PDF en base64:", pdfBase64.length, "caractères");
-      
-      // Préparation des données pour EmailJS
-      const templateParams = {
-        to_email: 'emailtest@example.com', // Adresse de test pour le débogage
+      // Créer un formulaire temporaire pour EmailJS
+      const form = document.createElement('form');
+      const formData = {
+        to_email: 'nicolas.cuerrier@tap.cambi.ca',
         from_name: 'Application TAP',
-        to_name: 'Service Technique', // Nom générique
+        to_name: 'Service Technique',
         subject: `Inspection ${formType} - ${getCurrentDateTime()}`,
         message: `Veuillez trouver ci-joint le rapport d'inspection ${formType} réalisée le ${getCurrentDateTime()} par ${matricule}.`,
         pdf_data: pdfBase64,
         pdf_name: `inspection_${formType.toLowerCase()}_${Date.now()}.pdf`
       };
       
+      // Ajouter les données au formulaire
+      Object.entries(formData).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = typeof value === 'string' ? value : '';
+        form.appendChild(input);
+      });
+      
+      document.body.appendChild(form);
+      
       console.log("Tentative d'envoi d'email avec EmailJS...");
+      console.log("Service ID:", emailjsServiceId);
+      console.log("Template ID:", emailjsTemplateId);
+      console.log("Taille de la clé publique:", emailjsPublicKey.length);
       
-      // Simplifier l'approche - utiliser la méthode alternative directement
-      console.log("Utilisation de la méthode de contournement pour l'envoi d'email");
+      // Utiliser sendForm au lieu de send
+      const result = await emailjs.sendForm(
+        emailjsServiceId,
+        emailjsTemplateId,
+        form,
+        emailjsPublicKey
+      );
       
-      // Simuler une réussite d'envoi pour les tests
-      // Dans un environnement de production, il faudrait implémenter une solution
-      // d'envoi d'email côté serveur
-      console.log("Création du PDF réussie - l'envoi d'email par EmailJS est désactivé pour le moment");
-      
-      // Créer une URL de téléchargement pour le PDF
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const pdfLink = document.createElement('a');
-      pdfLink.href = pdfUrl;
-      pdfLink.download = `inspection_${formType.toLowerCase()}_${Date.now()}.pdf`;
-      
-      // Notification utilisateur
-      setTimeout(() => {
-        alert("Pour des raisons techniques, l'envoi d'email automatique est actuellement désactivé. Le PDF a été généré avec succès et vous pouvez le télécharger manuellement.");
-      }, 500);
+      document.body.removeChild(form);
+      console.log("Résultat de l'envoi:", result.text);
+      alert(`L'inspection a été envoyée avec succès aux superviseurs et chefs d'équipe.`);
       
       return true;
-      
     } catch (error) {
-      console.error('Erreur d\'envoi d\'email:', error);
+      console.error('Erreur détaillée lors de l\'envoi d\'email:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      alert(`Problème lors de la préparation de l'email: ${errorMessage}`);
+      alert(`Problème lors de l'envoi de l'email: ${errorMessage}\nL'inspection a été générée mais n'a pas pu être envoyée par email.`);
+      
+      // Créer une URL de téléchargement pour le PDF comme solution de secours
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setGeneratedPdfUrl(pdfUrl);
+      
       throw error;
     }
   };
