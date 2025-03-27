@@ -81,6 +81,34 @@ function App() {
     }
   };
 
+  // Fonction pour formater le numéro de véhicule (4 chiffres commençant par 9)
+  const handleVehiculeNumberChange = (value: string) => {
+    // Garder seulement les chiffres
+    const sanitizedValue = value.replace(/[^0-9]/g, '');
+    
+    // Si la chaîne est vide, ne rien faire
+    if (sanitizedValue.length === 0) {
+      setNumeroVehicule('');
+      return;
+    }
+    
+    // S'assurer que le premier chiffre est un 9
+    let formattedValue;
+    if (sanitizedValue.charAt(0) !== '9') {
+      formattedValue = '9' + sanitizedValue.substring(0, 3);
+    } else {
+      formattedValue = sanitizedValue.substring(0, 4);
+    }
+    
+    // Toujours avoir exactement 4 chiffres
+    if (formattedValue.length < 4) {
+      // Compléter avec des zéros pour avoir 4 chiffres
+      formattedValue = formattedValue.padEnd(4, '0');
+    }
+    
+    setNumeroVehicule(formattedValue);
+  };
+
   // Items pour le formulaire MRSA
   const [mrsaItems, setMrsaItems] = useState<CheckItem[]>([
     // Câbles et raccords
@@ -728,10 +756,10 @@ function App() {
                 type="text"
                 id="numeroVehicule"
                 value={numeroVehicule}
-                onChange={(e) => setNumeroVehicule(e.target.value)}
+                onChange={(e) => handleVehiculeNumberChange(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 required
-                placeholder="Entrez le numéro du véhicule"
+                placeholder="Ex: 9198"
               />
             </div>
             
