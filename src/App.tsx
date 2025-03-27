@@ -614,51 +614,50 @@ function App() {
       
       const pdfBase64 = await pdfBase64Promise;
       
-      // Créer un formulaire temporaire pour EmailJS
-      const form = document.createElement('form');
-      const formData = {
-        to_email: 'nicolas.cuerrier@tap.cambi.ca',
-        from_name: 'Application TAP',
-        to_name: 'Service Technique',
-        subject: `Inspection ${formType} - ${getCurrentDateTime()}`,
-        message: `Veuillez trouver ci-joint le rapport d'inspection ${formType} réalisée le ${getCurrentDateTime()} par ${matricule}.`,
-        pdf_data: pdfBase64,
-        pdf_name: `inspection_${formType.toLowerCase()}_${Date.now()}.pdf`
+      // Préparation des données pour l'envoi
+      const currentDateTime = getCurrentDateTime();
+      const webhookUrl = formType === 'MRSA' ? WEBHOOK_URL_MRSA : WEBHOOK_URL_VEHICULE;
+      
+      // Créer une URL pour le téléchargement temporaire
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Préparation des données pour le webhook Make.com
+      const webhookData = {
+        type: formType,
+        matricule: matricule,
+        dateTime: currentDateTime,
+        pointDeService: pointDeService,
+        numeroIdentifiant: formType === 'MRSA' ? numeroMoniteur : numeroVehicule,
+        pdfData: pdfBase64,
+        fileName: `inspection_${formType.toLowerCase()}_${Date.now()}.pdf`
       };
       
-      // Ajouter les données au formulaire
-      Object.entries(formData).forEach(([key, value]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = typeof value === 'string' ? value : '';
-        form.appendChild(input);
+      console.log(`Envoi des données au webhook ${formType}...`);
+      
+      // Envoi au webhook Make.com
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
       });
       
-      document.body.appendChild(form);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erreur du serveur: ${response.status} - ${errorText}`);
+      }
       
-      console.log("Tentative d'envoi d'email avec EmailJS...");
-      console.log("Service ID:", emailjsServiceId);
-      console.log("Template ID:", emailjsTemplateId);
-      console.log("Taille de la clé publique:", emailjsPublicKey.length);
+      console.log("Données envoyées avec succès au webhook");
       
-      // Utiliser sendForm au lieu de send
-      const result = await emailjs.sendForm(
-        emailjsServiceId,
-        emailjsTemplateId,
-        form,
-        emailjsPublicKey
-      );
-      
-      document.body.removeChild(form);
-      console.log("Résultat de l'envoi:", result.text);
+      // Message de succès
       alert(`L'inspection a été envoyée avec succès aux superviseurs et chefs d'équipe.`);
       
       return true;
     } catch (error) {
       console.error('Erreur détaillée lors de l\'envoi d\'email:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      alert(`Problème lors de l'envoi de l'email: ${errorMessage}\nL'inspection a été générée mais n'a pas pu être envoyée par email.`);
+      alert(`Problème lors de l'envoi de l'inspection: ${errorMessage}\nL'inspection a été générée mais n'a pas pu être envoyée.`);
       
       // Créer une URL de téléchargement pour le PDF comme solution de secours
       const pdfUrl = URL.createObjectURL(pdfBlob);
