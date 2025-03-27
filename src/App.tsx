@@ -92,18 +92,23 @@ function App() {
       return;
     }
     
-    // S'assurer que le premier chiffre est un 9
+    // S'assurer que le premier chiffre est toujours 9
     let formattedValue;
     if (sanitizedValue.charAt(0) !== '9') {
-      formattedValue = '9' + sanitizedValue.substring(0, 3);
+      // Si le premier caractère n'est pas 9, on force un 9 au début
+      formattedValue = '9';
+      // On ajoute le reste des chiffres (jusqu'à 3 de plus pour un total de 4)
+      if (sanitizedValue.length > 0) {
+        formattedValue += sanitizedValue.substring(0, 3);
+      }
     } else {
+      // Si ça commence déjà par 9, on garde jusqu'à 4 chiffres
       formattedValue = sanitizedValue.substring(0, 4);
     }
     
-    // Toujours avoir exactement 4 chiffres
-    if (formattedValue.length < 4) {
-      // Compléter avec des zéros pour avoir 4 chiffres
-      formattedValue = formattedValue.padEnd(4, '0');
+    // S'assurer qu'on a toujours 4 chiffres (compléter avec des zéros si nécessaire)
+    while (formattedValue.length < 4) {
+      formattedValue += '0';
     }
     
     setNumeroVehicule(formattedValue);
