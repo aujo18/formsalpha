@@ -43,42 +43,35 @@ function App() {
 
   // Fonction pour formater le matricule (lettre-chiffres)
   const handleMatriculeChange = (value: string) => {
-    // Supprimer tous les caractères qui ne sont pas des lettres, des chiffres ou un tiret
-    let sanitizedValue = value.replace(/[^a-zA-Z0-9-]/g, '');
+    // Garder seulement les lettres et les chiffres
+    const sanitizedValue = value.replace(/[^a-zA-Z0-9]/g, '');
     
-    // Si la chaîne est vide, ne rien faire
     if (sanitizedValue.length === 0) {
       setMatricule('');
       return;
     }
     
-    // Extraire la première lettre et la mettre en majuscule
+    // Extraire la première lettre
     const firstChar = sanitizedValue.charAt(0).toUpperCase();
     
-    // Si la valeur n'a qu'un caractère, c'est juste la lettre
+    // Si la valeur ne contient qu'une lettre
     if (sanitizedValue.length === 1) {
       setMatricule(firstChar);
       return;
     }
     
-    // Si le second caractère n'est pas un tiret, l'ajouter
-    if (sanitizedValue.charAt(1) !== '-') {
-      sanitizedValue = firstChar + '-' + sanitizedValue.substring(1);
-    } else {
-      sanitizedValue = firstChar + sanitizedValue.substring(1);
+    // Extraire les chiffres (jusqu'à 4)
+    const numbers = sanitizedValue.substring(1).replace(/[^0-9]/g, '').substring(0, 4);
+    
+    // Si aucun chiffre n'est encore saisi
+    if (numbers.length === 0) {
+      setMatricule(firstChar);
+      return;
     }
     
-    // Limiter à une lettre, un tiret et 4 chiffres maximum
-    const regex = /^([A-Z])-?(\d{0,4}).*$/;
-    const match = sanitizedValue.match(regex);
-    
-    if (match) {
-      const letter = match[1];
-      const numbers = match[2];
-      setMatricule(`${letter}-${numbers}`);
-    } else {
-      setMatricule(sanitizedValue);
-    }
+    // Formater avec tiret: "N-0100" (sans espaces)
+    const formattedValue = `${firstChar}-${numbers.padStart(4, '0')}`;
+    setMatricule(formattedValue);
   };
 
   // Items pour le formulaire MRSA
