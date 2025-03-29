@@ -735,6 +735,353 @@ function App() {
     setShowConfirmation(true);
   };
   
+  // Fonction pour générer un HTML de l'inspection MRSA
+  const generateMrsaHTML = () => {
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Inspection MRSA</title>
+        <meta charset="UTF-8">
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+          }
+          h1 {
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .info {
+            margin-bottom: 20px;
+          }
+          .info p {
+            margin: 5px 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th {
+            background-color: #2563eb;
+            color: white;
+            text-align: left;
+            padding: 8px;
+          }
+          td {
+            border: 1px solid #ddd;
+            padding: 8px;
+          }
+          .category {
+            background-color: #dbeafe;
+            font-weight: bold;
+          }
+          .subcategory {
+            background-color: #f3f4f6;
+            font-weight: bold;
+          }
+          .checked {
+            color: green;
+            font-weight: bold;
+          }
+          .not-checked {
+            color: red;
+          }
+          footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Inspection MRSA</h1>
+        
+        <div class="info">
+          <p><strong>Matricule:</strong> ${matricule}</p>
+          <p><strong>Numéro du moniteur:</strong> ${numeroMoniteur}</p>
+          <p><strong>Point de service:</strong> ${pointDeService}</p>
+          <p><strong>Date et heure:</strong> ${getCurrentDateTime()}</p>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Élément</th>
+              <th>Vérifié</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    // Regrouper par catégorie et sous-catégorie
+    const groupedItems = mrsaItems.reduce((acc, item) => {
+      if (!acc[item.category || 'Autres']) acc[item.category || 'Autres'] = {};
+      
+      const subcategory = item.subcategory || 'default';
+      if (!acc[item.category || 'Autres'][subcategory]) {
+        acc[item.category || 'Autres'][subcategory] = [];
+      }
+      
+      acc[item.category || 'Autres'][subcategory].push(item);
+      return acc;
+    }, {} as Record<string, Record<string, CheckItem[]>>);
+    
+    // Ajouter les lignes par catégorie
+    Object.entries(groupedItems).forEach(([category, subcategories]) => {
+      html += `
+            <tr>
+              <td colspan="2" class="category">${category}</td>
+            </tr>
+      `;
+      
+      Object.entries(subcategories).forEach(([subcategory, items]) => {
+        if (subcategory !== 'default') {
+          html += `
+            <tr>
+              <td colspan="2" class="subcategory">${subcategory}</td>
+            </tr>
+          `;
+        }
+        
+        items.forEach(item => {
+          let itemLabel = item.label;
+          
+          if (item.id === 'electrode1' && expireDateElectrode1) {
+            itemLabel += ` (Expiration: ${expireDateElectrode1})`;
+          } else if (item.id === 'electrode2' && expireDateElectrode2) {
+            itemLabel += ` (Expiration: ${expireDateElectrode2})`;
+          }
+          
+          html += `
+            <tr>
+              <td>${itemLabel}</td>
+              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
+            </tr>
+          `;
+        });
+      });
+    });
+    
+    html += `
+          </tbody>
+        </table>
+        
+        <footer>
+          Inspection MRSA - Généré le ${getCurrentDateTime()}
+        </footer>
+      </body>
+      </html>
+    `;
+    
+    return html;
+  };
+
+  // Fonction pour générer un HTML de l'inspection Véhicule
+  const generateVehiculeHTML = () => {
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Inspection Véhicule</title>
+        <meta charset="UTF-8">
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+          }
+          h1 {
+            color: #16a34a;
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .info {
+            margin-bottom: 20px;
+          }
+          .info p {
+            margin: 5px 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th {
+            background-color: #16a34a;
+            color: white;
+            text-align: left;
+            padding: 8px;
+          }
+          td {
+            border: 1px solid #ddd;
+            padding: 8px;
+          }
+          .category {
+            background-color: #fef3c7;
+            font-weight: bold;
+          }
+          .checked {
+            color: green;
+            font-weight: bold;
+          }
+          .not-checked {
+            color: red;
+          }
+          footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Inspection Véhicule</h1>
+        
+        <div class="info">
+          <p><strong>Matricule:</strong> ${matricule}</p>
+          <p><strong>Numéro du véhicule:</strong> ${numeroVehicule}</p>
+          <p><strong>Point de service:</strong> ${pointDeService}</p>
+          <p><strong>Date et heure:</strong> ${getCurrentDateTime()}</p>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Élément</th>
+              <th>Vérifié</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    // Regrouper par catégorie
+    const groupedItems = vehiculeItems.reduce((acc, item) => {
+      if (!acc[item.category || 'Autres']) acc[item.category || 'Autres'] = [];
+      acc[item.category || 'Autres'].push(item);
+      return acc;
+    }, {} as Record<string, CheckItem[]>);
+    
+    // Ajouter les lignes par catégorie
+    Object.entries(groupedItems).forEach(([category, items]) => {
+      html += `
+            <tr>
+              <td colspan="2" class="category">${category}</td>
+            </tr>
+      `;
+      
+      items.forEach(item => {
+        let itemLabel = item.label;
+        
+        // Ajouter les informations supplémentaires
+        if (item.id === 'trousse3' && cylindre1PSI) {
+          itemLabel += ` (PSI: ${cylindre1PSI})`;
+        } else if (item.id === 'trousse4' && cylindre2PSI) {
+          itemLabel += ` (PSI: ${cylindre2PSI})`;
+        } else if (item.id === 'armoire15' && grosCylindrePSI) {
+          itemLabel += ` (PSI: ${grosCylindrePSI})`;
+        } else if (item.id === 'trousse7' && (glycemieNormal || glycemieHigh || glycemieLow)) {
+          itemLabel += ` (Normal: ${glycemieNormal || '-'}, High: ${glycemieHigh || '-'}, Low: ${glycemieLow || '-'})`;
+        }
+        
+        html += `
+          <tr>
+            <td>${itemLabel}</td>
+            <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
+          </tr>
+        `;
+      });
+    });
+    
+    html += `
+          </tbody>
+        </table>
+        
+        <footer>
+          Inspection Véhicule - Généré le ${getCurrentDateTime()}
+        </footer>
+      </body>
+      </html>
+    `;
+    
+    return html;
+  };
+
+  // Fonction pour envoyer les données d'inspection à Make.com
+  const sendInspectionToMakecom = async (formType: string) => {
+    try {
+      console.log(`Début de la préparation de l'envoi pour ${formType}...`);
+      
+      // Générer le HTML selon le type de formulaire
+      const htmlContent = formType === 'MRSA' ? generateMrsaHTML() : generateVehiculeHTML();
+      console.log(`HTML ${formType} généré, taille:`, htmlContent.length, "caractères");
+      
+      // Préparation des données pour l'envoi
+      const currentDateTime = getCurrentDateTime();
+      const webhookUrl = formType === 'MRSA' ? WEBHOOK_URL_MRSA : WEBHOOK_URL_VEHICULE;
+      
+      console.log(`Utilisation du webhook pour ${formType}:`, webhookUrl);
+      
+      // Créer un nom de fichier unique et significatif
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `inspection_${formType.toLowerCase()}_${formType === 'MRSA' ? numeroMoniteur : numeroVehicule}_${timestamp}.html`;
+      
+      // Préparation des données pour le webhook Make.com
+      const webhookData = {
+        type: formType,
+        matricule: matricule,
+        dateTime: currentDateTime,
+        pointDeService: pointDeService,
+        numeroIdentifiant: formType === 'MRSA' ? numeroMoniteur : numeroVehicule,
+        htmlContent: htmlContent,
+        fileName: fileName,
+        mimeType: "text/html" // Spécifier le type MIME comme HTML
+      };
+      
+      console.log(`Préparation des données pour webhook ${formType} complète`);
+      console.log(`Nom du fichier: ${fileName}`);
+      console.log(`Type d'inspection: ${formType}`);
+      console.log(`Envoi des données au webhook ${formType}...`);
+      
+      // Envoi au webhook Make.com
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+      
+      console.log(`Réponse du webhook ${formType} - Status:`, response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Erreur de réponse du webhook ${formType}:`, errorText);
+        throw new Error(`Erreur du serveur: ${response.status} - ${errorText}`);
+      }
+      
+      const responseText = await response.text();
+      console.log(`Réponse complète du webhook ${formType}:`, responseText);
+      
+      console.log(`Données HTML envoyées avec succès au webhook ${formType}`);
+      
+      // Message de succès
+      alert(`L'inspection ${formType} a été envoyée avec succès aux superviseurs et chefs d'équipe.`);
+      
+      return true;
+    } catch (error) {
+      console.error(`Erreur détaillée lors de l'envoi pour ${formType}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      alert(`Problème lors de l'envoi de l'inspection ${formType}: ${errorMessage}`);
+      throw error;
+    }
+  };
+  
   const confirmSubmitForm1 = async () => {
     // Fermer la boîte de dialogue de confirmation
     setShowConfirmation(false);
@@ -753,26 +1100,29 @@ function App() {
       const currentDateTime = getCurrentDateTime();
       setSubmissionDateTime(currentDateTime);
       
-      // Générer le PDF
+      // Pour la compatibilité, générer aussi le PDF
+      console.log("Génération du PDF MRSA...");
       const doc = generateMrsaPDF();
       const pdfBlob = doc.output('blob');
       
-      // Créer une URL pour le téléchargement
+      // Créer une URL pour le téléchargement du PDF
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setGeneratedPdfUrl(pdfUrl);
       
-      // Envoyer par email avec EmailJS
+      // Envoyer les données HTML à Make.com
       try {
-        console.log("Tentative d'envoi du PDF par email...");
-        const emailSent = await sendPdfByEmail(pdfBlob, 'MRSA');
-        if (emailSent) {
-          setSubmissionMessage("Le PDF a été généré et un email a été préparé. Vous pouvez télécharger le PDF manuellement.");
+        console.log("Tentative d'envoi des données MRSA via webhook...");
+        const dataSent = await sendInspectionToMakecom('MRSA');
+        if (dataSent) {
+          console.log("Envoi des données MRSA réussi");
+          setSubmissionMessage("L'inspection a été générée et envoyée avec succès. Vous pouvez également télécharger le PDF.");
         } else {
-          setSubmissionMessage("Le PDF a été généré mais la préparation de l'email a échoué. Vous pouvez télécharger le PDF manuellement.");
+          console.log("Échec de l'envoi des données MRSA");
+          setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué. Vous pouvez télécharger le PDF manuellement.");
         }
-      } catch (emailError) {
-        console.error('Erreur envoi email détaillée:', emailError);
-        setSubmissionMessage(`Le PDF a été généré mais l'envoi de l'email a échoué: ${emailError instanceof Error ? emailError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
+      } catch (sendError) {
+        console.error('Erreur envoi webhook détaillée pour MRSA:', sendError);
+        setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
       }
       
       setSubmitted(true);
@@ -791,8 +1141,8 @@ function App() {
         }))
       );
     } catch (error) {
-      console.error('Erreur lors de la génération du PDF:', error);
-      setError(`Échec de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      console.error('Erreur lors de la génération ou envoi de l\'inspection MRSA:', error);
+      setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -824,30 +1174,30 @@ function App() {
       const currentDateTime = getCurrentDateTime();
       setSubmissionDateTime(currentDateTime);
       
-      // Générer le PDF
+      // Pour la compatibilité, générer aussi le PDF
       console.log("Génération du PDF Véhicule...");
       const doc = generateVehiculePDF();
       const pdfBlob = doc.output('blob');
       console.log("PDF Véhicule généré, taille:", pdfBlob.size, "bytes");
       
-      // Créer une URL pour le téléchargement
+      // Créer une URL pour le téléchargement du PDF
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setGeneratedPdfUrl(pdfUrl);
       
-      // Envoyer par email avec le webhook
+      // Envoyer les données HTML à Make.com
       try {
-        console.log("Tentative d'envoi du PDF Véhicule via webhook...");
-        const emailSent = await sendPdfByEmail(pdfBlob, 'Véhicule');
-        if (emailSent) {
-          console.log("Envoi du PDF Véhicule réussi");
-          setSubmissionMessage("Le PDF a été généré et envoyé avec succès.");
+        console.log("Tentative d'envoi des données Véhicule via webhook...");
+        const dataSent = await sendInspectionToMakecom('Véhicule');
+        if (dataSent) {
+          console.log("Envoi des données Véhicule réussi");
+          setSubmissionMessage("L'inspection a été générée et envoyée avec succès. Vous pouvez également télécharger le PDF.");
         } else {
-          console.log("Échec de l'envoi du PDF Véhicule");
-          setSubmissionMessage("Le PDF a été généré mais l'envoi a échoué. Vous pouvez télécharger le PDF manuellement.");
+          console.log("Échec de l'envoi des données Véhicule");
+          setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué. Vous pouvez télécharger le PDF manuellement.");
         }
-      } catch (emailError) {
-        console.error('Erreur envoi webhook détaillée pour Véhicule:', emailError);
-        setSubmissionMessage(`Le PDF a été généré mais l'envoi a échoué: ${emailError instanceof Error ? emailError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
+      } catch (sendError) {
+        console.error('Erreur envoi webhook détaillée pour Véhicule:', sendError);
+        setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
       }
       
       setSubmitted(true);
@@ -869,7 +1219,7 @@ function App() {
         }))
       );
     } catch (error) {
-      console.error('Erreur lors de la génération ou envoi du PDF Véhicule:', error);
+      console.error('Erreur lors de la génération ou envoi de l\'inspection Véhicule:', error);
       setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
