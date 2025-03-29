@@ -591,7 +591,7 @@ function App() {
   // Fonction pour envoyer le PDF par e-mail
   const sendPdfByEmail = async (pdfBlob: Blob, formType: string) => {
     try {
-      console.log("Début de la préparation de l'envoi d'email...");
+      console.log(`Début de la préparation de l'envoi pour ${formType}...`);
       
       // Convertir le PDF en base64
       const reader = new FileReader();
@@ -599,7 +599,7 @@ function App() {
         reader.onload = () => {
           const base64data = reader.result?.toString().split(',')[1];
           if (base64data) {
-            console.log("PDF converti en base64 avec succès, taille:", base64data.length);
+            console.log(`PDF ${formType} converti en base64 avec succès, taille:`, base64data.length);
             resolve(base64data);
           } else {
             reject(new Error("Échec de la conversion du PDF en base64"));
@@ -618,8 +618,7 @@ function App() {
       const currentDateTime = getCurrentDateTime();
       const webhookUrl = formType === 'MRSA' ? WEBHOOK_URL_MRSA : WEBHOOK_URL_VEHICULE;
       
-      // Créer une URL pour le téléchargement temporaire
-      const pdfUrl = URL.createObjectURL(pdfBlob);
+      console.log(`Utilisation du webhook pour ${formType}:`, webhookUrl);
       
       // Préparation des données pour le webhook Make.com
       const webhookData = {
@@ -632,32 +631,46 @@ function App() {
         fileName: `inspection_${formType.toLowerCase()}_${Date.now()}.pdf`
       };
       
+      console.log(`Préparation des données pour webhook ${formType} complète`);
+      console.log(`Taille des données webhook ${formType}:`, JSON.stringify(webhookData).length);
+      console.log(`Type d'inspection:`, formType);
       console.log(`Envoi des données au webhook ${formType}...`);
       
       // Envoi au webhook Make.com
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData)
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erreur du serveur: ${response.status} - ${errorText}`);
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookData)
+        });
+        
+        console.log(`Réponse du webhook ${formType} - Status:`, response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Erreur de réponse du webhook ${formType}:`, errorText);
+          throw new Error(`Erreur du serveur: ${response.status} - ${errorText}`);
+        }
+        
+        const responseText = await response.text();
+        console.log(`Réponse complète du webhook ${formType}:`, responseText);
+        
+        console.log(`Données envoyées avec succès au webhook ${formType}`);
+        
+        // Message de succès
+        alert(`L'inspection ${formType} a été envoyée avec succès aux superviseurs et chefs d'équipe.`);
+        
+        return true;
+      } catch (fetchError) {
+        console.error(`Erreur lors de la requête fetch pour ${formType}:`, fetchError);
+        throw fetchError;
       }
-      
-      console.log("Données envoyées avec succès au webhook");
-      
-      // Message de succès
-      alert(`L'inspection a été envoyée avec succès aux superviseurs et chefs d'équipe.`);
-      
-      return true;
     } catch (error) {
-      console.error('Erreur détaillée lors de l\'envoi d\'email:', error);
+      console.error(`Erreur détaillée lors de l'envoi pour ${formType}:`, error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      alert(`Problème lors de l'envoi de l'inspection: ${errorMessage}\nL'inspection a été générée mais n'a pas pu être envoyée.`);
+      alert(`Problème lors de l'envoi de l'inspection ${formType}: ${errorMessage}\nL'inspection a été générée mais n'a pas pu être envoyée.`);
       
       // Créer une URL de téléchargement pour le PDF comme solution de secours
       const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -759,29 +772,34 @@ function App() {
     setError(null);
     
     try {
+      console.log("Début du traitement du formulaire Véhicule");
       const currentDateTime = getCurrentDateTime();
       setSubmissionDateTime(currentDateTime);
       
       // Générer le PDF
+      console.log("Génération du PDF Véhicule...");
       const doc = generateVehiculePDF();
       const pdfBlob = doc.output('blob');
+      console.log("PDF Véhicule généré, taille:", pdfBlob.size, "bytes");
       
       // Créer une URL pour le téléchargement
       const pdfUrl = URL.createObjectURL(pdfBlob);
       setGeneratedPdfUrl(pdfUrl);
       
-      // Envoyer par email avec EmailJS
+      // Envoyer par email avec le webhook
       try {
-        console.log("Tentative d'envoi du PDF par email...");
+        console.log("Tentative d'envoi du PDF Véhicule via webhook...");
         const emailSent = await sendPdfByEmail(pdfBlob, 'Véhicule');
         if (emailSent) {
-          setSubmissionMessage("Le PDF a été généré et un email a été préparé. Vous pouvez télécharger le PDF manuellement.");
+          console.log("Envoi du PDF Véhicule réussi");
+          setSubmissionMessage("Le PDF a été généré et envoyé avec succès.");
         } else {
-          setSubmissionMessage("Le PDF a été généré mais la préparation de l'email a échoué. Vous pouvez télécharger le PDF manuellement.");
+          console.log("Échec de l'envoi du PDF Véhicule");
+          setSubmissionMessage("Le PDF a été généré mais l'envoi a échoué. Vous pouvez télécharger le PDF manuellement.");
         }
       } catch (emailError) {
-        console.error('Erreur envoi email détaillée:', emailError);
-        setSubmissionMessage(`Le PDF a été généré mais l'envoi de l'email a échoué: ${emailError instanceof Error ? emailError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
+        console.error('Erreur envoi webhook détaillée pour Véhicule:', emailError);
+        setSubmissionMessage(`Le PDF a été généré mais l'envoi a échoué: ${emailError instanceof Error ? emailError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
       }
       
       setSubmitted(true);
@@ -803,8 +821,8 @@ function App() {
         }))
       );
     } catch (error) {
-      console.error('Erreur lors de la génération du PDF:', error);
-      setError(`Échec de la génération: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      console.error('Erreur lors de la génération ou envoi du PDF Véhicule:', error);
+      setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
