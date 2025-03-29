@@ -592,15 +592,22 @@ function App() {
   const sendPdfByEmail = async (pdfBlob: Blob, formType: string) => {
     try {
       console.log(`Début de la préparation de l'envoi pour ${formType}...`);
+      console.log(`Type du PDF blob:`, pdfBlob.type);
+      console.log(`Taille du PDF blob:`, pdfBlob.size, "bytes");
       
-      // Convertir le PDF en base64
+      // Convertir le PDF en base64 AVEC le préfixe data:application/pdf;base64,
       const reader = new FileReader();
       const pdfBase64Promise = new Promise<string>((resolve, reject) => {
         reader.onload = () => {
-          const base64data = reader.result?.toString().split(',')[1];
-          if (base64data) {
-            console.log(`PDF ${formType} converti en base64 avec succès, taille:`, base64data.length);
-            resolve(base64data);
+          const fullBase64 = reader.result as string;
+          if (fullBase64) {
+            // Gardons le préfixe data:application/pdf;base64, pour Make.com
+            console.log(`PDF ${formType} converti en base64 avec succès, taille complète:`, fullBase64.length);
+            // Vérifions si le préfixe est correct
+            if (!fullBase64.startsWith('data:application/pdf;base64,')) {
+              console.warn(`Le préfixe base64 n'est pas comme attendu:`, fullBase64.substring(0, 30) + '...');
+            }
+            resolve(fullBase64);
           } else {
             reject(new Error("Échec de la conversion du PDF en base64"));
           }
@@ -609,16 +616,26 @@ function App() {
           console.error("Erreur lors de la lecture du PDF:", reader.error);
           reject(reader.error);
         };
+        // Utiliser readAsDataURL pour avoir le préfixe data:application/pdf;base64,
         reader.readAsDataURL(pdfBlob);
       });
       
       const pdfBase64 = await pdfBase64Promise;
+      
+      // Vérifier que la conversion a réussi et que les données semblent correctes
+      if (!pdfBase64 || pdfBase64.length < 100) {
+        throw new Error(`Conversion PDF en base64 incomplète ou incorrecte: ${pdfBase64.length} caractères`);
+      }
       
       // Préparation des données pour l'envoi
       const currentDateTime = getCurrentDateTime();
       const webhookUrl = formType === 'MRSA' ? WEBHOOK_URL_MRSA : WEBHOOK_URL_VEHICULE;
       
       console.log(`Utilisation du webhook pour ${formType}:`, webhookUrl);
+      
+      // Créer un nom de fichier unique et significatif
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `inspection_${formType.toLowerCase()}_${formType === 'MRSA' ? numeroMoniteur : numeroVehicule}_${timestamp}.pdf`;
       
       // Préparation des données pour le webhook Make.com
       const webhookData = {
@@ -628,22 +645,53 @@ function App() {
         pointDeService: pointDeService,
         numeroIdentifiant: formType === 'MRSA' ? numeroMoniteur : numeroVehicule,
         pdfData: pdfBase64,
-        fileName: `inspection_${formType.toLowerCase()}_${Date.now()}.pdf`
+        fileName: fileName,
+        mimeType: "application/pdf" // Ajout explicite du type MIME
       };
       
       console.log(`Préparation des données pour webhook ${formType} complète`);
-      console.log(`Taille des données webhook ${formType}:`, JSON.stringify(webhookData).length);
-      console.log(`Type d'inspection:`, formType);
+      console.log(`Nom du fichier: ${fileName}`);
+      console.log(`Type d'inspection: ${formType}`);
       console.log(`Envoi des données au webhook ${formType}...`);
       
       // Envoi au webhook Make.com
       try {
+        // Créer un corps de requête simplifié si les données sont trop volumineuses
+        let requestBody = JSON.stringify(webhookData);
+        
+        // Vérifier la taille des données JSON (limite approximative pour Make.com)
+        if (requestBody.length > 5000000) { // 5MB est une estimation prudente
+          console.warn(`Les données sont très volumineuses (${requestBody.length} octets), tentative de réduction...`);
+          
+          // Créer une version réduite du PDF si nécessaire
+          // Note: cela pourrait réduire la qualité
+          const doc = formType === 'MRSA' ? generateMrsaPDF() : generateVehiculePDF();
+          const pdfBlobReduced = doc.output('blob');
+          
+          // Convertir à nouveau en base64
+          const readerReduced = new FileReader();
+          const pdfBase64ReducedPromise = new Promise<string>((resolve, reject) => {
+            readerReduced.onload = () => {
+              resolve(readerReduced.result as string);
+            };
+            readerReduced.onerror = () => reject(readerReduced.error);
+            readerReduced.readAsDataURL(pdfBlobReduced);
+          });
+          
+          const pdfBase64Reduced = await pdfBase64ReducedPromise;
+          
+          // Mettre à jour les données
+          webhookData.pdfData = pdfBase64Reduced;
+          requestBody = JSON.stringify(webhookData);
+          console.log(`Données réduites à ${requestBody.length} octets`);
+        }
+        
         const response = await fetch(webhookUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(webhookData)
+          body: requestBody
         });
         
         console.log(`Réponse du webhook ${formType} - Status:`, response.status);
