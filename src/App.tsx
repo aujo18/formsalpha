@@ -115,7 +115,7 @@ function App() {
     { id: 'trousse1', label: 'Trousse support vital', category: 'TROUSSES', checked: false },
     { id: 'trousse2', label: 'Trousse à médicaments (vérification du scellé/péremption)', category: 'TROUSSES', checked: false },
     { id: 'trousse3', label: 'Trousse d\'oxygène (800 ou plus) - CYLINDRE 1', category: 'TROUSSES', checked: false },
-    { id: 'trousse4', label: 'INSCRIRE NIVEAU PSI - CYLINDRE 2', category: 'TROUSSES', checked: false },
+    { id: 'trousse4', label: 'Trousse d\'oxygène (800 ou plus) - CYLINDRE 2', category: 'TROUSSES', checked: false },
     { id: 'trousse5', label: 'Trousse pédiatrique/obstétrique (vérification du scellé/péremption)', category: 'TROUSSES', checked: false },
     { id: 'trousse6', label: 'Trousse mesure d\'urgence', category: 'TROUSSES', checked: false },
     { id: 'trousse7', label: 'Kit à glycémie/Résultat du test hebdomadaire', category: 'TROUSSES', checked: false },
@@ -125,7 +125,6 @@ function App() {
     { id: 'armoire2', label: 'CIVIÈRE: Rescue seat', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
     { id: 'armoire3', label: 'Médi-toile', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
     { id: 'armoire4', label: 'Planche de transfert', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
-    { id: 'armoire5', label: '***Rotation de la batterie***', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
     { id: 'armoire6', label: 'Civière-chaise', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
     { id: 'armoire7', label: 'Vomit-bag', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
     { id: 'armoire8', label: 'Pen light', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
@@ -1238,9 +1237,9 @@ function App() {
   if (currentForm === null) {
     return (
       <div className="min-h-screen bg-gray-100 p-4 md:p-8">
-        <header className="bg-blue-600 text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-8">
+        <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-8">
           <div className="flex items-center">
-            <Ambulance className="mr-2" size={32} />
+            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/viy76oo8kfhz7r84pfig" alt="Logo CAMBI" className="h-10 mr-3" />
             <h1 className="text-2xl font-bold">Application TAP</h1>
           </div>
         </header>
@@ -1250,24 +1249,24 @@ function App() {
             onClick={() => setCurrentForm('form1')}
             className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col items-center"
           >
-            <div className="bg-blue-100 p-4 rounded-full mb-4">
-              <ClipboardCheck size={48} className="text-blue-600" />
+            <div className="bg-[#b22a2e]/10 p-4 rounded-full mb-4">
+              <ClipboardCheck size={48} className="text-[#b22a2e]" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Inspection MRSA</h2>
             <p className="text-gray-600 text-center">Vérification du moniteur défibrillateur</p>
-            <ChevronRight className="mt-4 text-blue-600" />
+            <ChevronRight className="mt-4 text-[#b22a2e]" />
           </button>
           
           <button 
             onClick={() => setCurrentForm('form2')}
             className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col items-center"
           >
-            <div className="bg-green-100 p-4 rounded-full mb-4">
-              <ClipboardCheck size={48} className="text-green-600" />
+            <div className="bg-[#102947]/10 p-4 rounded-full mb-4">
+              <ClipboardCheck size={48} className="text-[#102947]" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Inspection Véhicule</h2>
             <p className="text-gray-600 text-center">Vérification du matériel clinique de l'ambulance</p>
-            <ChevronRight className="mt-4 text-green-600" />
+            <ChevronRight className="mt-4 text-[#102947]" />
           </button>
         </div>
         
@@ -1283,8 +1282,8 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-100 p-4 md:p-8 flex flex-col items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full text-center">
-          <div className="bg-green-100 p-4 rounded-full mx-auto w-20 h-20 flex items-center justify-center mb-4">
-            <CheckCircle2 size={32} className="text-green-600" />
+          <div className="bg-[#b22a2e]/10 p-4 rounded-full mx-auto w-20 h-20 flex items-center justify-center mb-4">
+            <CheckCircle2 size={32} className="text-[#b22a2e]" />
           </div>
           <h2 className="text-2xl font-bold mb-4">Inspection terminée avec succès!</h2>
           
@@ -1299,7 +1298,7 @@ function App() {
               setGeneratedPdfUrl(null);
               setSubmissionMessage(null);
             }}
-            className="bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors w-full"
+            className="bg-[#b22a2e] text-white py-3 px-6 rounded-lg hover:bg-[#b22a2e]/90 transition-colors w-full"
           >
             Retour à l'accueil
           </button>
@@ -1312,9 +1311,9 @@ function App() {
   if (currentForm === 'form1') {
     return (
       <div className="min-h-screen bg-gray-100 p-4 md:p-6">
-        <header className="bg-blue-600 text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
+        <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <Ambulance className="mr-2" size={28} />
+            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/viy76oo8kfhz7r84pfig" alt="Logo CAMBI" className="h-8 mr-2" />
             <h1 className="text-xl font-bold">Inspection MRSA</h1>
           </div>
           <button onClick={goBack} className="flex items-center text-white">
@@ -1333,7 +1332,7 @@ function App() {
                 id="numeroMoniteur"
                 value={numeroMoniteur}
                 onChange={(e) => setNumeroMoniteur(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#b22a2e] focus:border-[#b22a2e]"
                 required
                 placeholder="Entrez le numéro"
               />
@@ -1347,7 +1346,7 @@ function App() {
                 id="pointDeService"
                 value={pointDeService}
                 onChange={(e) => setPointDeService(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#b22a2e] focus:border-[#b22a2e]"
                 required
               >
                 <option value="">Sélectionner un PDS</option>
@@ -1371,8 +1370,8 @@ function App() {
             <table className="min-w-full border-collapse border border-gray-300">
               <thead>
                 <tr>
-                  <th className="border border-gray-300 p-2 bg-gray-50 w-4/5">INSPECTION DU MRSA</th>
-                  <th className="border border-gray-300 p-2 bg-gray-50 w-1/5">Vérifié</th>
+                  <th className="border border-gray-300 p-2 bg-[#b22a2e] text-white w-4/5">INSPECTION DU MRSA</th>
+                  <th className="border border-gray-300 p-2 bg-[#b22a2e] text-white w-1/5">Vérifié</th>
                 </tr>
               </thead>
               <tbody>
@@ -1392,7 +1391,7 @@ function App() {
                 ).map(([category, subcategories]) => (
                   <React.Fragment key={category}>
                     <tr>
-                      <td colSpan={2} className="border border-gray-300 p-2 bg-blue-100 font-semibold">
+                      <td colSpan={2} className="border border-gray-300 p-2 bg-[#b22a2e]/10 font-semibold">
                         {category}
                       </td>
                     </tr>
@@ -1410,7 +1409,7 @@ function App() {
                         {items.map((item) => (
                           <tr 
                             key={item.id} 
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-[#b22a2e]/10' : ''}`}
                             onClick={() => handleMrsaCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
@@ -1455,7 +1454,7 @@ function App() {
                                 checked={item.checked}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={() => handleMrsaCheckChange(item.id)}
-                                className="w-5 h-5"
+                                className="w-5 h-5 accent-[#b22a2e]"
                                 required
                               />
                             </td>
@@ -1478,7 +1477,7 @@ function App() {
                           id="matricule"
                           value={matricule}
                           onChange={(e) => handleMatriculeChange(e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#b22a2e] focus:border-[#b22a2e]"
                           required
                           placeholder="Ex: N-0100"
                         />
@@ -1499,7 +1498,7 @@ function App() {
           <div className="sticky bottom-0 bg-white p-4 border-t mt-4">
             <button
               type="submit"
-              className={`w-full ${isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center`}
+              className={`w-full ${isSubmitting ? 'bg-[#b22a2e]/70' : 'bg-[#b22a2e] hover:bg-[#b22a2e]/90'} text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center`}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -1529,7 +1528,7 @@ function App() {
               </div>
               <div className="mb-6">
                 <div className="flex items-start mb-4">
-                  <AlertCircle className="text-amber-500 mr-3 mt-0.5" size={24} />
+                  <AlertCircle className="text-[#102947] mr-3 mt-0.5" size={24} />
                   <p>Êtes-vous sûr de vouloir finaliser cette inspection? Un PDF sera généré et envoyé par email.</p>
                 </div>
               </div>
@@ -1542,7 +1541,7 @@ function App() {
                 </button>
                 <button 
                   onClick={confirmSubmitForm1}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 bg-[#b22a2e] text-white rounded-md hover:bg-[#b22a2e]/90"
                 >
                   Confirmer
                 </button>
@@ -1558,9 +1557,9 @@ function App() {
   if (currentForm === 'form2') {
     return (
       <div className="min-h-screen bg-gray-100 p-4 md:p-6">
-        <header className="bg-green-600 text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
+        <header className="bg-[#102947] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <Ambulance className="mr-2" size={28} />
+            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/viy76oo8kfhz7r84pfig" alt="Logo CAMBI" className="h-8 mr-2" />
             <h1 className="text-xl font-bold">Inspection Véhicule</h1>
           </div>
           <button onClick={goBack} className="flex items-center text-white">
@@ -1579,7 +1578,7 @@ function App() {
                 id="numeroVehicule"
                 value={numeroVehicule}
                 onChange={(e) => handleVehiculeNumberChange(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#102947] focus:border-[#102947]"
                 required
                 placeholder="Ex: 9198"
               />
@@ -1593,7 +1592,7 @@ function App() {
                 id="pointDeServiceVehicule"
                 value={pointDeService}
                 onChange={(e) => setPointDeService(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#102947] focus:border-[#102947]"
                 required
               >
                 <option value="">Sélectionner un PDS</option>
@@ -1617,8 +1616,8 @@ function App() {
             <table className="min-w-full border-collapse border border-gray-300">
               <thead>
                 <tr>
-                  <th className="border border-gray-300 p-2 bg-gray-50 w-4/5">INSPECTION (10-84) DU MATÉRIELS CLINIQUES</th>
-                  <th className="border border-gray-300 p-2 bg-gray-50 w-1/5">Vérifié</th>
+                  <th className="border border-gray-300 p-2 bg-[#102947] text-white w-4/5">INSPECTION (10-84) DU MATÉRIELS CLINIQUES</th>
+                  <th className="border border-gray-300 p-2 bg-[#102947] text-white w-1/5">Vérifié</th>
                 </tr>
               </thead>
               <tbody>
@@ -1632,7 +1631,7 @@ function App() {
                 ).map(([category, items]) => (
                   <React.Fragment key={category}>
                     <tr>
-                      <td colSpan={2} className="border border-gray-300 p-2 bg-yellow-100 font-semibold">
+                      <td colSpan={2} className="border border-gray-300 p-2 bg-[#102947]/10 font-semibold">
                         {category}
                       </td>
                     </tr>
@@ -1642,7 +1641,7 @@ function App() {
                         {items.map((item) => (
                           <tr 
                             key={item.id}
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-[#102947]/10' : ''}`}
                             onClick={() => handleVehiculeCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
@@ -1721,7 +1720,7 @@ function App() {
                                 checked={item.checked}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={() => handleVehiculeCheckChange(item.id)}
-                                className="w-5 h-5"
+                                className="w-5 h-5 accent-[#102947]"
                                 required={item.id !== 'trousse7'} // Pas obligatoire pour kit glycémie
                               />
                             </td>
@@ -1735,7 +1734,7 @@ function App() {
                         {items.map((item) => (
                           <tr 
                             key={item.id}
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-[#102947]/10' : ''}`}
                             onClick={() => handleVehiculeCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
@@ -1761,7 +1760,7 @@ function App() {
                                 checked={item.checked}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={() => handleVehiculeCheckChange(item.id)}
-                                className="w-5 h-5"
+                                className="w-5 h-5 accent-[#102947]"
                                 required
                               />
                             </td>
@@ -1784,7 +1783,7 @@ function App() {
                           id="matriculeVehicule"
                           value={matricule}
                           onChange={(e) => handleMatriculeChange(e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#102947] focus:border-[#102947]"
                           required
                           placeholder="Ex: N-0100"
                         />
@@ -1805,7 +1804,7 @@ function App() {
           <div className="sticky bottom-0 bg-white p-4 border-t mt-4">
             <button
               type="submit"
-              className={`w-full ${isSubmitting ? 'bg-green-400' : 'bg-green-600 hover:bg-green-700'} text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center`}
+              className={`w-full ${isSubmitting ? 'bg-[#102947]/70' : 'bg-[#102947] hover:bg-[#102947]/90'} text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center`}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -1835,7 +1834,7 @@ function App() {
               </div>
               <div className="mb-6">
                 <div className="flex items-start mb-4">
-                  <AlertCircle className="text-amber-500 mr-3 mt-0.5" size={24} />
+                  <AlertCircle className="text-[#b22a2e] mr-3 mt-0.5" size={24} />
                   <p>Êtes-vous sûr de vouloir finaliser cette inspection? Un PDF sera généré et envoyé par email.</p>
                 </div>
               </div>
@@ -1848,7 +1847,7 @@ function App() {
                 </button>
                 <button 
                   onClick={confirmSubmitForm2}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  className="px-4 py-2 bg-[#102947] text-white rounded-md hover:bg-[#102947]/90"
                 >
                   Confirmer
                 </button>
