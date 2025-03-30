@@ -1243,7 +1243,7 @@ function App() {
               <ClipboardCheck size={48} className="text-[#102947]" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Inspection Véhicule</h2>
-            <p className="text-gray-600 text-center">Vérification du matériel clinique de l'ambulance</p>
+            <p className="text-gray-600 text-center">Vérification du materiel de l'ambulance</p>
             <ChevronRight className="mt-4 text-[#102947]" />
           </button>
         </div>
