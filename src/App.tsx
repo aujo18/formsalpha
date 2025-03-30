@@ -1099,29 +1099,20 @@ function App() {
       const currentDateTime = getCurrentDateTime();
       setSubmissionDateTime(currentDateTime);
       
-      // Pour la compatibilité, générer aussi le PDF
-      console.log("Génération du PDF MDSA...");
-      const doc = generateMdsaPDF();
-      const pdfBlob = doc.output('blob');
-      
-      // Créer une URL pour le téléchargement du PDF
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setGeneratedPdfUrl(pdfUrl);
-      
       // Envoyer les données HTML à Make.com
       try {
         console.log("Tentative d'envoi des données MDSA via webhook...");
         const dataSent = await sendInspectionToMakecom('MDSA');
         if (dataSent) {
           console.log("Envoi des données MDSA réussi");
-          setSubmissionMessage("L'inspection a été générée et envoyée avec succès. Vous pouvez également télécharger le PDF.");
+          setSubmissionMessage("L'inspection a été générée et envoyée avec succès.");
         } else {
           console.log("Échec de l'envoi des données MDSA");
-          setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué. Vous pouvez télécharger le PDF manuellement.");
+          setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué.");
         }
       } catch (sendError) {
         console.error('Erreur envoi webhook détaillée pour MDSA:', sendError);
-        setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
+        setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}.`);
       }
       
       setSubmitted(true);
@@ -1173,30 +1164,20 @@ function App() {
       const currentDateTime = getCurrentDateTime();
       setSubmissionDateTime(currentDateTime);
       
-      // Pour la compatibilité, générer aussi le PDF
-      console.log("Génération du PDF Véhicule...");
-      const doc = generateVehiculePDF();
-      const pdfBlob = doc.output('blob');
-      console.log("PDF Véhicule généré, taille:", pdfBlob.size, "bytes");
-      
-      // Créer une URL pour le téléchargement du PDF
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      setGeneratedPdfUrl(pdfUrl);
-      
       // Envoyer les données HTML à Make.com
       try {
         console.log("Tentative d'envoi des données Véhicule via webhook...");
         const dataSent = await sendInspectionToMakecom('Véhicule');
         if (dataSent) {
           console.log("Envoi des données Véhicule réussi");
-          setSubmissionMessage("L'inspection a été générée et envoyée avec succès. Vous pouvez également télécharger le PDF.");
+          setSubmissionMessage("L'inspection a été générée et envoyée avec succès.");
         } else {
           console.log("Échec de l'envoi des données Véhicule");
-          setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué. Vous pouvez télécharger le PDF manuellement.");
+          setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué.");
         }
       } catch (sendError) {
         console.error('Erreur envoi webhook détaillée pour Véhicule:', sendError);
-        setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
+        setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}.`);
       }
       
       setSubmitted(true);
@@ -1529,7 +1510,7 @@ function App() {
               <div className="mb-6">
                 <div className="flex items-start mb-4">
                   <AlertCircle className="text-[#102947] mr-3 mt-0.5" size={24} />
-                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Un PDF sera généré et envoyé par email.</p>
+                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Les données seront envoyées à Make.com.</p>
                 </div>
               </div>
               <div className="flex justify-end space-x-4">
@@ -1835,7 +1816,7 @@ function App() {
               <div className="mb-6">
                 <div className="flex items-start mb-4">
                   <AlertCircle className="text-[#b22a2e] mr-3 mt-0.5" size={24} />
-                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Un PDF sera généré et envoyé par email.</p>
+                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Les données seront envoyées à Make.com.</p>
                 </div>
               </div>
               <div className="flex justify-end space-x-4">
