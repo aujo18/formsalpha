@@ -337,7 +337,7 @@ function App() {
     let yPosition = 60;
     
     // En-tête du tableau
-    doc.setFillColor(66, 135, 245);
+    doc.setFillColor(178, 42, 46); // Rouge CAMBI #b22a2e
     doc.setTextColor(255, 255, 255);
     doc.rect(14, yPosition, 130, 10, 'F');
     doc.rect(144, yPosition, 52, 10, 'F');
@@ -357,7 +357,7 @@ function App() {
         currentCategory = item.category || 'Autre';
         
         // Dessiner la ligne de catégorie
-        doc.setFillColor(200, 220, 255);
+        doc.setFillColor(230, 200, 200); // Rouge CAMBI clair pour les catégories
         doc.rect(14, yPosition, 182, 8, 'F');
         doc.setFont('helvetica', 'bold');
         doc.text(currentCategory, 16, yPosition + 6);
@@ -417,7 +417,7 @@ function App() {
         const centerY = yPosition + 5 + (lineHeight/2);
         
         // Rectangle coloré
-        doc.setFillColor(50, 150, 50); // Vert foncé
+        doc.setFillColor(178, 42, 46); // Rouge CAMBI #b22a2e
         doc.rect(centerX - checkboxSize/2, centerY - checkboxSize/2, checkboxSize, checkboxSize, 'F');
         
         // X blanc à l'intérieur
@@ -477,7 +477,7 @@ function App() {
     let yPosition = 60;
     
     // En-tête du tableau
-    doc.setFillColor(66, 180, 80);
+    doc.setFillColor(16, 41, 71); // Bleu CAMBI #102947
     doc.setTextColor(255, 255, 255);
     doc.rect(14, yPosition, 130, 10, 'F');
     doc.rect(144, yPosition, 52, 10, 'F');
@@ -497,7 +497,7 @@ function App() {
         currentCategory = item.category || 'Autre';
         
         // Dessiner la ligne de catégorie
-        doc.setFillColor(255, 240, 200);
+        doc.setFillColor(200, 210, 230); // Bleu CAMBI clair pour les catégories
         doc.rect(14, yPosition, 182, 8, 'F');
         doc.setFont('helvetica', 'bold');
         doc.text(currentCategory, 16, yPosition + 6);
@@ -546,7 +546,7 @@ function App() {
         const centerY = yPosition + 5 + (lineHeight/2);
         
         // Rectangle coloré
-        doc.setFillColor(50, 150, 50); // Vert foncé
+        doc.setFillColor(16, 41, 71); // Bleu CAMBI #102947
         doc.rect(centerX - checkboxSize/2, centerY - checkboxSize/2, checkboxSize, checkboxSize, 'F');
         
         // X blanc à l'intérieur
