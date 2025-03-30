@@ -10,10 +10,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Application TAP',
-        short_name: 'TAP App',
-        description: 'Application pour les techniciens ambulanciers paramédicaux',
-        theme_color: '#ffffff',
+        name: 'Inspection AMC (CAMBI)',
+        short_name: 'Inspection CAMBI',
+        description: 'Application d\'inspection pour CAMBI',
+        theme_color: '#b22a2e',
         icons: [
           {
             src: 'pwa-192x192.png',
