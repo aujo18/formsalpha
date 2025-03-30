@@ -1287,36 +1287,10 @@ function App() {
             <CheckCircle2 size={32} className="text-green-600" />
           </div>
           <h2 className="text-2xl font-bold mb-4">Inspection terminée avec succès!</h2>
-          <p className="text-gray-600 mb-6">
-            {submissionMessage || "Votre inspection a été traitée et un PDF a été généré avec succès."}
-          </p>
-          
-          {!submissionMessage?.includes("email a été envoyé") && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-6">
-              <p className="text-amber-700 text-sm">
-                <AlertCircle size={16} className="inline mr-1" />
-                <strong>Note:</strong> Pour que l'envoi d'emails fonctionne, vous devez configurer EmailJS avec vos propres identifiants.
-              </p>
-            </div>
-          )}
           
           <p className="text-sm text-gray-500 mb-8">
             Terminé le {submissionDateTime}
           </p>
-          
-          {generatedPdfUrl && (
-            <div className="mb-6">
-              <a 
-                href={generatedPdfUrl}
-                download={`inspection_${currentForm === 'form1' ? 'mrsa' : 'vehicule'}_${Date.now()}.pdf`}
-                className="bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center w-full mb-3"
-              >
-                <Download className="mr-2" size={24} />
-                Télécharger le PDF
-              </a>
-              <p className="text-xs text-gray-500">Cliquez sur ce bouton pour télécharger et enregistrer le PDF sur votre appareil.</p>
-            </div>
-          )}
           
           <button 
             onClick={() => {
