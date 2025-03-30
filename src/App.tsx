@@ -1069,14 +1069,11 @@ function App() {
       
       console.log(`Données HTML envoyées avec succès au webhook ${formType}`);
       
-      // Message de succès
-      alert(`L'inspection ${formType} a été envoyée avec succès aux superviseurs et chefs d'équipe.`);
-      
       return true;
     } catch (error) {
       console.error(`Erreur détaillée lors de l'envoi pour ${formType}:`, error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      alert(`Problème lors de l'envoi de l'inspection ${formType}: ${errorMessage}`);
+      console.error(`Problème lors de l'envoi de l'inspection ${formType}: ${errorMessage}`);
       throw error;
     }
   };
