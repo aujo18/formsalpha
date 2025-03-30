@@ -1239,7 +1239,7 @@ function App() {
       <div className="min-h-screen bg-gray-100 p-4 md:p-8">
         <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-8">
           <div className="flex items-center">
-            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/viy76oo8kfhz7r84pfig" alt="Logo CAMBI" className="h-10 mr-3" />
+            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-10 mr-3 filter brightness-0 invert" />
             <h1 className="text-2xl font-bold">Application TAP</h1>
           </div>
         </header>
@@ -1313,7 +1313,7 @@ function App() {
       <div className="min-h-screen bg-gray-100 p-4 md:p-6">
         <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/viy76oo8kfhz7r84pfig" alt="Logo CAMBI" className="h-8 mr-2" />
+            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
             <h1 className="text-xl font-bold">Inspection MRSA</h1>
           </div>
           <button onClick={goBack} className="flex items-center text-white">
@@ -1559,7 +1559,7 @@ function App() {
       <div className="min-h-screen bg-gray-100 p-4 md:p-6">
         <header className="bg-[#102947] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/viy76oo8kfhz7r84pfig" alt="Logo CAMBI" className="h-8 mr-2" />
+            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
             <h1 className="text-xl font-bold">Inspection Véhicule</h1>
           </div>
           <button onClick={goBack} className="flex items-center text-white">
