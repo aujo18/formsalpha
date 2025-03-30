@@ -25,16 +25,23 @@
     <link rel="manifest" href="/manifest.json" />
     <title>Inspection AMC (CAMBI)</title>
     <style>
-      /* Styles pour iOS PWA */
+      /* Styles pour iOS PWA - modifiés pour permettre le défilement */
       @supports (-webkit-touch-callout: none) {
-        html {
+        html, body {
           height: 100%;
-        }
-        body {
-          height: 100%;
-          overflow: hidden;
-          position: fixed;
           width: 100%;
+        }
+        /* Gestion des rebonds pour iOS en mode PWA */
+        body {
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: none;
+        }
+        /* Ajuster le padding pour éviter les problèmes avec la safe area sur iOS */
+        #root {
+          padding-top: env(safe-area-inset-top);
+          padding-bottom: env(safe-area-inset-bottom);
+          padding-left: env(safe-area-inset-left);
+          padding-right: env(safe-area-inset-right);
         }
       }
     </style>
