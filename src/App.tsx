@@ -33,7 +33,7 @@ function App() {
   const form2Ref = useRef<HTMLFormElement>(null);
   
   // URLs des webhooks Make.com
-  const WEBHOOK_URL_MRSA = 'https://hook.us1.make.com/6npqjkskt1d71ir3aypy7h6434s98b8u'; // URL du webhook MRSA
+  const WEBHOOK_URL_MDSA = 'https://hook.us1.make.com/6npqjkskt1d71ir3aypy7h6434s98b8u'; // URL du webhook MDSA
   const WEBHOOK_URL_VEHICULE = 'https://hook.us1.make.com/5unm52j98tg1nr5tz9esxk3jd2msj367'; // URL du webhook Véhicule
   
   // Valeurs pour la glycémie
@@ -67,8 +67,8 @@ function App() {
     }
   }, []);
   
-  // Items pour le formulaire MRSA
-  const [mrsaItems, setMrsaItems] = useState<CheckItem[]>([
+  // Items pour le formulaire MDSA
+  const [mdsaItems, setMdsaItems] = useState<CheckItem[]>([
     // Câbles et raccords
     { id: 'cable1', label: 'Câbles d\'oxymétrie (capteur et rallonge)', category: 'Câbles et raccords', checked: false },
     { id: 'cable2', label: 'Câbles de surveillance ECG à 4 brins et 6 brins', category: 'Câbles et raccords', checked: false },
@@ -155,9 +155,9 @@ function App() {
     });
   };
 
-  // Fonction pour mettre à jour l'état d'une case à cocher du MRSA
-  const handleMrsaCheckChange = (itemId: string) => {
-    setMrsaItems(prevItems => 
+  // Fonction pour mettre à jour l'état d'une case à cocher du MDSA
+  const handleMdsaCheckChange = (itemId: string) => {
+    setMdsaItems(prevItems => 
       prevItems.map(item => 
         item.id === itemId 
           ? { 
@@ -169,9 +169,9 @@ function App() {
     );
   };
 
-  // Fonction pour mettre à jour la date d'expiration d'un item du MRSA
-  const handleMrsaExpireDateChange = (itemId: string, date: string) => {
-    setMrsaItems(prevItems => 
+  // Fonction pour mettre à jour la date d'expiration d'un item du MDSA
+  const handleMdsaExpireDateChange = (itemId: string, date: string) => {
+    setMdsaItems(prevItems => 
       prevItems.map(item => 
         item.id === itemId 
           ? { 
@@ -198,9 +198,9 @@ function App() {
   };
 
   // Vérifier si tous les champs requis sont remplis
-  const validateMrsaForm = () => {
+  const validateMdsaForm = () => {
     // Vérifier si tous les éléments à cocher sont cochés
-    for (const item of mrsaItems) {
+    for (const item of mdsaItems) {
       if (!item.checked) {
         return `Veuillez cocher tous les éléments: ${item.label}`;
       }
@@ -318,13 +318,13 @@ function App() {
     }
   };
 
-  // Fonction pour générer un PDF de l'inspection MRSA
-  const generateMrsaPDF = () => {
+  // Fonction pour générer un PDF de l'inspection MDSA
+  const generateMdsaPDF = () => {
     const doc = new jsPDF();
     
     // Titre du document
     doc.setFontSize(18);
-    doc.text('Inspection MRSA', 105, 15, { align: 'center' });
+    doc.text('Inspection MDSA', 105, 15, { align: 'center' });
     
     // Informations générales
     doc.setFontSize(12);
@@ -351,7 +351,7 @@ function App() {
     // Lignes de données
     let currentCategory = '';
     
-    mrsaItems.forEach(item => {
+    mdsaItems.forEach(item => {
       // Nouvelle catégorie
       if (item.category !== currentCategory) {
         currentCategory = item.category || 'Autre';
@@ -372,7 +372,7 @@ function App() {
       }
       
       // Sous-catégorie si nécessaire
-      if (item.subcategory && (mrsaItems.find(i => i.category === item.category && i.subcategory === item.subcategory) === item)) {
+      if (item.subcategory && (mdsaItems.find(i => i.category === item.category && i.subcategory === item.subcategory) === item)) {
         doc.setFillColor(240, 240, 240);
         doc.rect(14, yPosition, 182, 8, 'F');
         doc.setFont('helvetica', 'bold');
@@ -452,7 +452,7 @@ function App() {
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(10);
-      doc.text(`Inspection MRSA - Page ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+      doc.text(`Inspection MDSA - Page ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
     }
     
     return doc;
@@ -628,13 +628,13 @@ function App() {
       
       // Préparation des données pour l'envoi
       const currentDateTime = getCurrentDateTime();
-      const webhookUrl = formType === 'MRSA' ? WEBHOOK_URL_MRSA : WEBHOOK_URL_VEHICULE;
+      const webhookUrl = formType === 'MDSA' ? WEBHOOK_URL_MDSA : WEBHOOK_URL_VEHICULE;
       
       console.log(`Utilisation du webhook pour ${formType}:`, webhookUrl);
       
       // Créer un nom de fichier unique et significatif
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `inspection_${formType.toLowerCase()}_${formType === 'MRSA' ? numeroMoniteur : numeroVehicule}_${timestamp}.pdf`;
+      const fileName = `inspection_${formType.toLowerCase()}_${formType === 'MDSA' ? numeroMoniteur : numeroVehicule}_${timestamp}.pdf`;
       
       // Préparation des données pour le webhook Make.com
       const webhookData = {
@@ -642,7 +642,7 @@ function App() {
         matricule: matricule,
         dateTime: currentDateTime,
         pointDeService: pointDeService,
-        numeroIdentifiant: formType === 'MRSA' ? numeroMoniteur : numeroVehicule,
+        numeroIdentifiant: formType === 'MDSA' ? numeroMoniteur : numeroVehicule,
         pdfData: pdfBase64,
         fileName: fileName,
         mimeType: "application/pdf" // Ajout explicite du type MIME
@@ -664,7 +664,7 @@ function App() {
           
           // Créer une version réduite du PDF si nécessaire
           // Note: cela pourrait réduire la qualité
-          const doc = formType === 'MRSA' ? generateMrsaPDF() : generateVehiculePDF();
+          const doc = formType === 'MDSA' ? generateMdsaPDF() : generateVehiculePDF();
           const pdfBlobReduced = doc.output('blob');
           
           // Convertir à nouveau en base64
@@ -734,13 +734,13 @@ function App() {
     setShowConfirmation(true);
   };
   
-  // Fonction pour générer un HTML de l'inspection MRSA
-  const generateMrsaHTML = () => {
+  // Fonction pour générer un HTML de l'inspection MDSA
+  const generateMdsaHTML = () => {
     let html = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Inspection MRSA</title>
+        <title>Inspection MDSA</title>
         <meta charset="UTF-8">
         <style>
           body {
@@ -798,7 +798,7 @@ function App() {
         </style>
       </head>
       <body>
-        <h1>Inspection MRSA</h1>
+        <h1>Inspection MDSA</h1>
         
         <div class="info">
           <p><strong>Matricule:</strong> ${matricule}</p>
@@ -818,7 +818,7 @@ function App() {
     `;
     
     // Regrouper par catégorie et sous-catégorie
-    const groupedItems = mrsaItems.reduce((acc, item) => {
+    const groupedItems = mdsaItems.reduce((acc, item) => {
       if (!acc[item.category || 'Autres']) acc[item.category || 'Autres'] = {};
       
       const subcategory = item.subcategory || 'default';
@@ -871,7 +871,7 @@ function App() {
         </table>
         
         <footer>
-          Inspection MRSA - Généré le ${getCurrentDateTime()}
+          Inspection MDSA - Généré le ${getCurrentDateTime()}
         </footer>
       </body>
       </html>
@@ -1017,18 +1017,18 @@ function App() {
       console.log(`Début de la préparation de l'envoi pour ${formType}...`);
       
       // Générer le HTML selon le type de formulaire
-      const htmlContent = formType === 'MRSA' ? generateMrsaHTML() : generateVehiculeHTML();
+      const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
       console.log(`HTML ${formType} généré, taille:`, htmlContent.length, "caractères");
       
       // Préparation des données pour l'envoi
       const currentDateTime = getCurrentDateTime();
-      const webhookUrl = formType === 'MRSA' ? WEBHOOK_URL_MRSA : WEBHOOK_URL_VEHICULE;
+      const webhookUrl = formType === 'MDSA' ? WEBHOOK_URL_MDSA : WEBHOOK_URL_VEHICULE;
       
       console.log(`Utilisation du webhook pour ${formType}:`, webhookUrl);
       
       // Créer un nom de fichier unique et significatif
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `inspection_${formType.toLowerCase()}_${formType === 'MRSA' ? numeroMoniteur : numeroVehicule}_${timestamp}.html`;
+      const fileName = `inspection_${formType.toLowerCase()}_${formType === 'MDSA' ? numeroMoniteur : numeroVehicule}_${timestamp}.html`;
       
       // Préparation des données pour le webhook Make.com
       const webhookData = {
@@ -1036,7 +1036,7 @@ function App() {
         matricule: matricule,
         dateTime: currentDateTime,
         pointDeService: pointDeService,
-        numeroIdentifiant: formType === 'MRSA' ? numeroMoniteur : numeroVehicule,
+        numeroIdentifiant: formType === 'MDSA' ? numeroMoniteur : numeroVehicule,
         htmlContent: htmlContent,
         fileName: fileName,
         mimeType: "text/html" // Spécifier le type MIME comme HTML
@@ -1086,7 +1086,7 @@ function App() {
     setShowConfirmation(false);
     
     // Valider le formulaire
-    const validationError = validateMrsaForm();
+    const validationError = validateMdsaForm();
     if (validationError) {
       setError(validationError);
       return;
@@ -1100,8 +1100,8 @@ function App() {
       setSubmissionDateTime(currentDateTime);
       
       // Pour la compatibilité, générer aussi le PDF
-      console.log("Génération du PDF MRSA...");
-      const doc = generateMrsaPDF();
+      console.log("Génération du PDF MDSA...");
+      const doc = generateMdsaPDF();
       const pdfBlob = doc.output('blob');
       
       // Créer une URL pour le téléchargement du PDF
@@ -1110,17 +1110,17 @@ function App() {
       
       // Envoyer les données HTML à Make.com
       try {
-        console.log("Tentative d'envoi des données MRSA via webhook...");
-        const dataSent = await sendInspectionToMakecom('MRSA');
+        console.log("Tentative d'envoi des données MDSA via webhook...");
+        const dataSent = await sendInspectionToMakecom('MDSA');
         if (dataSent) {
-          console.log("Envoi des données MRSA réussi");
+          console.log("Envoi des données MDSA réussi");
           setSubmissionMessage("L'inspection a été générée et envoyée avec succès. Vous pouvez également télécharger le PDF.");
         } else {
-          console.log("Échec de l'envoi des données MRSA");
+          console.log("Échec de l'envoi des données MDSA");
           setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué. Vous pouvez télécharger le PDF manuellement.");
         }
       } catch (sendError) {
-        console.error('Erreur envoi webhook détaillée pour MRSA:', sendError);
+        console.error('Erreur envoi webhook détaillée pour MDSA:', sendError);
         setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}. Vous pouvez télécharger le PDF manuellement.`);
       }
       
@@ -1132,7 +1132,7 @@ function App() {
       setPointDeService('');
       setExpireDateElectrode1('');
       setExpireDateElectrode2('');
-      setMrsaItems(prevItems => 
+      setMdsaItems(prevItems => 
         prevItems.map(item => ({
           ...item,
           checked: false,
@@ -1140,7 +1140,7 @@ function App() {
         }))
       );
     } catch (error) {
-      console.error('Erreur lors de la génération ou envoi de l\'inspection MRSA:', error);
+      console.error('Erreur lors de la génération ou envoi de l\'inspection MDSA:', error);
       setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
@@ -1252,7 +1252,7 @@ function App() {
             <div className="bg-[#b22a2e]/10 p-4 rounded-full mb-4">
               <ClipboardCheck size={48} className="text-[#b22a2e]" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Inspection MRSA</h2>
+            <h2 className="text-xl font-semibold mb-2">Inspection MDSA</h2>
             <p className="text-gray-600 text-center">Vérification du moniteur défibrillateur</p>
             <ChevronRight className="mt-4 text-[#b22a2e]" />
           </button>
@@ -1307,14 +1307,14 @@ function App() {
     );
   }
 
-  // Formulaire 1: Inspection MRSA
+  // Formulaire 1: Inspection MDSA
   if (currentForm === 'form1') {
     return (
       <div className="min-h-screen bg-gray-100 p-4 md:p-6">
         <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
           <div className="flex items-center">
             <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
-            <h1 className="text-xl font-bold">Inspection MRSA</h1>
+            <h1 className="text-xl font-bold">Inspection MDSA</h1>
           </div>
           <button onClick={goBack} className="flex items-center text-white">
             <ChevronLeft size={20} /> Retour
@@ -1370,14 +1370,14 @@ function App() {
             <table className="min-w-full border-collapse border border-gray-300">
               <thead>
                 <tr>
-                  <th className="border border-gray-300 p-2 bg-[#b22a2e] text-white w-4/5">INSPECTION DU MRSA</th>
+                  <th className="border border-gray-300 p-2 bg-[#b22a2e] text-white w-4/5">INSPECTION DU MDSA</th>
                   <th className="border border-gray-300 p-2 bg-[#b22a2e] text-white w-1/5">Vérifié</th>
                 </tr>
               </thead>
               <tbody>
                 {/* Grouper les items par catégorie */}
                 {Object.entries(
-                  mrsaItems.reduce<Record<string, Record<string, CheckItem[]>>>((acc, item) => {
+                  mdsaItems.reduce<Record<string, Record<string, CheckItem[]>>>((acc, item) => {
                     if (!acc[item.category || 'Autres']) acc[item.category || 'Autres'] = {};
                     
                     const subcategory = item.subcategory || 'default';
@@ -1410,7 +1410,7 @@ function App() {
                           <tr 
                             key={item.id} 
                             className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
-                            onClick={() => handleMrsaCheckChange(item.id)}
+                            onClick={() => handleMdsaCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
                               {item.label}
@@ -1453,7 +1453,7 @@ function App() {
                                 type="checkbox" 
                                 checked={item.checked}
                                 onClick={(e) => e.stopPropagation()}
-                                onChange={() => handleMrsaCheckChange(item.id)}
+                                onChange={() => handleMdsaCheckChange(item.id)}
                                 className="w-5 h-5 accent-[#b22a2e]"
                                 required
                               />
