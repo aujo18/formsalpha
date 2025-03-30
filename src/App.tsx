@@ -1240,7 +1240,7 @@ function App() {
         <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-8">
           <div className="flex items-center">
             <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-10 mr-3 filter brightness-0 invert" />
-            <h1 className="text-2xl font-bold">Application TAP</h1>
+            <h1 className="text-2xl font-bold">Inspection AMC (CAMBI)</h1>
           </div>
         </header>
         
@@ -1271,7 +1271,7 @@ function App() {
         </div>
         
         <footer className="mt-8 text-center text-gray-500 text-sm">
-          <p>© 2025 Application TAP - Tous droits réservés</p>
+          <p>© 2025 Inspection AMC (CAMBI) - Tous droits réservés</p>
         </footer>
       </div>
     );
@@ -1409,7 +1409,7 @@ function App() {
                         {items.map((item) => (
                           <tr 
                             key={item.id} 
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-[#b22a2e]/10' : ''}`}
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
                             onClick={() => handleMrsaCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
@@ -1641,7 +1641,7 @@ function App() {
                         {items.map((item) => (
                           <tr 
                             key={item.id}
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-[#102947]/10' : ''}`}
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
                             onClick={() => handleVehiculeCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
@@ -1734,7 +1734,7 @@ function App() {
                         {items.map((item) => (
                           <tr 
                             key={item.id}
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-[#102947]/10' : ''}`}
+                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
                             onClick={() => handleVehiculeCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
