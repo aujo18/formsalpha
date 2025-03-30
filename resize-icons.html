@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Redimensionner le logo CAMBI pour les icônes PWA</title>
+</head>
+<body>
+  <h1>Redimensionner le logo CAMBI pour les icônes PWA</h1>
+  
+  <p>Cette page va redimensionner l'image et vous permettre de télécharger les icônes PWA</p>
+  
+  <img id="originalImage" src="" alt="Logo CAMBI original" style="max-width: 300px; display: none;">
+  
+  <div style="margin-top: 20px;">
+    <canvas id="canvas192" width="192" height="192" style="border:1px solid #d3d3d3; margin-right: 10px;"></canvas>
+    <canvas id="canvas512" width="512" height="512" style="border:1px solid #d3d3d3;"></canvas>
+  </div>
+  
+  <div style="margin-top: 20px;">
+    <a id="download192" href="#" download="pwa-192x192.png" style="margin-right: 20px;">Télécharger 192x192</a>
+    <a id="download512" href="#" download="pwa-512x512.png">Télécharger 512x512</a>
+  </div>
+  
+  <script>
+    window.onload = function() {
+      const img = document.getElementById('originalImage');
+      img.src = 'cambi-logo.png';
+      
+      img.onload = function() {
+        const canvas192 = document.getElementById('canvas192');
+        const ctx192 = canvas192.getContext('2d');
+        
+        const canvas512 = document.getElementById('canvas512');
+        const ctx512 = canvas512.getContext('2d');
+        
+        // Fonction pour dessiner l'image avec un fond rouge
+        function drawImageWithBackground(ctx, canvas, size) {
+          // Remplir avec la couleur rouge CAMBI (#b22a2e)
+          ctx.fillStyle = '#b22a2e';
+          ctx.fillRect(0, 0, size, size);
+          
+          // Calculer les dimensions pour maintenir le ratio d'aspect
+          const ratio = Math.min(size / img.width, size / img.height) * 0.7; // 70% de la taille pour laisser une marge
+          const newWidth = img.width * ratio;
+          const newHeight = img.height * ratio;
+          
+          // Centrer l'image
+          const x = (size - newWidth) / 2;
+          const y = (size - newHeight) / 2;
+          
+          // Dessiner l'image
+          ctx.drawImage(img, x, y, newWidth, newHeight);
+          
+          // Si l'image a un fond transparent, la rendre blanche
+          const imageData = ctx.getImageData(0, 0, size, size);
+          const data = imageData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            // Si le pixel est transparent, le rendre blanc
+            if (data[i + 3] < 128) {
+              data[i] = 255; // Rouge
+              data[i + 1] = 255; // Vert
+              data[i + 2] = 255; // Bleu
+              data[i + 3] = 255; // Alpha
+            }
+          }
+          ctx.putImageData(imageData, 0, 0);
+          
+          return canvas.toDataURL();
+        }
+        
+        // Générer et configurer les liens de téléchargement
+        const download192 = document.getElementById('download192');
+        download192.href = drawImageWithBackground(ctx192, canvas192, 192);
+        
+        const download512 = document.getElementById('download512');
+        download512.href = drawImageWithBackground(ctx512, canvas512, 512);
+      };
+    };
+  </script>
+</body>
+</html> 
