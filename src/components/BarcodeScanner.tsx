@@ -10,6 +10,8 @@ interface BarcodeScannerProps {
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
+  const [cameras, setCameras] = useState<{id: string, label: string}[]>([]);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -28,8 +30,30 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
       // Initialiser le scanner
       scannerRef.current = new Html5Qrcode(scannerId);
       
-      // Demander la permission d'accès à la caméra
-      startScanner();
+      // Énumérer les caméras disponibles
+      Html5Qrcode.getCameras()
+        .then(devices => {
+          if (devices && devices.length) {
+            setCameras(devices);
+            // Sélectionner la caméra arrière par défaut si disponible
+            const backCamera = devices.find(camera => 
+              camera.label.toLowerCase().includes('back') || 
+              camera.label.toLowerCase().includes('arrière') ||
+              camera.label.toLowerCase().includes('rear')
+            );
+            if (backCamera) {
+              setSelectedCamera(backCamera.id);
+              startScanner(backCamera.id);
+            } else {
+              setSelectedCamera(devices[0].id);
+              startScanner(devices[0].id);
+            }
+          }
+        })
+        .catch(err => {
+          console.error("Erreur lors de l'énumération des caméras:", err);
+          setError("Impossible d'accéder aux caméras. Veuillez vérifier vos permissions.");
+        });
     }
 
     // Nettoyer lors du démontage
@@ -38,13 +62,19 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
     };
   }, []);
 
-  const startScanner = async () => {
+  const startScanner = async (cameraId?: string) => {
     if (!scannerRef.current) return;
+    
+    // Si un scan est déjà en cours, l'arrêter d'abord
+    if (scannerRef.current.isScanning) {
+      await scannerRef.current.stop().catch(err => console.error("Erreur lors de l'arrêt du scanner:", err));
+    }
 
     try {
       setError(null);
       
       const qrCodeSuccessCallback = (decodedText: string) => {
+        console.log("Code détecté:", decodedText);
         // Arrêter le scanner après un scan réussi
         stopScanner();
         // Appeler le callback avec le texte décodé
@@ -52,10 +82,15 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
       };
 
       const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 100 },
-        aspectRatio: 1.0,
+        fps: 15, // Augmentation de la fréquence d'images
+        qrbox: { width: 300, height: 100 }, // Ajustement pour mieux capturer les codes-barres linéaires
+        aspectRatio: 2.0, // Format plus large pour les codes-barres
+        disableFlip: false, // Permettre la détection dans toutes les orientations
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true // Utiliser l'API Barcode Detector si disponible
+        },
         formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
           Html5QrcodeSupportedFormats.CODE_128,
           Html5QrcodeSupportedFormats.EAN_13,
           Html5QrcodeSupportedFormats.CODE_39,
@@ -63,14 +98,25 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
           Html5QrcodeSupportedFormats.UPC_A,
           Html5QrcodeSupportedFormats.UPC_E,
           Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.CODABAR
         ],
       };
 
+      // Si une caméra spécifique est sélectionnée, l'utiliser
+      const cameraToUse = cameraId || selectedCamera || { facingMode: "environment" };
+      
       await scannerRef.current.start(
-        { facingMode: "environment" },
+        cameraToUse,
         config,
         qrCodeSuccessCallback,
-        undefined
+        (errorMessage) => {
+          // Ne pas afficher les erreurs transitoires
+          if (errorMessage.includes("No MultiFormat Readers")) {
+            return;
+          }
+          console.log("Erreur de scan (non bloquante):", errorMessage);
+        }
       );
       
       setPermissionGranted(true);
@@ -85,6 +131,12 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
       scannerRef.current.stop()
         .catch(err => console.error("Error stopping scanner:", err));
     }
+  };
+
+  const handleCameraChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCameraId = event.target.value;
+    setSelectedCamera(newCameraId);
+    startScanner(newCameraId);
   };
 
   return (
@@ -105,7 +157,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
             <div className="text-red-500 mb-4 text-center">
               {error}
               <button 
-                onClick={startScanner}
+                onClick={() => startScanner()}
                 className="mt-2 px-4 py-2 bg-[#b22a2e] text-white rounded-md block w-full"
               >
                 Réessayer
@@ -118,6 +170,25 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
             </div>
           ) : null}
           
+          {cameras.length > 1 && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sélectionner une caméra:
+              </label>
+              <select
+                value={selectedCamera || ''}
+                onChange={handleCameraChange}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                {cameras.map(camera => (
+                  <option key={camera.id} value={camera.id}>
+                    {camera.label || `Caméra ${camera.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          
           <div 
             ref={scannerContainerRef} 
             className="scanner-container"
@@ -126,6 +197,9 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
           
           <p className="text-center text-sm text-gray-500 mt-4">
             Placez le code-barres du moniteur dans le cadre pour le scanner automatiquement.
+          </p>
+          <p className="text-center text-xs text-gray-400 mt-1">
+            Assurez-vous que le code-barres est bien éclairé et clairement visible.
           </p>
         </div>
       </div>
