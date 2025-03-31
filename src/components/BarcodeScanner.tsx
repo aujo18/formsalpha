@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { X, Camera, RotateCcw } from 'lucide-react';
 
 interface BarcodeScannerProps {
@@ -9,237 +9,194 @@ interface BarcodeScannerProps {
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose }) => {
   const [error, setError] = useState<string | null>(null);
-  const [permissionGranted, setPermissionGranted] = useState(false);
-  const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
-  const [cameras, setCameras] = useState<{id: string, label: string}[]>([]);
+  const [scanning, setScanning] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const cameraRef = useRef<HTMLDivElement | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const scannerContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Effet d'initialisation du scanner
+  // Effet d'initialisation 
   useEffect(() => {
-    if (!scannerContainerRef.current) return;
-    
-    // Créer un ID unique pour le scanner
-    const scannerId = "html5-qrcode-scanner";
-    
-    // S'assurer que l'élément n'existe pas déjà
-    let scannerElement = document.getElementById(scannerId);
-    if (!scannerElement) {
-      scannerElement = document.createElement("div");
-      scannerElement.id = scannerId;
-      scannerContainerRef.current.appendChild(scannerElement);
-    }
-
-    // Nettoyer le contenu précédent si nécessaire
-    while (scannerElement.firstChild) {
-      scannerElement.removeChild(scannerElement.firstChild);
-    }
-
-    // Créer une nouvelle instance du scanner
-    try {
-      scannerRef.current = new Html5Qrcode(scannerId);
-      console.log("Scanner initialisé avec succès");
-      
-      // Enumérer les caméras disponibles
-      Html5Qrcode.getCameras()
-        .then(devices => {
-          if (devices && devices.length) {
-            console.log("Caméras disponibles:", devices);
-            setCameras(devices);
-            
-            // Sélectionner la caméra arrière par défaut
-            const backCamera = devices.find(camera => 
-              camera.label.toLowerCase().includes('back') || 
-              camera.label.toLowerCase().includes('arrière') ||
-              camera.label.toLowerCase().includes('rear')
-            );
-            
-            if (backCamera) {
-              setSelectedCamera(backCamera.id);
-              startScanner(backCamera.id);
-            } else {
-              setSelectedCamera(devices[0].id);
-              startScanner(devices[0].id);
-            }
-          } else {
-            setError("Aucune caméra détectée. Veuillez vérifier les permissions de votre navigateur.");
-          }
-        })
-        .catch(err => {
-          console.error("Erreur lors de l'énumération des caméras:", err);
-          setError(`Impossible d'accéder aux caméras: ${err.toString()}`);
-        });
-    } catch (err) {
-      console.error("Erreur lors de l'initialisation du scanner:", err);
-      setError(`Erreur d'initialisation: ${err instanceof Error ? err.message : String(err)}`);
-    }
-
-    // Nettoyage lors du démontage
-    return () => {
-      if (scannerRef.current) {
-        if (scannerRef.current.isScanning) {
-          scannerRef.current.stop()
-            .catch(err => console.error("Erreur lors de l'arrêt du scanner:", err));
+    // Initialiser seulement une fois au montage
+    const initScanner = async () => {
+      try {
+        // Assurons-nous d'avoir un élément DOM
+        if (!cameraRef.current) {
+          console.error("Container de caméra non trouvé");
+          return;
         }
+
+        // ID unique pour le scanner
+        const scannerId = "html5-qrcode-scanner";
+        
+        // Nettoyer l'ancien scanner s'il existe
+        const oldScanner = document.getElementById(scannerId);
+        if (oldScanner) {
+          oldScanner.remove();
+        }
+        
+        // Créer un nouvel élément pour le scanner
+        const newScannerElement = document.createElement('div');
+        newScannerElement.id = scannerId;
+        cameraRef.current.appendChild(newScannerElement);
+        
+        // Initialiser le scanner
+        scannerRef.current = new Html5Qrcode(scannerId);
+        console.log("Scanner initialisé avec succès");
+        
+        // Démarrer directement le scanner avec la caméra arrière
+        await startScanner();
+      } catch (err) {
+        console.error("Erreur d'initialisation:", err);
+        setError("Impossible d'initialiser le scanner: " + (err instanceof Error ? err.message : String(err)));
+      }
+    };
+
+    initScanner();
+    
+    // Nettoyage à la fermeture
+    return () => {
+      stopScanner();
+      if (scannerRef.current) {
         scannerRef.current = null;
       }
-      // Supprimer l'overlay et nettoyer le DOM
-      const overlay = document.querySelector('.scanner-overlay');
-      if (overlay) overlay.remove();
     };
   }, []);
-
-  const startScanner = async (cameraId?: string) => {
-    console.log("Démarrage du scanner avec la caméra:", cameraId);
+  
+  const startScanner = async () => {
     if (!scannerRef.current) {
-      console.error("Scanner non initialisé");
-      setError("Scanner non initialisé, veuillez recharger la page");
+      setError("Scanner non initialisé");
       return;
     }
     
-    // Arrêter le scan précédent si nécessaire
+    // Arrêter le scanner s'il est déjà en cours
     if (scannerRef.current.isScanning) {
-      await scannerRef.current.stop().catch(err => console.error("Erreur lors de l'arrêt du scanner:", err));
+      await scannerRef.current.stop().catch(e => console.log("Erreur en arrêtant le scanner:", e));
     }
-
+    
     try {
       setError(null);
       setLastResult(null);
       
-      // Callback en cas de scan réussi
-      const qrCodeSuccessCallback = (decodedText: string) => {
-        console.log("Code détecté:", decodedText);
-        // Afficher le résultat sans fermer le scanner
+      // Configuration ultra-simple
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 100 },
+      };
+      
+      // Callback en cas de succès
+      const successCallback = (decodedText: string) => {
+        console.log("Code-barres détecté:", decodedText);
         setLastResult(decodedText.trim());
       };
-
-      // Configuration simplifiée mais robuste
-      const config = {
-        fps: 10, 
-        qrbox: { width: 250, height: 100 },
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_93,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.ITF,
-          Html5QrcodeSupportedFormats.CODABAR
-        ]
-      };
-
-      // Utiliser la caméra sélectionnée ou par défaut
-      const cameraToUse = cameraId || selectedCamera || { facingMode: "environment" };
       
-      console.log("Démarrage du scanner avec configuration:", config);
-      await scannerRef.current.start(
-        cameraToUse,
-        config,
-        qrCodeSuccessCallback,
-        (errorMessage) => {
-          // Ne pas afficher les erreurs transitoires
-          if (errorMessage.includes("No MultiFormat Readers")) {
-            return;
-          }
-          console.log("Erreur de scan non bloquante:", errorMessage);
+      // Callback d'erreur non bloquante
+      const errorCallback = (err: string) => {
+        // Ignorer les erreurs transitoires
+        if (err.includes("No MultiFormat Readers") || 
+            err.includes("ongoing scan") ||
+            err.includes("Frame")) {
+          return;
         }
+        console.log("Erreur de scan (non bloquante):", err);
+      };
+      
+      console.log("Démarrage du scanner avec la caméra par défaut");
+      
+      // Utiliser { facingMode: "environment" } pour forcer la caméra arrière
+      await scannerRef.current.start(
+        { facingMode: "environment" }, 
+        config, 
+        successCallback, 
+        errorCallback
       );
       
       console.log("Scanner démarré avec succès");
-      setPermissionGranted(true);
+      setScanning(true);
       
-      // Ajouter l'encadré après le démarrage réussi
+      // Ajouter l'overlay après le démarrage
       setTimeout(() => {
-        addScannerOverlay();
+        addScanFrame();
       }, 1000);
+      
     } catch (err) {
-      console.error("Erreur de démarrage du scanner:", err);
-      setError(`Erreur d'accès à la caméra: ${err instanceof Error ? err.message : String(err)}`);
+      console.error("Erreur d'accès à la caméra:", err);
+      setError("Erreur d'accès à la caméra. Vérifiez les permissions de votre navigateur et assurez-vous qu'aucune autre application n'utilise la caméra.");
     }
   };
-
-  const addScannerOverlay = () => {
+  
+  const stopScanner = () => {
+    if (!scannerRef.current) return;
+    
+    if (scannerRef.current.isScanning) {
+      scannerRef.current.stop()
+        .catch(err => console.log("Erreur en arrêtant le scanner:", err))
+        .finally(() => {
+          setScanning(false);
+        });
+    }
+    
+    // Supprimer le cadre
+    const overlay = document.querySelector('.scanner-frame');
+    if (overlay) overlay.remove();
+  };
+  
+  const addScanFrame = () => {
     try {
-      const scannerElement = document.querySelector('#html5-qrcode-scanner');
+      const scannerElement = document.getElementById('html5-qrcode-scanner');
+      if (!scannerElement) return;
       
-      if (!scannerElement) {
-        console.error("Élément scanner non trouvé pour l'overlay");
-        return;
-      }
+      // Supprimer l'ancien cadre s'il existe
+      const oldFrame = document.querySelector('.scanner-frame');
+      if (oldFrame) oldFrame.remove();
       
-      // Supprimer l'overlay existant
-      const existingOverlay = document.querySelector('.scanner-overlay');
-      if (existingOverlay) {
-        existingOverlay.remove();
-      }
+      // Créer le cadre
+      const frame = document.createElement('div');
+      frame.className = 'scanner-frame';
+      frame.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 250px;
+        height: 100px;
+        transform: translate(-50%, -50%);
+        border: 2px solid #b22a2e;
+        border-radius: 10px;
+        box-shadow: 0 0 0 3000px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+        pointer-events: none;
+      `;
       
-      // Créer l'encadré visuel
-      const overlay = document.createElement('div');
-      overlay.className = 'scanner-overlay';
-      overlay.style.position = 'absolute';
-      overlay.style.top = '50%';
-      overlay.style.left = '50%';
-      overlay.style.width = '250px';
-      overlay.style.height = '100px';
-      overlay.style.transform = 'translate(-50%, -50%)';
-      overlay.style.border = '2px solid #b22a2e';
-      overlay.style.borderRadius = '10px';
-      overlay.style.boxShadow = '0 0 0 3000px rgba(0, 0, 0, 0.3)';
-      overlay.style.zIndex = '10';
-      overlay.style.pointerEvents = 'none';
+      // Indication textuelle
+      const label = document.createElement('div');
+      label.textContent = 'Alignez le code-barre ici';
+      label.style.cssText = `
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-weight: bold;
+        text-shadow: 0px 0px 3px black;
+        font-size: 14px;
+      `;
       
-      // Texte guide
-      const guide = document.createElement('div');
-      guide.textContent = 'Alignez le code-barre ici';
-      guide.style.position = 'absolute';
-      guide.style.top = '-30px';
-      guide.style.left = '50%';
-      guide.style.transform = 'translateX(-50%)';
-      guide.style.color = 'white';
-      guide.style.fontWeight = 'bold';
-      guide.style.textShadow = '0px 0px 3px black';
-      guide.style.fontSize = '14px';
+      frame.appendChild(label);
       
-      overlay.appendChild(guide);
-      
-      // Ajouter l'overlay au parent du scanner
       const scannerParent = scannerElement.parentElement;
       if (scannerParent) {
         scannerParent.style.position = 'relative';
-        scannerParent.appendChild(overlay);
+        scannerParent.appendChild(frame);
       }
     } catch (error) {
-      console.error("Erreur lors de l'ajout de l'overlay:", error);
+      console.error("Erreur lors de l'ajout du cadre:", error);
     }
   };
-
-  const stopScanner = () => {
-    if (scannerRef.current && scannerRef.current.isScanning) {
-      scannerRef.current.stop()
-        .catch(err => console.error("Erreur lors de l'arrêt du scanner:", err));
-    }
-    
-    // Supprimer l'overlay
-    const overlay = document.querySelector('.scanner-overlay');
-    if (overlay) {
-      overlay.remove();
-    }
-  };
-
-  const handleCameraChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCameraId = event.target.value;
-    setSelectedCamera(newCameraId);
-    startScanner(newCameraId);
-  };
-
+  
   const resetScanner = () => {
     setLastResult(null);
-    startScanner(selectedCamera || undefined);
+    startScanner();
   };
-
+  
   const confirmResult = () => {
     if (lastResult) {
       stopScanner();
@@ -271,13 +228,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
                 Recharger la page
               </button>
               <button 
-                onClick={() => startScanner()}
+                onClick={startScanner}
                 className="mt-2 px-4 py-2 bg-[#b22a2e] text-white rounded-md block w-full"
               >
                 Réessayer
               </button>
             </div>
-          ) : !permissionGranted ? (
+          ) : !scanning ? (
             <div className="text-center py-4">
               <p className="mb-4">Chargement de la caméra...</p>
               <div className="w-8 h-8 border-4 border-[#b22a2e] border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -307,27 +264,8 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
             </>
           )}
           
-          {cameras.length > 1 && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Caméra:
-              </label>
-              <select
-                value={selectedCamera || ''}
-                onChange={handleCameraChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              >
-                {cameras.map(camera => (
-                  <option key={camera.id} value={camera.id}>
-                    {camera.label || `Caméra ${camera.id}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          
           <div 
-            ref={scannerContainerRef} 
+            ref={cameraRef} 
             className="scanner-container rounded overflow-hidden"
             style={{ minHeight: "300px", position: "relative" }}
           ></div>
