@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle } from 'lucide-react';
+import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle, Camera } from 'lucide-react';
 import jsPDF from 'jspdf';
 import emailjs from '@emailjs/browser';
+import BarcodeScanner from './components/BarcodeScanner';
 
 // Interface pour les éléments à vérifier avec leur état de vérification
 interface CheckItem {
@@ -27,6 +28,7 @@ function App() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
   
   // Référence aux formulaires
   const form1Ref = useRef<HTMLFormElement>(null);
@@ -1211,6 +1213,14 @@ function App() {
     }
   };
 
+  // Fonction pour gérer le résultat du scan de code-barres
+  const handleScanSuccess = (result: string) => {
+    // Nettoyer le résultat si nécessaire (par exemple, enlever des préfixes)
+    const cleanResult = result.trim();
+    setNumeroMoniteur(cleanResult);
+    setShowScanner(false);
+  };
+
   // Page d'accueil avec les deux options de formulaire
   if (currentForm === null) {
     return (
@@ -1305,15 +1315,23 @@ function App() {
               <label htmlFor="numeroMoniteur" className="block text-sm font-medium text-gray-700 mb-1">
                 Numéro du moniteur :
               </label>
-              <input
-                type="text"
-                id="numeroMoniteur"
-                value={numeroMoniteur}
-                onChange={(e) => setNumeroMoniteur(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#b22a2e] focus:border-[#b22a2e]"
-                required
-                placeholder="Entrez le numéro"
-              />
+              <div className="flex">
+                <input
+                  type="text"
+                  id="numeroMoniteur"
+                  value={numeroMoniteur}
+                  onChange={(e) => setNumeroMoniteur(e.target.value)}
+                  className="flex-1 p-2 border rounded-l-md focus:ring-2 focus:ring-[#b22a2e] focus:border-transparent"
+                  placeholder="Scanner ou entrer le numéro"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowScanner(true)}
+                  className="bg-[#b22a2e] text-white p-2 rounded-r-md hover:bg-[#b22a2e]/90"
+                >
+                  <Camera size={20} />
+                </button>
+              </div>
             </div>
             
             <div className="md:w-1/3">
@@ -1526,6 +1544,14 @@ function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Scanner de code-barres */}
+        {showScanner && (
+          <BarcodeScanner 
+            onScanSuccess={handleScanSuccess} 
+            onClose={() => setShowScanner(false)} 
+          />
         )}
       </div>
     );
