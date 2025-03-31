@@ -88,34 +88,27 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
         setLastResult(cleanedText);
       };
 
-      // Priorité donnée au CODE 39 et autres formats linéaires
+      // Inclure TOUS les formats de codes-barres linéaires possibles
       const formats = [
-        Html5QrcodeSupportedFormats.CODE_39,        // Priorité au CODE 39
+        Html5QrcodeSupportedFormats.CODE_39,
         Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_93,
         Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8, 
         Html5QrcodeSupportedFormats.UPC_A,
         Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.EAN_8,
         Html5QrcodeSupportedFormats.ITF,
         Html5QrcodeSupportedFormats.CODABAR
       ];
 
-      // Configuration spécifique pour le CODE 39
+      // Configuration pour tous types de codes-barres linéaires
       const config = {
-        fps: 5,                            // FPS très réduit pour une meilleure précision
-        qrbox: { width: 500, height: 80 }, // Zone très large mais peu haute pour les codes-barres CODE 39
-        aspectRatio: 3.0,                  // Ratio plus large pour CODE 39
-        disableFlip: false,
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true
-        },
-        formatsToSupport: formats,
-        // Forcer uniquement le CODE 39 en priorité absolue
-        experimentalFeaturesConfig: {
-          barcodeScanningPriority: [
-            Html5QrcodeSupportedFormats.CODE_39
-          ]
-        }
+        fps: 10,                           // Augmenter le FPS pour plus de chances de détecter
+        qrbox: { width: 250, height: 100 }, // Zone de scan adaptée aux codes-barres
+        aspectRatio: 1.5,                  // Format plus flexible
+        disableFlip: false,                // Permettre de scanner dans toutes les orientations
+        supportedScanTypes: [],            // Laisser la bibliothèque utiliser le meilleur type de scan
+        formatsToSupport: formats
       };
 
       // Si une caméra spécifique est sélectionnée, l'utiliser
@@ -133,6 +126,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
           console.log("Erreur de scan (non bloquante):", errorMessage);
         }
       );
+
+      // Ajouter l'encadré de positionnement après le démarrage du scanner
+      setTimeout(() => {
+        addScannerOverlay();
+      }, 1000);
       
       setPermissionGranted(true);
     } catch (err) {
@@ -141,10 +139,71 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
     }
   };
 
+  // Fonction pour ajouter un encadré visuel dans le scanner
+  const addScannerOverlay = () => {
+    try {
+      // Trouver l'élément vidéo dans le scanner
+      const videoElement = document.querySelector('#html5-qrcode-scanner video');
+      const scannerElement = document.querySelector('#html5-qrcode-scanner');
+      
+      if (videoElement && scannerElement) {
+        // Supprimer l'overlay s'il existe déjà
+        const existingOverlay = document.querySelector('.scanner-overlay');
+        if (existingOverlay) {
+          existingOverlay.remove();
+        }
+        
+        // Créer un encadré visuel
+        const overlay = document.createElement('div');
+        overlay.className = 'scanner-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.top = '50%';
+        overlay.style.left = '50%';
+        overlay.style.width = '250px';
+        overlay.style.height = '100px';
+        overlay.style.transform = 'translate(-50%, -50%)';
+        overlay.style.border = '2px solid #b22a2e';
+        overlay.style.borderRadius = '10px';
+        overlay.style.boxShadow = '0 0 0 3000px rgba(0, 0, 0, 0.3)';
+        overlay.style.zIndex = '10';
+        overlay.style.pointerEvents = 'none'; // Ne pas bloquer les interactions
+        
+        // Créer un texte guide
+        const guide = document.createElement('div');
+        guide.textContent = 'Alignez le code-barre ici';
+        guide.style.position = 'absolute';
+        guide.style.top = '-30px';
+        guide.style.left = '50%';
+        guide.style.transform = 'translateX(-50%)';
+        guide.style.color = 'white';
+        guide.style.fontWeight = 'bold';
+        guide.style.textShadow = '0px 0px 3px black';
+        guide.style.fontSize = '14px';
+        
+        overlay.appendChild(guide);
+        
+        // Ajouter l'overlay comme enfant relatif du scanner
+        const scannerParent = scannerElement.parentElement;
+        if (scannerParent) {
+          scannerParent.style.position = 'relative';
+          scannerParent.appendChild(overlay);
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'overlay:", error);
+    }
+  };
+
   const stopScanner = () => {
     if (scannerRef.current && scannerRef.current.isScanning) {
       scannerRef.current.stop()
         .catch(err => console.error("Error stopping scanner:", err));
+    }
+    
+    // Supprimer l'overlay quand on arrête le scanner
+    const overlay = document.querySelector('.scanner-overlay');
+    if (overlay) {
+      overlay.remove();
     }
   };
 
@@ -174,7 +233,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
         <div className="p-4 bg-[#b22a2e] text-white flex justify-between items-center">
           <div className="flex items-center">
             <Camera className="mr-2" size={20} />
-            <h3 className="font-medium">Scanner de code-barres CODE 39</h3>
+            <h3 className="font-medium">Scanner de code-barres</h3>
           </div>
           <button onClick={onClose} className="text-white hover:text-gray-200">
             <X size={20} />
@@ -244,15 +303,15 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
           <div 
             ref={scannerContainerRef} 
             className="scanner-container rounded overflow-hidden"
-            style={{ minHeight: "300px" }}
+            style={{ minHeight: "300px", position: "relative" }}
           ></div>
           
           <div className="mt-4 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-center text-sm text-yellow-800 font-medium mb-1">
-              Spécifiquement optimisé pour CODE 39
+              Compatible avec tous types de codes-barres
             </p>
             <p className="text-center text-xs text-gray-600 mt-1">
-              Conseils: Assurez-vous que le code est bien éclairé, placez-le à environ 10-15cm, et maintenez-le aussi stable que possible.
+              Conseils: Alignez le code-barre dans le cadre rouge, assurez-vous qu'il est bien éclairé et stable.
             </p>
           </div>
           
