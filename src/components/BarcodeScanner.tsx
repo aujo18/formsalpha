@@ -307,10 +307,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
           ></div>
           
           <div className="mt-4 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p className="text-center text-sm text-yellow-800 font-medium mb-1">
-              Compatible avec tous types de codes-barres
-            </p>
-            <p className="text-center text-xs text-gray-600 mt-1">
+            <p className="text-center text-xs text-gray-600">
               Conseils: Alignez le code-barre dans le cadre rouge, assurez-vous qu'il est bien éclairé et stable.
             </p>
           </div>
