@@ -1813,7 +1813,7 @@ function App() {
               <div className="mb-6">
                 <div className="flex items-start mb-4">
                   <AlertCircle className="text-[#b22a2e] mr-3 mt-0.5" size={24} />
-                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Les données seront envoyées à Make.com.</p>
+                  <p>Êtes-vous sûr de vouloir finaliser cette inspection?</p>
                 </div>
               </div>
               <div className="flex justify-end space-x-4">
