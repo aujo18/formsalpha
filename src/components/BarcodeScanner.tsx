@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
 import { X, Camera, RotateCcw } from 'lucide-react';
 
 interface BarcodeScannerProps {
@@ -8,199 +7,92 @@ interface BarcodeScannerProps {
 }
 
 const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose }) => {
-  const [error, setError] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [lastResult, setLastResult] = useState<string | null>(null);
-  const cameraRef = useRef<HTMLDivElement | null>(null);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [cameraActive, setCameraActive] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  // Effet d'initialisation 
-  useEffect(() => {
-    // Initialiser seulement une fois au montage
-    const initScanner = async () => {
-      try {
-        // Assurons-nous d'avoir un élément DOM
-        if (!cameraRef.current) {
-          console.error("Container de caméra non trouvé");
-          return;
-        }
-
-        // ID unique pour le scanner
-        const scannerId = "html5-qrcode-scanner";
-        
-        // Nettoyer l'ancien scanner s'il existe
-        const oldScanner = document.getElementById(scannerId);
-        if (oldScanner) {
-          oldScanner.remove();
-        }
-        
-        // Créer un nouvel élément pour le scanner
-        const newScannerElement = document.createElement('div');
-        newScannerElement.id = scannerId;
-        cameraRef.current.appendChild(newScannerElement);
-        
-        // Initialiser le scanner
-        scannerRef.current = new Html5Qrcode(scannerId);
-        console.log("Scanner initialisé avec succès");
-        
-        // Démarrer directement le scanner avec la caméra arrière
-        await startScanner();
-      } catch (err) {
-        console.error("Erreur d'initialisation:", err);
-        setError("Impossible d'initialiser le scanner: " + (err instanceof Error ? err.message : String(err)));
-      }
-    };
-
-    initScanner();
-    
-    // Nettoyage à la fermeture
-    return () => {
-      stopScanner();
-      if (scannerRef.current) {
-        scannerRef.current = null;
-      }
-    };
-  }, []);
-  
-  const startScanner = async () => {
-    if (!scannerRef.current) {
-      setError("Scanner non initialisé");
-      return;
-    }
-    
-    // Arrêter le scanner s'il est déjà en cours
-    if (scannerRef.current.isScanning) {
-      await scannerRef.current.stop().catch(e => console.log("Erreur en arrêtant le scanner:", e));
-    }
-    
+  const startCamera = async () => {
     try {
-      setError(null);
-      setLastResult(null);
+      // Réinitialiser l'erreur
+      setErrorMessage(null);
       
-      // Configuration ultra-simple
-      const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 100 },
-      };
+      // Vérifier si le navigateur supporte l'API MediaDevices
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setErrorMessage("Votre navigateur ne supporte pas l'accès à la caméra");
+        return;
+      }
       
-      // Callback en cas de succès
-      const successCallback = (decodedText: string) => {
-        console.log("Code-barres détecté:", decodedText);
-        setLastResult(decodedText.trim());
-      };
+      console.log("Demande d'accès à la caméra...");
       
-      // Callback d'erreur non bloquante
-      const errorCallback = (err: string) => {
-        // Ignorer les erreurs transitoires
-        if (err.includes("No MultiFormat Readers") || 
-            err.includes("ongoing scan") ||
-            err.includes("Frame")) {
-          return;
-        }
-        console.log("Erreur de scan (non bloquante):", err);
-      };
+      // Demander l'accès à la caméra arrière si possible
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      });
       
-      console.log("Démarrage du scanner avec la caméra par défaut");
+      console.log("Accès à la caméra accordé");
       
-      // Utiliser { facingMode: "environment" } pour forcer la caméra arrière
-      await scannerRef.current.start(
-        { facingMode: "environment" }, 
-        config, 
-        successCallback, 
-        errorCallback
-      );
+      // Stocker le flux pour pouvoir l'arrêter plus tard
+      streamRef.current = stream;
       
-      console.log("Scanner démarré avec succès");
-      setScanning(true);
-      
-      // Ajouter l'overlay après le démarrage
-      setTimeout(() => {
-        addScanFrame();
-      }, 1000);
-      
+      // Connecter le flux à l'élément vidéo
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setCameraActive(true);
+      } else {
+        console.error("Élément vidéo non trouvé");
+        setErrorMessage("Erreur lors de l'initialisation de la caméra");
+      }
     } catch (err) {
       console.error("Erreur d'accès à la caméra:", err);
-      setError("Erreur d'accès à la caméra. Vérifiez les permissions de votre navigateur et assurez-vous qu'aucune autre application n'utilise la caméra.");
-    }
-  };
-  
-  const stopScanner = () => {
-    if (!scannerRef.current) return;
-    
-    if (scannerRef.current.isScanning) {
-      scannerRef.current.stop()
-        .catch(err => console.log("Erreur en arrêtant le scanner:", err))
-        .finally(() => {
-          setScanning(false);
-        });
-    }
-    
-    // Supprimer le cadre
-    const overlay = document.querySelector('.scanner-frame');
-    if (overlay) overlay.remove();
-  };
-  
-  const addScanFrame = () => {
-    try {
-      const scannerElement = document.getElementById('html5-qrcode-scanner');
-      if (!scannerElement) return;
       
-      // Supprimer l'ancien cadre s'il existe
-      const oldFrame = document.querySelector('.scanner-frame');
-      if (oldFrame) oldFrame.remove();
-      
-      // Créer le cadre
-      const frame = document.createElement('div');
-      frame.className = 'scanner-frame';
-      frame.style.cssText = `
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 250px;
-        height: 100px;
-        transform: translate(-50%, -50%);
-        border: 2px solid #b22a2e;
-        border-radius: 10px;
-        box-shadow: 0 0 0 3000px rgba(0, 0, 0, 0.3);
-        z-index: 10;
-        pointer-events: none;
-      `;
-      
-      // Indication textuelle
-      const label = document.createElement('div');
-      label.textContent = 'Alignez le code-barre ici';
-      label.style.cssText = `
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        color: white;
-        font-weight: bold;
-        text-shadow: 0px 0px 3px black;
-        font-size: 14px;
-      `;
-      
-      frame.appendChild(label);
-      
-      const scannerParent = scannerElement.parentElement;
-      if (scannerParent) {
-        scannerParent.style.position = 'relative';
-        scannerParent.appendChild(frame);
+      // Message d'erreur détaillé en fonction du type d'erreur
+      if (err instanceof DOMException) {
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setErrorMessage("Accès à la caméra refusé. Veuillez autoriser l'accès à la caméra dans les paramètres de votre navigateur.");
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          setErrorMessage("Aucune caméra détectée sur votre appareil.");
+        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          setErrorMessage("La caméra est utilisée par une autre application. Veuillez fermer les autres applications qui pourraient utiliser la caméra.");
+        } else {
+          setErrorMessage(`Erreur d'accès à la caméra: ${err.message}`);
+        }
+      } else {
+        setErrorMessage(`Erreur d'accès à la caméra: ${err instanceof Error ? err.message : String(err)}`);
       }
-    } catch (error) {
-      console.error("Erreur lors de l'ajout du cadre:", error);
     }
   };
-  
-  const resetScanner = () => {
-    setLastResult(null);
-    startScanner();
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      // Arrêter tous les tracks du stream
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    // Réinitialiser l'élément vidéo
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
+    setCameraActive(false);
   };
-  
-  const confirmResult = () => {
-    if (lastResult) {
-      stopScanner();
-      onScanSuccess(lastResult);
+
+  // Démarrer la caméra au montage du composant
+  useEffect(() => {
+    startCamera();
+    
+    // Nettoyer à la fermeture
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  const handleSubmit = () => {
+    if (inputValue.trim()) {
+      onScanSuccess(inputValue.trim());
     }
   };
 
@@ -218,9 +110,9 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
         </div>
         
         <div className="p-4">
-          {error ? (
+          {errorMessage ? (
             <div className="text-red-500 mb-4 text-center">
-              <p className="mb-2">{error}</p>
+              <p className="mb-2">{errorMessage}</p>
               <button 
                 onClick={() => window.location.reload()}
                 className="mt-2 px-4 py-2 bg-gray-600 text-white rounded-md block w-full"
@@ -228,60 +120,91 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
                 Recharger la page
               </button>
               <button 
-                onClick={startScanner}
+                onClick={startCamera}
                 className="mt-2 px-4 py-2 bg-[#b22a2e] text-white rounded-md block w-full"
               >
                 Réessayer
               </button>
             </div>
-          ) : !scanning ? (
-            <div className="text-center py-4">
-              <p className="mb-4">Chargement de la caméra...</p>
-              <div className="w-8 h-8 border-4 border-[#b22a2e] border-t-transparent rounded-full animate-spin mx-auto"></div>
-            </div>
-          ) : (
-            <>
-              {lastResult && (
-                <div className="bg-green-50 border border-green-200 p-2 rounded-md mb-4">
-                  <p className="text-green-700 text-sm font-medium">Code détecté:</p>
-                  <p className="text-gray-700 font-mono break-all">{lastResult}</p>
-                  <div className="flex space-x-2 mt-2">
-                    <button 
-                      onClick={confirmResult}
-                      className="bg-green-600 text-white text-sm py-1 px-3 rounded-md hover:bg-green-700 flex-1"
-                    >
-                      Utiliser ce code
-                    </button>
-                    <button
-                      onClick={resetScanner}
-                      className="bg-gray-200 text-gray-700 text-sm py-1 px-3 rounded-md hover:bg-gray-300"
-                    >
-                      Scanner à nouveau
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+          ) : null}
           
-          <div 
-            ref={cameraRef} 
-            className="scanner-container rounded overflow-hidden"
-            style={{ minHeight: "300px", position: "relative" }}
-          ></div>
+          {/* Aperçu caméra */}
+          <div className="relative rounded overflow-hidden" style={{ minHeight: "250px", background: "#000" }}>
+            {cameraActive ? (
+              <video 
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                playsInline
+                autoPlay
+                muted
+              />
+            ) : !errorMessage ? (
+              <div className="flex items-center justify-center h-full py-8">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-[#b22a2e] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-400">Activation de la caméra...</p>
+                </div>
+              </div>
+            ) : null}
+            
+            {/* Cadre guide pour positionner le code-barre */}
+            {cameraActive && (
+              <div 
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 border-[#b22a2e] rounded-md pointer-events-none"
+                style={{ width: "250px", height: "100px", boxShadow: "0 0 0 3000px rgba(0, 0, 0, 0.3)" }}
+              >
+                <div className="absolute -top-7 left-1/2 transform -translate-x-1/2 text-white text-sm font-medium drop-shadow-lg">
+                  Alignez le code-barre ici
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Saisie manuelle */}
+          <div className="mt-4">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">
+                Saisie manuelle du code:
+              </label>
+              {inputValue && (
+                <button 
+                  onClick={() => setInputValue('')}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Effacer
+                </button>
+              )}
+            </div>
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Entrez le code manuellement"
+                className="flex-1 p-2 border border-gray-300 rounded-md"
+              />
+              <button
+                onClick={handleSubmit}
+                className="px-4 py-2 bg-[#b22a2e] text-white rounded-md hover:bg-[#b22a2e]/90"
+                disabled={!inputValue.trim()}
+              >
+                Utiliser
+              </button>
+            </div>
+          </div>
           
           <div className="mt-4 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-center text-xs text-gray-600">
-              Conseils: Alignez le code-barre dans le cadre rouge, assurez-vous qu'il est bien éclairé et stable.
+              Note: Si la lecture du code-barre échoue, vous pouvez saisir le code manuellement dans le champ ci-dessus.
             </p>
           </div>
           
-          <div className="mt-2 flex justify-center">
+          <div className="mt-3 flex justify-center">
             <button
-              onClick={resetScanner}
+              onClick={startCamera}
               className="flex items-center text-sm px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
             >
-              <RotateCcw size={14} className="mr-1" /> Réinitialiser le scanner
+              <RotateCcw size={14} className="mr-1" /> Redémarrer la caméra
             </button>
           </div>
         </div>
