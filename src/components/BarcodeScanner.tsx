@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { X, Camera, RotateCcw } from 'lucide-react';
+import { X, Camera, RotateCcw, Smartphone } from 'lucide-react';
 
 interface BarcodeScannerProps {
   onScanSuccess: (decodedText: string) => void;
@@ -12,8 +12,18 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
   const [scanning, setScanning] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState('');
+  const [isIOS, setIsIOS] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Détecter si l'appareil est un iOS
+  useEffect(() => {
+    const checkIsIOS = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod/.test(userAgent);
+    };
+    setIsIOS(checkIsIOS());
+  }, []);
 
   // Initialiser le scanner au montage
   useEffect(() => {
@@ -54,9 +64,10 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
       scannerRef.current = new Html5Qrcode(scannerId);
       
       // Démarrer le scanner avec un délai pour s'assurer que le DOM est prêt
+      // Délai plus long sur iOS pour garantir l'initialisation complète
       setTimeout(() => {
         startScanner();
-      }, 500);
+      }, isIOS ? 1000 : 500);
     } catch (err) {
       console.error("Erreur lors de l'initialisation du scanner:", err);
       setError(`Erreur d'initialisation: ${err instanceof Error ? err.message : String(err)}`);
@@ -64,7 +75,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
 
     // Nettoyer lors du démontage
     return cleanup;
-  }, []);
+  }, [isIOS]);
 
   const startScanner = async () => {
     if (!scannerRef.current) {
@@ -86,11 +97,11 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
     try {
       setError(null);
       setLastResult(null);
-      console.log("Démarrage du scanner...");
+      console.log("Démarrage du scanner...", isIOS ? "sur iOS" : "sur autre appareil");
 
-      // Configuration simplifiée pour une meilleure compatibilité
+      // Configuration adaptée selon le type d'appareil
       const config = {
-        fps: 8,
+        fps: isIOS ? 5 : 8, // FPS réduit sur iOS pour éviter les problèmes
         qrbox: { width: 250, height: 100 },
         formatsToSupport: [
           Html5QrcodeSupportedFormats.CODE_39,
@@ -102,7 +113,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
           Html5QrcodeSupportedFormats.UPC_E,
           Html5QrcodeSupportedFormats.ITF,
           Html5QrcodeSupportedFormats.CODABAR
-        ]
+        ],
+        // Paramètres spécifiques à iOS
+        ...(isIOS && {
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: false // Désactiver l'API native sur iOS
+          }
+        })
       };
 
       // Callback en cas de succès
@@ -111,9 +128,14 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
         setLastResult(decodedText.trim());
       };
 
-      // Utiliser facingMode environment pour la caméra arrière
+      // Configuration de la caméra adaptée à iOS
+      const cameraConfig = isIOS 
+        ? { facingMode: { exact: "environment" } } // Forcer la caméra arrière exacte sur iOS
+        : { facingMode: "environment" };           // Plus souple sur autres appareils
+
+      // Démarrer le scanner avec la configuration adaptée
       await scannerRef.current.start(
-        { facingMode: "environment" },
+        cameraConfig,
         config,
         successCallback,
         (errorMessage) => {
@@ -136,7 +158,19 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
       }, 1000);
     } catch (err) {
       console.error("Erreur lors du démarrage du scanner:", err);
-      setError(`Erreur d'accès à la caméra: ${err instanceof Error ? err.message : String(err)}`);
+      
+      // Messages d'erreur personnalisés pour iOS
+      if (isIOS) {
+        if (err instanceof Error && err.message.includes("permission")) {
+          setError("Accès refusé à la caméra. Sur iOS, allez dans Réglages > Safari > Caméra et autorisez l'accès.");
+        } else if (err instanceof Error && err.message.includes("device")) {
+          setError("Impossible d'accéder à la caméra arrière sur cet appareil iOS.");
+        } else {
+          setError(`Erreur d'accès à la caméra iOS: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      } else {
+        setError(`Erreur d'accès à la caméra: ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
   };
 
@@ -241,6 +275,15 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
         </div>
         
         <div className="p-4">
+          {isIOS && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-2 mb-4">
+              <div className="flex items-center text-blue-800 text-sm">
+                <Smartphone size={16} className="mr-2" />
+                <p>Appareil iOS détecté. Assurez-vous d'avoir autorisé l'accès à la caméra.</p>
+              </div>
+            </div>
+          )}
+          
           {error ? (
             <div className="text-red-500 mb-4 text-center">
               <p className="mb-2">{error}</p>
@@ -328,7 +371,10 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
           
           <div className="mt-4 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-center text-xs text-gray-600">
-              Conseils: Alignez le code-barre dans le cadre rouge, assurez-vous qu'il est bien éclairé et stable.
+              {isIOS ? 
+                "Sur iOS, assurez-vous d'autoriser l'accès à la caméra dans les paramètres Safari." :
+                "Conseils: Alignez le code-barre dans le cadre rouge, assurez-vous qu'il est bien éclairé et stable."
+              }
             </p>
           </div>
           
