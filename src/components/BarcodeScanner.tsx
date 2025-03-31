@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { X, Camera, RotateCcw } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 
 interface BarcodeScannerProps {
   onScanSuccess: (decodedText: string) => void;
@@ -12,11 +12,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
   const [cameras, setCameras] = useState<{id: string, label: string}[]>([]);
-  const [scanMode, setScanMode] = useState<'all' | 'linear'>('linear');
-  const [scanWidth, setScanWidth] = useState(350);
-  const [scanHeight, setScanHeight] = useState(100);
-  const [torchEnabled, setTorchEnabled] = useState(false);
-  const [lastResult, setLastResult] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -70,14 +65,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
     };
   }, []);
 
-  // Version simplifiée de la fonction torch
-  const toggleTorch = () => {
-    // Nous utilisons simplement l'indicateur visuel, mais la fonctionnalité réelle
-    // dépend de la compatibilité du navigateur et de l'appareil
-    setTorchEnabled(!torchEnabled);
-    console.log("Tentative d'activation de la lampe torche - fonctionnalité non garantie sur tous les appareils");
-  };
-
   const startScanner = async (cameraId?: string) => {
     if (!scannerRef.current) return;
     
@@ -88,58 +75,52 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
 
     try {
       setError(null);
-      setLastResult(null);
       
       const qrCodeSuccessCallback = (decodedText: string) => {
         console.log("Code détecté:", decodedText);
-        setLastResult(decodedText);
         
         // Nettoyer le résultat (enlever espaces et caractères spéciaux)
         const cleanedText = decodedText.trim();
-        onScanSuccess(cleanedText);
         
-        // On ne ferme plus automatiquement pour permettre plusieurs tentatives
-        // stopScanner();
+        // Arrêter le scanner après un scan réussi
+        stopScanner();
+        
+        // Appeler le callback avec le texte décodé
+        onScanSuccess(cleanedText);
       };
 
-      // Définir les formats en fonction du mode
-      let formats = [];
-      if (scanMode === 'linear') {
-        formats = [
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.ITF,
-          Html5QrcodeSupportedFormats.CODABAR
-        ];
-      } else {
-        formats = [
-          Html5QrcodeSupportedFormats.QR_CODE,
-          Html5QrcodeSupportedFormats.DATA_MATRIX,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.ITF,
-          Html5QrcodeSupportedFormats.CODABAR
-        ];
-      }
+      // Définir les formats à prendre en charge - inclure tous les codes-barres courants
+      const formats = [
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.CODABAR,
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.DATA_MATRIX
+      ];
 
+      // Configuration optimisée pour les codes-barres 1D
       const config = {
-        fps: 10, // Réduction du fps pour plus de stabilité
-        qrbox: { width: scanWidth, height: scanHeight },
-        aspectRatio: scanMode === 'linear' ? 2.5 : 1.0,
-        disableFlip: false,
+        fps: 8, // Fps réduit pour une meilleure stabilité et précision
+        qrbox: { width: 400, height: 100 }, // Zone large mais peu haute pour les codes-barres
+        aspectRatio: 2.5, // Format plus large que haut pour les codes-barres
+        disableFlip: false, // Permettre toutes les orientations
         experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true
+          useBarCodeDetectorIfSupported: true // Utiliser l'API native si disponible
         },
-        rememberLastUsedCamera: true,
         formatsToSupport: formats,
+        // Priorité aux formats standards
+        experimentalFeaturesConfig: {
+          barcodeScanningPriority: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.CODE_39
+          ]
+        }
       };
 
       // Si une caméra spécifique est sélectionnée, l'utiliser
@@ -178,42 +159,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
     startScanner(newCameraId);
   };
 
-  const handleModeChange = (mode: 'all' | 'linear') => {
-    setScanMode(mode);
-    // Réinitialiser les dimensions en fonction du mode
-    if (mode === 'linear') {
-      setScanWidth(350);
-      setScanHeight(100);
-    } else {
-      setScanWidth(250);
-      setScanHeight(250);
-    }
-    // Redémarrer le scanner avec le nouveau mode
-    startScanner(selectedCamera || undefined);
-  };
-
-  const resetScanner = () => {
-    stopScanner();
-    setLastResult(null);
-    setTimeout(() => {
-      startScanner(selectedCamera || undefined);
-    }, 100);
-  };
-
-  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const width = parseInt(e.target.value);
-    setScanWidth(width);
-  };
-
-  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const height = parseInt(e.target.value);
-    setScanHeight(height);
-  };
-
-  const applyDimensionChanges = () => {
-    startScanner(selectedCamera || undefined);
-  };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg w-full max-w-md overflow-hidden">
@@ -243,58 +188,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
               <p className="mb-4">Chargement de la caméra...</p>
               <div className="w-8 h-8 border-4 border-[#b22a2e] border-t-transparent rounded-full animate-spin mx-auto"></div>
             </div>
-          ) : (
-            <>
-              {lastResult && (
-                <div className="bg-green-50 border border-green-200 p-2 rounded-md mb-4">
-                  <p className="text-green-700 text-sm font-medium">Code détecté:</p>
-                  <p className="text-gray-700 font-mono break-all">{lastResult}</p>
-                  <div className="flex space-x-2 mt-2">
-                    <button 
-                      onClick={() => onScanSuccess(lastResult)}
-                      className="bg-green-600 text-white text-sm py-1 px-3 rounded-md hover:bg-green-700 flex-1"
-                    >
-                      Utiliser ce code
-                    </button>
-                    <button
-                      onClick={resetScanner}
-                      className="bg-gray-200 text-gray-700 text-sm py-1 px-3 rounded-md hover:bg-gray-300"
-                    >
-                      Scanner à nouveau
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Contrôles de scan */}
-              <div className="mb-4 flex flex-wrap gap-2">
-                <button 
-                  onClick={() => handleModeChange('linear')}
-                  className={`px-3 py-1 text-sm rounded-md ${scanMode === 'linear' ? 'bg-[#b22a2e] text-white' : 'bg-gray-200 text-gray-700'}`}
-                >
-                  Code-barres
-                </button>
-                <button 
-                  onClick={() => handleModeChange('all')}
-                  className={`px-3 py-1 text-sm rounded-md ${scanMode === 'all' ? 'bg-[#b22a2e] text-white' : 'bg-gray-200 text-gray-700'}`}
-                >
-                  Tous les formats
-                </button>
-                <button 
-                  onClick={toggleTorch}
-                  className={`px-3 py-1 text-sm rounded-md ${torchEnabled ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-700'}`}
-                >
-                  Lampe torche
-                </button>
-                <button 
-                  onClick={resetScanner}
-                  className="px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700 flex items-center"
-                >
-                  <RotateCcw size={14} className="mr-1" /> Réinitialiser
-                </button>
-              </div>
-            </>
-          )}
+          ) : null}
           
           {cameras.length > 1 && (
             <div className="mb-4">
@@ -312,49 +206,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
                   </option>
                 ))}
               </select>
-            </div>
-          )}
-          
-          {permissionGranted && (
-            <div className="mb-4 grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Largeur de scan:
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="range"
-                    min="100"
-                    max="500"
-                    value={scanWidth}
-                    onChange={handleWidthChange}
-                    className="w-full"
-                  />
-                  <span className="text-xs ml-2 w-8">{scanWidth}</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Hauteur de scan:
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="range"
-                    min="50"
-                    max="250"
-                    value={scanHeight}
-                    onChange={handleHeightChange}
-                    className="w-full"
-                  />
-                  <span className="text-xs ml-2 w-8">{scanHeight}</span>
-                </div>
-              </div>
-              <button
-                onClick={applyDimensionChanges}
-                className="col-span-2 mt-1 text-xs bg-gray-200 py-1 px-2 rounded hover:bg-gray-300"
-              >
-                Appliquer les dimensions
-              </button>
             </div>
           )}
           
