@@ -1415,6 +1415,32 @@ function App() {
     );
   };
 
+  // Fonction pour gérer la case "Tout est conforme" par section
+  const handleSectionAllConform = (category: string) => {
+    setDefectuositesItems(prevItems => 
+      prevItems.map(item => {
+        // Ne modifie que les items qui appartiennent à la catégorie sélectionnée et qui ne sont pas désactivés
+        if (item.category === category && !item.disabled) {
+          return {
+            ...item,
+            isConform: true, // Tous les items deviennent conformes
+            checked: false,  // Décoche toutes les défectuosités
+            comment: ''      // Efface tous les commentaires
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Fonction pour vérifier s'il y a des défectuosités majeures (identifiées par une lettre dans l'ID)
+  const hasMajorDefects = () => {
+    const majorDefects = defectuositesItems.filter(item => 
+      item.checked && item.id.includes('-') && /[A-Z]/.test(item.id.split('-')[1])
+    );
+    return majorDefects.length > 0 ? majorDefects : null;
+  };
+
   // Validation du formulaire Défectuosités
   const validateDefectuositesForm = () => {
     // Vérifier les champs obligatoires
@@ -1429,8 +1455,24 @@ function App() {
   const handleSubmitForm3 = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Afficher la boîte de dialogue de confirmation
-    setShowConfirmation(true);
+    // Vérifier s'il y a des défectuosités majeures
+    const majorDefects = hasMajorDefects();
+    
+    if (majorDefects) {
+      const defectsList = majorDefects.map(item => 
+        `- ${item.label}${item.comment ? ` (${item.comment})` : ''}`
+      ).join('\n');
+      
+      if (window.confirm(
+        `ATTENTION : Des défectuosités majeures ont été détectées :\n\n${defectsList}\n\nVeuillez contacter immédiatement votre chef d'équipe ou superviseur.\n\nVoulez-vous quand même envoyer ce formulaire ?`
+      )) {
+        // Afficher la boîte de dialogue de confirmation standard
+        setShowConfirmation(true);
+      }
+    } else {
+      // Pas de défectuosités majeures, afficher la boîte de dialogue de confirmation standard
+      setShowConfirmation(true);
+    }
   };
   
   const confirmSubmitForm3 = async () => {
@@ -1449,6 +1491,15 @@ function App() {
     
     try {
       console.log("Début du traitement du formulaire Défectuosités");
+      
+      // Vérifier s'il y a des défectuosités majeures pour le message final
+      const majorDefects = hasMajorDefects();
+      let majorDefectsMessage = '';
+      
+      if (majorDefects) {
+        majorDefectsMessage = 'ATTENTION: Des défectuosités majeures ont été détectées. Veuillez contacter votre chef d\'équipe ou superviseur immédiatement.';
+      }
+      
       const currentDateTime = getCurrentDateTime();
       setSubmissionDateTime(currentDateTime);
       
@@ -1458,7 +1509,9 @@ function App() {
         const dataSent = await sendInspectionToMakecom('Defectuosites');
         if (dataSent) {
           console.log("Envoi des données Défectuosités réussi");
-          setSubmissionMessage("L'inspection a été générée et envoyée avec succès.");
+          // Ajouter le message sur les défectuosités majeures si nécessaire
+          const successMsg = "L'inspection a été générée et envoyée avec succès.";
+          setSubmissionMessage(majorDefectsMessage ? `${successMsg}\n\n${majorDefectsMessage}` : successMsg);
         } else {
           console.log("Échec de l'envoi des données Défectuosités");
           setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué.");
@@ -1477,7 +1530,9 @@ function App() {
       setDefectuositesItems(prevItems => 
         prevItems.map(item => ({
           ...item,
-          checked: false
+          checked: false,
+          isConform: false,
+          comment: ''
         }))
       );
     } catch (error) {
@@ -1490,168 +1545,93 @@ function App() {
 
   // Fonction pour générer le HTML du formulaire Défectuosités
   const generateDefectuositesHTML = () => {
-    let html = `
+    // Vérifier s'il y a des défectuosités majeures
+    const majorDefects = hasMajorDefects();
+    const majorDefectsWarning = majorDefects 
+      ? `<div style="background-color: #ffebee; border: 2px solid #c62828; padding: 15px; margin: 20px 0; border-radius: 5px;">
+          <h3 style="color: #c62828; margin-top: 0;">⚠️ ATTENTION: DÉFECTUOSITÉS MAJEURES DÉTECTÉES</h3>
+          <p>Les défectuosités majeures suivantes nécessitent une attention immédiate. Veuillez contacter votre chef d'équipe ou superviseur.</p>
+          <ul style="margin-bottom: 0;">
+            ${majorDefects.map(item => 
+              `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`
+            ).join('')}
+          </ul>
+        </div>` 
+      : '';
+
+    // Regrouper les éléments par catégorie
+    const categorized = defectuositesItems.reduce<Record<string, CheckItem[]>>((acc, item) => {
+      if (!acc[item.category || 'Autres']) acc[item.category || 'Autres'] = [];
+      acc[item.category || 'Autres'].push(item);
+      return acc;
+    }, {});
+
+    // Générer le HTML avec le style de base
+    const html = `
       <!DOCTYPE html>
       <html>
       <head>
-        <meta charset="utf-8" />
-        <title>Liste des Défectuosités - Véhicules Lourds Ambulanciers</title>
+        <meta charset="UTF-8">
+        <title>Liste de défectuosités</title>
         <style>
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-          }
-          h1 {
-            color: #b22a2e;
-            text-align: center;
-            margin-bottom: 20px;
-          }
-          .info-container {
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-          }
-          .info-item {
-            margin-right: 30px;
-            margin-bottom: 10px;
-          }
-          .info-label {
-            font-weight: bold;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-          }
-          th {
-            background-color: #102947;
-            color: white;
-          }
-          .category {
-            background-color: #f0f0f0;
-            font-weight: bold;
-          }
-          .subcategory {
-            background-color: #f9f9f9;
-            font-style: italic;
-          }
-          .checked {
-            color: green;
-            font-weight: bold;
-            text-align: center;
-          }
-          .not-checked {
-            color: red;
-            text-align: center;
-          }
-          .comment {
-            font-style: italic;
-            color: #666;
-            margin-top: 5px;
-            padding-left: 10px;
-            border-left: 3px solid #f0ad4e;
-          }
-          .row-conform {
-            background-color: #dff0d8;
-          }
-          .row-defect {
-            background-color: #f2dede;
-          }
-          footer {
-            margin-top: 40px;
-            font-size: 0.8rem;
-            text-align: center;
-            color: #666;
-          }
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          h1 { color: #333; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; }
+          th { background-color: #f2f2f2; text-align: left; }
+          .category { background-color: #e9ecef; font-weight: bold; }
+          .conformed { background-color: #d4edda; }
+          .defect { background-color: #f8d7da; }
+          .comment { font-style: italic; color: #721c24; }
+          .header-info { margin-bottom: 20px; }
+          .header-info p { margin: 5px 0; }
         </style>
       </head>
       <body>
-        <h1>Liste des Défectuosités - Véhicules Lourds Ambulanciers</h1>
+        <h1>Liste de défectuosités</h1>
         
-        <div class="info-container">
-          <div class="info-item">
-            <span class="info-label">Matricule:</span> ${matricule}
-          </div>
-          <div class="info-item">
-            <span class="info-label">Véhicule #:</span> ${numeroVehicule}
-          </div>
-          <div class="info-item">
-            <span class="info-label">Point de service:</span> ${pointDeService}
-          </div>
-          <div class="info-item">
-            <span class="info-label">Date et heure:</span> ${getCurrentDateTime()}
-          </div>
+        <div class="header-info">
+          <p><strong>Matricule:</strong> ${matricule}</p>
+          <p><strong>Numéro de véhicule:</strong> ${numeroVehicule}</p>
+          <p><strong>Point de service:</strong> ${pointDeService}</p>
+          <p><strong>Date et heure:</strong> ${getCurrentDateTime()}</p>
         </div>
+        
+        ${majorDefectsWarning}
         
         <table>
           <thead>
             <tr>
-              <th style="width: 60%;">Élément</th>
-              <th style="width: 20%;">Conforme</th>
-              <th style="width: 20%;">Défectuosité</th>
+              <th style="width: 70%;">Élément</th>
+              <th style="width: 15%;">État</th>
+              <th style="width: 15%;">Commentaire</th>
             </tr>
           </thead>
           <tbody>
-    `;
-    
-    // Regrouper par catégorie
-    const groupedItems = defectuositesItems.reduce((acc, item) => {
-      if (!acc[item.category || 'Autres']) {
-        acc[item.category || 'Autres'] = [];
-      }
-      acc[item.category || 'Autres'].push(item);
-      return acc;
-    }, {} as Record<string, CheckItem[]>);
-    
-    // Ajouter les lignes par catégorie
-    Object.entries(groupedItems).forEach(([category, items]) => {
-      html += `
-        <tr>
-          <td colspan="3" class="category">${category}</td>
-        </tr>
-      `;
-      
-      items.forEach(item => {
-        const rowClass = item.isConform ? 'row-conform' : (item.checked ? 'row-defect' : '');
-        html += `
-          <tr class="${rowClass}">
-            <td>${item.label}</td>
-            <td class="checked">${item.isConform ? '✓' : ''}</td>
-            <td class="not-checked">${item.checked ? '✓' : ''}</td>
-          </tr>
-        `;
-        
-        // Ajouter le commentaire si disponible et si défectueux
-        if (item.checked && item.comment) {
-          html += `
-            <tr class="${rowClass}">
-              <td colspan="3" class="comment">
-                <strong>Commentaire:</strong> ${item.comment}
-              </td>
-            </tr>
-          `;
-        }
-      });
-    });
-    
-    html += `
+            ${Object.entries(categorized).map(([category, items]) => `
+              <tr>
+                <td colspan="3" class="category">${category}</td>
+              </tr>
+              ${items.map(item => {
+                const status = item.isConform ? 'Conforme' : (item.checked ? 'Défectueux' : 'Non vérifié');
+                const rowClass = item.isConform ? 'conformed' : (item.checked ? 'defect' : '');
+                const isMajor = item.checked && item.id.includes('-') && /[A-Z]/.test(item.id.split('-')[1]);
+                
+                return `
+                  <tr class="${rowClass}">
+                    <td>${isMajor ? '⚠️ ' : ''}${item.label}</td>
+                    <td>${status}</td>
+                    <td>${item.comment || ''}</td>
+                  </tr>
+                `;
+              }).join('')}
+            `).join('')}
           </tbody>
         </table>
-        
-        <footer>
-          Liste des Défectuosités - Généré le ${getCurrentDateTime()}
-        </footer>
       </body>
       </html>
     `;
-    
+
     return html;
   };
 
@@ -2355,8 +2335,16 @@ function App() {
                 ).map(([category, items]) => (
                   <React.Fragment key={category}>
                     <tr>
-                      <td colSpan={3} className="border border-gray-300 p-2 bg-[#4f6683]/10 font-semibold">
-                        {category}
+                      <td colSpan={3} className="border border-gray-300 p-2 bg-[#4f6683]/10 font-semibold flex justify-between items-center">
+                        <span>{category}</span>
+                        <div className="flex items-center">
+                          <span className="text-xs mr-2">Tout est conforme</span>
+                          <input 
+                            type="checkbox" 
+                            onChange={() => handleSectionAllConform(category)}
+                            className="w-5 h-5 accent-green-600"
+                          />
+                        </div>
                       </td>
                     </tr>
                     
