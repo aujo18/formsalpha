@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle, Camera, RotateCcw } from 'lucide-react';
+import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle, Camera, RotateCcw, AlertTriangle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import emailjs from '@emailjs/browser';
 import BarcodeScanner from './components/BarcodeScanner';
@@ -1457,29 +1457,41 @@ function App() {
     return null;
   };
 
-  // Soumission du formulaire Défectuosités
+  // Ajouter un état pour stocker les défectuosités majeures détectées
+  const [majorDefectsInfo, setMajorDefectsInfo] = useState<{
+    hasMajorDefects: boolean;
+    defectsList: string;
+  }>({
+    hasMajorDefects: false,
+    defectsList: ''
+  });
+
+  // Modifier la fonction handleSubmitForm3 pour ne pas afficher d'alerte séparée
   const handleSubmitForm3 = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Vérifier s'il y a des défectuosités majeures
     const majorDefects = hasMajorDefects();
     
-    // Afficher la boîte de dialogue de confirmation standard, avec un message supplémentaire si nécessaire
-    let confirmationMessage = "Voulez-vous soumettre ce formulaire de défectuosités ?";
-    
     if (majorDefects) {
       const defectsList = majorDefects.map((item: CheckItem) => 
         `- ${item.label}${item.comment ? ` (${item.comment})` : ''}`
       ).join('\n');
       
-      confirmationMessage = `ATTENTION : Des défectuosités majeures ont été détectées :\n\n${defectsList}\n\nVeuillez contacter immédiatement votre chef d'équipe ou superviseur.\n\nVoulez-vous quand même envoyer ce formulaire ?`;
+      // Stocker les informations sur les défectuosités majeures dans l'état
+      setMajorDefectsInfo({
+        hasMajorDefects: true,
+        defectsList
+      });
+    } else {
+      setMajorDefectsInfo({
+        hasMajorDefects: false,
+        defectsList: ''
+      });
     }
     
-    // Utiliser window.confirm avec le message approprié
-    if (window.confirm(confirmationMessage)) {
-      // Si l'utilisateur confirme, montrer la boîte de dialogue de confirmation standard
-      setShowConfirmation(true);
-    }
+    // Afficher la boîte de dialogue de confirmation
+    setShowConfirmation(true);
   };
   
   const confirmSubmitForm3 = async () => {
@@ -2422,20 +2434,6 @@ function App() {
                     <div className="text-xs text-center italic mb-2">
                       Veuillez cocher les défectuosités constatées sur le véhicule
                     </div>
-                    <div className="flex justify-center mb-6">
-                      <button 
-                        type="button"
-                        className="px-4 py-2 bg-red-100 text-red-800 rounded-md flex items-center space-x-2 mr-4"
-                        onClick={() => {
-                          setDefectuositesItems(prevItems =>
-                            prevItems.map(item => ({...item, checked: false}))
-                          );
-                        }}
-                      >
-                        <RotateCcw size={14} />
-                        <span>Réinitialiser tout</span>
-                      </button>
-                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -2480,10 +2478,26 @@ function App() {
                 </button>
               </div>
               <div className="mb-6">
-                <div className="flex items-start mb-4">
-                  <AlertCircle className="text-[#b22a2e] mr-3 mt-0.5" size={24} />
-                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Les données seront envoyées au système central.</p>
-                </div>
+                {majorDefectsInfo.hasMajorDefects ? (
+                  <>
+                    <div className="flex items-start mb-4">
+                      <AlertTriangle className="text-red-600 mr-3 mt-0.5" size={24} />
+                      <div>
+                        <p className="font-bold text-red-600">ATTENTION : Des défectuosités majeures ont été détectées</p>
+                        <p className="text-red-600 mt-2">Veuillez contacter immédiatement votre chef d'équipe ou superviseur.</p>
+                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                          <pre className="whitespace-pre-wrap text-sm">{majorDefectsInfo.defectsList}</pre>
+                        </div>
+                        <p className="mt-4">Voulez-vous quand même envoyer ce formulaire ?</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-start mb-4">
+                    <AlertCircle className="text-[#b22a2e] mr-3 mt-0.5" size={24} />
+                    <p>Êtes-vous sûr de vouloir finaliser cette inspection? Les données seront envoyées au système central.</p>
+                  </div>
+                )}
               </div>
               <div className="flex justify-end space-x-4">
                 <button 
