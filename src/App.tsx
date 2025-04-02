@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle, Camera } from 'lucide-react';
+import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle, Camera, RotateCcw } from 'lucide-react';
 import jsPDF from 'jspdf';
 import emailjs from '@emailjs/browser';
 import BarcodeScanner from './components/BarcodeScanner';
@@ -33,10 +33,12 @@ function App() {
   // Référence aux formulaires
   const form1Ref = useRef<HTMLFormElement>(null);
   const form2Ref = useRef<HTMLFormElement>(null);
+  const form3Ref = useRef<HTMLFormElement>(null);
   
   // URLs des API d'intégration
   const API_URL_MDSA = 'https://hook.us1.make.com/6npqjkskt1d71ir3aypy7h6434s98b8u'; // URL de l'API pour MDSA
   const API_URL_VEHICULE = 'https://hook.us1.make.com/5unm52j98tg1nr5tz9esxk3jd2msj367'; // URL de l'API pour Véhicule
+  const API_URL_DEFECTUOSITES = 'https://hook.us1.make.com/5unm52j98tg1nr5tz9esxk3jd2msj367'; // URL de l'API pour Défectuosités (même que véhicule pour l'instant)
   
   // Valeurs pour la glycémie
   const [glycemieNormal, setGlycemieNormal] = useState('');
@@ -142,6 +144,55 @@ function App() {
     { id: 'armoire18', label: 'Ceintures fast clip, Immobilisateur de tête', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
     { id: 'armoire19', label: 'Attelles sous vide/pompe, abrasif, attelle en carton, lave-vitre', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false },
     { id: 'armoire20', label: 'Trousse VPI (Ébola)', category: 'ARRIÈRE DE L\'AMBULANCE (INT. ET EXT.)', checked: false }
+  ]);
+  
+  // Items pour le formulaire Défectuosités
+  const [defectuositesItems, setDefectuositesItems] = useState<CheckItem[]>([
+    // 1. ATTELAGE
+    { id: 'attelage1-1', label: 'Élément(s) de fixation du dispositif d\'attelage manquant(s), endommagé(s)', category: '1. ATTELAGE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'attelage1-2', label: 'Attache de sûreté ou raccord manquant, détérioré ou mal fixé', category: '1. ATTELAGE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'attelage1-A', label: 'Plaque d\'attelage ou pivot d\'attelage fissuré, mal fixé ou absence d\'attelage, fissure ou mal fixé', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'attelage1-B', label: 'Mouvement entre la sellette et le cadre', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'attelage1-C', label: 'Plus de 20% des éléments de fixation du mécanisme manquants ou desserrés', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'attelage1-D', label: '25% ou plus des poupées de blocage sont manquantes ou inopérantes', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'attelage1-E', label: 'Mécanisme d\'attelage mal fermé ou mal verrouillé', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'attelage1-F', label: 'Élément du mécanisme d\'attelage manquant, mal fixé, mal ajusté ou endommagé au point où il y a risque de rupture ou de séparation', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 2. CHÂSSIS ET CARROSSERIE
+    { id: 'chassis2-1', label: 'Longeron fissuré ou traverse fissurée ou cassée', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'chassis2-2', label: 'Élément fixe de la carrosserie absent ou mal fixé', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'chassis2-A', label: 'Longeron risque de casser', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'chassis2-B', label: 'Longeron ou traverse affaissé et qui provoque le contact d\'une pièce mobile avec la carrosserie', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'chassis2-C', label: 'Plus de 25% des goupilles de glissière d\'un train roulant manquantes ou non fixées', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 3. CHAUFFAGE ET DÉGIVRAGE
+    { id: 'chauffage3-1', label: 'Soufflerie du pare-brise ne fonctionne pas', category: '3. CHAUFFAGE ET DÉGIVRAGE', subcategory: 'Défectuosités mineures', checked: false },
+    
+    // 4. COMMANDES DU CONDUCTEUR
+    { id: 'commandes4-1', label: 'Accélérateur ou embrayage ne fonctionne pas correctement', category: '4. COMMANDES DU CONDUCTEUR', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'commandes4-2', label: 'Klaxon ne fonctionne pas correctement', category: '4. COMMANDES DU CONDUCTEUR', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'commandes4-A', label: 'Moteur ne revient pas au ralenti après le relâchement de l\'accélérateur', category: '4. COMMANDES DU CONDUCTEUR', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 5. DIRECTION
+    { id: 'direction5-1', label: 'Colonne de direction se déplace par rapport à sa position normale ou volant ajustable ne demeure pas à la position choisie par le fabricant', category: '5. DIRECTION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'direction5-2', label: 'Niveau du liquide de la servodirection n\'est pas celui prescrit par le fabricant', category: '5. DIRECTION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'direction5-3', label: 'Courroie de la pompe présente une coupure', category: '5. DIRECTION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'direction5-A', label: 'Colonne de direction ou volant se déplace par rapport à leur position normale alors qu\'il y a un risque de séparation', category: '5. DIRECTION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'direction5-B', label: 'Servodirection ne fonctionne pas', category: '5. DIRECTION', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 6. ESSUIE-GLACES ET LAVE-GLACE
+    { id: 'essuie6-1', label: 'Essuie-glace du côté passager manquant ou inadéquat', category: '6. ESSUIE-GLACES ET LAVE-GLACE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'essuie6-2', label: 'Système de lave-glace inefficace', category: '6. ESSUIE-GLACES ET LAVE-GLACE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'essuie6-A', label: 'Essuie-glace du côté conducteur manquant ou inadéquat', category: '6. ESSUIE-GLACES ET LAVE-GLACE', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 7. MATÉRIEL D'URGENCE
+    { id: 'urgence7-1', label: 'Triangle de premiers soins requis par la loi mal fixé ou difficilement accessible', category: '7. MATÉRIEL D\'URGENCE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'urgence7-2', label: 'Extincteur chimique requis par la loi mal fixé, inadéquat ou difficilement accessible', category: '7. MATÉRIEL D\'URGENCE', subcategory: 'Défectuosités mineures', checked: false },
+    
+    // 8. PHARES ET FEUX
+    { id: 'phares8-1', label: 'Phare de croisement, feu de position, feu de changement de direction, feu de freinage ou feu de la plaque d\'immatriculation ne s\'allume pas', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'phares8-A', label: 'Aucun phare de croisement ne s\'allume', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'phares8-B', label: 'À l\'arrière d\'un véhicule d\'une seule unité ou du dernier véhicule d\'un ensemble de véhicules: *Aucun feu de changement de direction droit ou gauche ne s\'allume *Aucun feu de freinage ne s\'allume *Aucun des feux de position ne s\'allume', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités majeures', checked: false }
   ]);
   
   // Obtenir la date et l'heure actuelles au format lisible
@@ -1013,32 +1064,58 @@ function App() {
     return html;
   };
 
-  // Fonction pour envoyer les données d'inspection à Make.com
+  // Fonction pour envoyer les données d'inspection à l'API
   const sendInspectionToMakecom = async (formType: string) => {
     try {
       console.log(`Début de la préparation de l'envoi pour ${formType}...`);
       
       // Générer le HTML selon le type de formulaire
-      const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
+      let htmlContent = '';
+      if (formType === 'MDSA') {
+        htmlContent = generateMdsaHTML();
+      } else if (formType === 'Véhicule') {
+        htmlContent = generateVehiculeHTML();
+      } else if (formType === 'Defectuosites') {
+        htmlContent = generateDefectuositesHTML();
+      } else {
+        throw new Error(`Type de formulaire inconnu: ${formType}`);
+      }
       console.log(`HTML ${formType} généré, taille:`, htmlContent.length, "caractères");
       
       // Préparation des données pour l'envoi
       const currentDateTime = getCurrentDateTime();
-      const webhookUrl = formType === 'MDSA' ? API_URL_MDSA : API_URL_VEHICULE;
+      let webhookUrl = '';
+      if (formType === 'MDSA') {
+        webhookUrl = API_URL_MDSA;
+      } else if (formType === 'Véhicule') {
+        webhookUrl = API_URL_VEHICULE;
+      } else if (formType === 'Defectuosites') {
+        webhookUrl = API_URL_DEFECTUOSITES;
+      } else {
+        throw new Error(`Type de formulaire inconnu: ${formType}`);
+      }
       
       console.log(`Utilisation du webhook pour ${formType}:`, webhookUrl);
       
       // Créer un nom de fichier unique et significatif
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `inspection_${formType.toLowerCase()}_${formType === 'MDSA' ? numeroMoniteur : numeroVehicule}_${timestamp}.html`;
+      let numeroIdentifiant = "";
       
-      // Préparation des données pour le webhook Make.com
+      if (formType === 'MDSA') {
+        numeroIdentifiant = numeroMoniteur;
+      } else {
+        numeroIdentifiant = numeroVehicule;
+      }
+      
+      const fileName = `inspection_${formType.toLowerCase()}_${numeroIdentifiant}_${timestamp}.html`;
+      
+      // Préparation des données pour l'API
       const webhookData = {
         type: formType,
         matricule: matricule,
         dateTime: currentDateTime,
         pointDeService: pointDeService,
-        numeroIdentifiant: formType === 'MDSA' ? numeroMoniteur : numeroVehicule,
+        numeroIdentifiant: numeroIdentifiant,
         htmlContent: htmlContent,
         fileName: fileName,
         mimeType: "text/html" // Spécifier le type MIME comme HTML
@@ -1221,7 +1298,245 @@ function App() {
     setShowScanner(false);
   };
 
-  // Page d'accueil avec les deux options de formulaire
+  // Fonction pour gérer les cases à cocher du formulaire Défectuosités
+  const handleDefectuositesCheckChange = (itemId: string) => {
+    setDefectuositesItems(prevItems => 
+      prevItems.map(item => 
+        item.id === itemId 
+          ? { 
+              ...item, 
+              checked: !item.checked
+            } 
+          : item
+      )
+    );
+  };
+
+  // Validation du formulaire Défectuosités
+  const validateDefectuositesForm = () => {
+    // Vérifier les champs obligatoires
+    if (!matricule) return "Veuillez entrer votre matricule";
+    if (!numeroVehicule) return "Veuillez entrer le numéro du véhicule";
+    if (!pointDeService) return "Veuillez sélectionner le point de service";
+    
+    return null;
+  };
+
+  // Soumission du formulaire Défectuosités
+  const handleSubmitForm3 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Afficher la boîte de dialogue de confirmation
+    setShowConfirmation(true);
+  };
+  
+  const confirmSubmitForm3 = async () => {
+    // Fermer la boîte de dialogue de confirmation
+    setShowConfirmation(false);
+    
+    // Valider le formulaire
+    const validationError = validateDefectuositesForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      console.log("Début du traitement du formulaire Défectuosités");
+      const currentDateTime = getCurrentDateTime();
+      setSubmissionDateTime(currentDateTime);
+      
+      // Envoyer les données HTML à l'API
+      try {
+        console.log("Tentative d'envoi des données Défectuosités via webhook...");
+        const dataSent = await sendInspectionToMakecom('Defectuosites');
+        if (dataSent) {
+          console.log("Envoi des données Défectuosités réussi");
+          setSubmissionMessage("L'inspection a été générée et envoyée avec succès.");
+        } else {
+          console.log("Échec de l'envoi des données Défectuosités");
+          setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué.");
+        }
+      } catch (sendError) {
+        console.error('Erreur envoi webhook détaillée pour Défectuosités:', sendError);
+        setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}.`);
+      }
+      
+      setSubmitted(true);
+      
+      // Réinitialiser le formulaire
+      setMatricule('');
+      setNumeroVehicule('');
+      setPointDeService('');
+      setDefectuositesItems(prevItems => 
+        prevItems.map(item => ({
+          ...item,
+          checked: false
+        }))
+      );
+    } catch (error) {
+      console.error('Erreur lors de la génération ou envoi de l\'inspection Défectuosités:', error);
+      setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Fonction pour générer le HTML du formulaire Défectuosités
+  const generateDefectuositesHTML = () => {
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Liste des Défectuosités - Véhicules Lourds Ambulanciers</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+          }
+          h1 {
+            color: #b22a2e;
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          .info-container {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+          }
+          .info-item {
+            margin-right: 30px;
+            margin-bottom: 10px;
+          }
+          .info-label {
+            font-weight: bold;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+          }
+          th {
+            background-color: #102947;
+            color: white;
+          }
+          .category {
+            background-color: #f0f0f0;
+            font-weight: bold;
+          }
+          .subcategory {
+            background-color: #f9f9f9;
+            font-style: italic;
+          }
+          .checked {
+            color: green;
+            font-weight: bold;
+            text-align: center;
+          }
+          .not-checked {
+            color: red;
+            text-align: center;
+          }
+          footer {
+            margin-top: 40px;
+            font-size: 0.8rem;
+            text-align: center;
+            color: #666;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Liste des Défectuosités - Véhicules Lourds Ambulanciers</h1>
+        
+        <div class="info-container">
+          <div class="info-item">
+            <span class="info-label">Matricule:</span> ${matricule}
+          </div>
+          <div class="info-item">
+            <span class="info-label">Véhicule #:</span> ${numeroVehicule}
+          </div>
+          <div class="info-item">
+            <span class="info-label">Point de service:</span> ${pointDeService}
+          </div>
+          <div class="info-item">
+            <span class="info-label">Date et heure:</span> ${getCurrentDateTime()}
+          </div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 80%;">Élément</th>
+              <th style="width: 20%;">Défectuosité constatée</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    // Regrouper par catégorie et sous-catégorie
+    const groupedItems = defectuositesItems.reduce((acc, item) => {
+      if (!acc[item.category || 'Autres']) {
+        acc[item.category || 'Autres'] = {};
+      }
+      if (!acc[item.category || 'Autres'][item.subcategory || 'Général']) {
+        acc[item.category || 'Autres'][item.subcategory || 'Général'] = [];
+      }
+      acc[item.category || 'Autres'][item.subcategory || 'Général'].push(item);
+      return acc;
+    }, {} as Record<string, Record<string, CheckItem[]>>);
+    
+    // Ajouter les lignes par catégorie et sous-catégorie
+    Object.entries(groupedItems).forEach(([category, subcategories]) => {
+      html += `
+        <tr>
+          <td colspan="2" class="category">${category}</td>
+        </tr>
+      `;
+      
+      Object.entries(subcategories).forEach(([subcategory, items]) => {
+        html += `
+          <tr>
+            <td colspan="2" class="subcategory">${subcategory}</td>
+          </tr>
+        `;
+        
+        items.forEach(item => {
+          html += `
+            <tr>
+              <td>${item.label}</td>
+              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
+            </tr>
+          `;
+        });
+      });
+    });
+    
+    html += `
+          </tbody>
+        </table>
+        
+        <footer>
+          Liste des Défectuosités - Généré le ${getCurrentDateTime()}
+        </footer>
+      </body>
+      </html>
+    `;
+    
+    return html;
+  };
+
+  // Page d'accueil avec les options de formulaire
   if (currentForm === null) {
     return (
       <div className="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -1232,7 +1547,7 @@ function App() {
           </div>
         </header>
         
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           <button 
             onClick={() => setCurrentForm('form1')}
             className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col items-center"
@@ -1255,6 +1570,18 @@ function App() {
             <h2 className="text-xl font-semibold mb-2">Inspection Véhicule</h2>
             <p className="text-gray-600 text-center">Vérification du materiel de l'ambulance</p>
             <ChevronRight className="mt-4 text-[#102947]" />
+          </button>
+          
+          <button 
+            onClick={() => setCurrentForm('form3')}
+            className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col items-center"
+          >
+            <div className="bg-[#4f6683]/10 p-4 rounded-full mb-4">
+              <ClipboardCheck size={48} className="text-[#4f6683]" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Liste des Défectuosités</h2>
+            <p className="text-gray-600 text-center">Véhicules lourds ambulanciers</p>
+            <ChevronRight className="mt-4 text-[#4f6683]" />
           </button>
         </div>
         
@@ -1852,6 +2179,208 @@ function App() {
                 <button 
                   onClick={confirmSubmitForm2}
                   className="px-4 py-2 bg-[#102947] text-white rounded-md hover:bg-[#102947]/90"
+                >
+                  Confirmer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Formulaire 3: Liste des Défectuosités
+  if (currentForm === 'form3') {
+    return (
+      <div className="min-h-screen bg-gray-100 p-4 md:p-6">
+        <header className="bg-[#4f6683] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
+            <h1 className="text-xl font-bold">Liste des Défectuosités</h1>
+          </div>
+          <button onClick={goBack} className="flex items-center text-white">
+            <ChevronLeft size={20} /> Retour
+          </button>
+        </header>
+        
+        <form ref={form3Ref} onSubmit={handleSubmitForm3} className="bg-white rounded-xl shadow-md p-4 mb-20">
+          <div className="flex flex-col mb-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+            <div className="md:w-1/3">
+              <label htmlFor="matriculeVehicule" className="block text-sm font-medium text-gray-700 mb-1">
+                Matricule du TAP:
+              </label>
+              <input
+                type="text"
+                id="matriculeVehicule"
+                value={matricule}
+                onChange={(e) => handleMatriculeChange(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#4f6683] focus:border-[#4f6683]"
+                required
+                placeholder="Ex: N-0100"
+              />
+            </div>
+            
+            <div className="md:w-1/3">
+              <label htmlFor="numeroVehicule" className="block text-sm font-medium text-gray-700 mb-1">
+                Véhicule # :
+              </label>
+              <input
+                type="text"
+                id="numeroVehicule"
+                value={numeroVehicule}
+                onChange={(e) => handleVehiculeNumberChange(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#4f6683] focus:border-[#4f6683]"
+                required
+                placeholder="Ex: 9198"
+              />
+            </div>
+            
+            <div className="md:w-1/3">
+              <label htmlFor="pointDeServiceVehicule" className="block text-sm font-medium text-gray-700 mb-1">
+                Point de service (PDS) :
+              </label>
+              <select
+                id="pointDeServiceVehicule"
+                value={pointDeService}
+                onChange={(e) => setPointDeService(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#4f6683] focus:border-[#4f6683]"
+                required
+              >
+                <option value="">Sélectionner un PDS</option>
+                <option value="Sainte-Adèle">Sainte-Adèle</option>
+                <option value="Grenville">Grenville</option>
+                <option value="Saint-Donat">Saint-Donat</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse border border-gray-300">
+              <thead>
+                <tr>
+                  <th className="border border-gray-300 p-2 bg-[#4f6683] text-white w-4/5">DÉFAUTÉS</th>
+                  <th className="border border-gray-300 p-2 bg-[#4f6683] text-white w-1/5">Vérifié</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Grouper les items par catégorie */}
+                {Object.entries(
+                  defectuositesItems.reduce<Record<string, CheckItem[]>>((acc, item) => {
+                    if (!acc[item.category || 'Autres']) acc[item.category || 'Autres'] = [];
+                    acc[item.category || 'Autres'].push(item);
+                    return acc;
+                  }, {})
+                ).map(([category, items]) => (
+                  <React.Fragment key={category}>
+                    <tr>
+                      <td colSpan={2} className="border border-gray-300 p-2 bg-[#4f6683]/10 font-semibold">
+                        {category}
+                      </td>
+                    </tr>
+                    
+                    {items.map((item) => (
+                      <tr 
+                        key={item.id}
+                        className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
+                        onClick={() => handleDefectuositesCheckChange(item.id)}
+                      >
+                        <td className="border border-gray-300 p-2 text-sm">
+                          {item.label}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-center">
+                          <input 
+                            type="checkbox" 
+                            checked={item.checked}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={() => handleDefectuositesCheckChange(item.id)}
+                            className="w-5 h-5 accent-[#4f6683]"
+                            required
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))}
+                
+                <tr>
+                  <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100">
+                    <div className="text-xs text-center italic mb-2">
+                      Veuillez cocher les défectuosités constatées sur le véhicule
+                    </div>
+                    <div className="flex justify-center mb-6">
+                      <button 
+                        type="button"
+                        className="px-4 py-2 bg-red-100 text-red-800 rounded-md flex items-center space-x-2 mr-4"
+                        onClick={() => {
+                          setDefectuositesItems(prevItems =>
+                            prevItems.map(item => ({...item, checked: false}))
+                          );
+                        }}
+                      >
+                        <RotateCcw size={14} />
+                        <span>Réinitialiser tout</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4 mb-4">
+              <p>{error}</p>
+            </div>
+          )}
+          
+          <div className="sticky bottom-0 bg-white p-4 border-t mt-4">
+            <button
+              type="submit"
+              className={`w-full ${isSubmitting ? 'bg-[#4f6683]/70' : 'bg-[#4f6683] hover:bg-[#4f6683]/90'} text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center`}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  Traitement en cours...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2" size={20} />
+                  Envoyer l'inspection
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+        
+        {/* Boîte de dialogue de confirmation */}
+        {showConfirmation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Confirmation</h3>
+                <button onClick={() => setShowConfirmation(false)} className="text-gray-500 hover:text-gray-700">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="mb-6">
+                <div className="flex items-start mb-4">
+                  <AlertCircle className="text-[#b22a2e] mr-3 mt-0.5" size={24} />
+                  <p>Êtes-vous sûr de vouloir finaliser cette inspection? Les données seront envoyées au système central.</p>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button 
+                  onClick={() => setShowConfirmation(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={confirmSubmitForm3}
+                  className="px-4 py-2 bg-[#4f6683] text-white rounded-md hover:bg-[#4f6683]/90"
                 >
                   Confirmer
                 </button>
