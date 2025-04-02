@@ -212,25 +212,28 @@ function App() {
     { id: 'portieres10-1', label: 'Portière ou issue ne s\'ouvre ou ne se ferme pas correctement', category: '10. PORTIÈRES ET AUTRES ISSUES', subcategory: 'Défectuosités mineures', checked: false },
     { id: 'portieres10-A', label: 'Issue de secours obstruée', category: '10. PORTIÈRES ET AUTRES ISSUES', subcategory: 'Défectuosités majeures', checked: false },
     
-    // 11. RETENUE DE LA CARGAISON
-    { id: 'cargaison11-1', label: 'Équipement de retenue ou d\'arrimage endommagé', category: '11. RETENUE DE LA CARGAISON', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'cargaison11-2', label: 'Équipement d\'arrimage mal ajusté', category: '11. RETENUE DE LA CARGAISON', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'cargaison11-A', label: 'Arrimage non fixé, mal fixé ou insuffisant qui permet un déplacement de la cargaison', category: '11. RETENUE DE LA CARGAISON', subcategory: 'Défectuosités majeures', checked: false },
+    // 11. PARE-BRISE ET VITRES
+    { id: 'parebrise11-1', label: 'Fissure dans le pare-brise dans la zone balayée par l\'essuie-glace', category: '11. PARE-BRISE ET VITRES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'parebrise11-2', label: 'Pare-brise ou vitre cassé, approuvé par le fabricant', category: '11. PARE-BRISE ET VITRES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'parebrise11-A', label: 'Absence de pare-brise', category: '11. PARE-BRISE ET VITRES', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'parebrise11-B', label: 'Surface vitrée obstruée du côté du conducteur', category: '11. PARE-BRISE ET VITRES', subcategory: 'Défectuosités majeures', checked: false },
     
-    // 12. RÉTROVISEURS
-    { id: 'retroviseurs12-1', label: 'Absence d\'un rétroviseur extérieur exigé par le Code', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'retroviseurs12-2', label: 'Rétroviseur mal fixé ou qui présente une arête vive', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'retroviseurs12-3', label: 'Rétroviseur réfléchissant mal', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
+    // 12. PNEUS
+    { id: 'pneus12-1', label: 'Indicateur d\'usure d\'un pneu touche la chaussée', category: '12. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus12-2', label: 'Pneu qui présente une matière étrangère pouvant causer une crevaison', category: '12. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus12-3', label: 'Pneu fissuré ou coupé exposant la toile de renforcement ou la ceinture d\'acier', category: '12. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus12-4', label: 'Pneu déformé, déchiqueté ou dont des morceaux sont détachés', category: '12. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus12-5', label: 'Valve usée, endommagée ou coupée', category: '12. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus12-A', label: 'Pneu simple dont la profondeur de deux rainures adjacentes mesurées dans un indicateur d\'usure est inférieure à 1,6 mm', category: '12. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus12-B', label: 'Pneu jumelé dont la profondeur d\'une rainure mesurée dans un indicateur d\'usure est inférieure à 1,6 mm', category: '12. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus12-C', label: 'Pneu simple ou jumelé dont la bande de roulement ou le flanc présente une déchirure exposant la toile de renforcement ou la ceinture d\'acier', category: '12. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus12-D', label: 'Pneu en contact avec une partie fixe du véhicule', category: '12. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus12-E', label: 'Pneu crevé ou dont la pression est nettement insuffisante', category: '12. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus12-F', label: 'Pneu dont un renflement indique un défaut de la carcasse', category: '12. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
     
-    // 13. ROUES, MOYEUX ET PIÈCES DE FIXATION
-    { id: 'roues13-1', label: 'Écrou, boulon ou goujon de roue manquant, mal fixé ou endommagé', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'roues13-2', label: 'Trace de fuite du joint d\'huile de roue', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'roues13-A', label: 'Roue, jante ou cercle de roue endommagé', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'roues13-B', label: 'Fissure dans un disque ou toute autre composante de montage d\'une roue', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'roues13-C', label: 'Mauvais appariement des roues', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'roues13-D', label: 'Fuite d\'huile d\'un moyeu qui affecte le freinage', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'roues13-E', label: 'Réparation par soudage d\'une jante ou d\'un disque de roue', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'roues13-F', label: 'Lubrifiant absent ou insuffisant dans un moyeu muni d\'un hublot', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    // 13. PORTIÈRE ET AUTRES ISSUES
+    { id: 'portieres13-1', label: 'Portière ou issue ne s\'ouvre ou ne se ferme pas correctement', category: '13. PORTIÈRE ET AUTRES ISSUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'portieres13-A', label: 'Issue de secours obstruée', category: '13. PORTIÈRE ET AUTRES ISSUES', subcategory: 'Défectuosités majeures', checked: false },
     
     // 14. SUSPENSION
     { id: 'suspension14-1', label: 'Fuite d\'huile dans un amortisseur', category: '14. SUSPENSION', subcategory: 'Défectuosités mineures', checked: false },
