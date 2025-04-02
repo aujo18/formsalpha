@@ -1447,6 +1447,14 @@ function App() {
     return majorDefects.length > 0 ? majorDefects : null;
   };
 
+  // Ajouter la fonction pour détecter les défectuosités mineures
+  const hasMinorDefects = () => {
+    const minorDefects = defectuositesItems.filter(item => 
+      item.checked && item.id.includes('-') && !/[A-Z]/.test(item.id.split('-')[1])
+    );
+    return minorDefects.length > 0 ? minorDefects : null;
+  };
+
   // Vérifier si tous les champs requis sont remplis
   const validateDefectuositesForm = () => {
     // Vérifier les champs obligatoires
@@ -1461,9 +1469,11 @@ function App() {
   const [majorDefectsInfo, setMajorDefectsInfo] = useState<{
     hasMajorDefects: boolean;
     defectsList: string;
+    hasMinorDefects?: boolean;
   }>({
     hasMajorDefects: false,
-    defectsList: ''
+    defectsList: '',
+    hasMinorDefects: false
   });
 
   // Modifier la fonction handleSubmitForm3 pour ne pas afficher d'alerte séparée
@@ -1472,6 +1482,7 @@ function App() {
     
     // Vérifier s'il y a des défectuosités majeures
     const majorDefects = hasMajorDefects();
+    const minorDefects = hasMinorDefects();
     
     if (majorDefects) {
       const defectsList = majorDefects.map((item: CheckItem) => 
@@ -1483,10 +1494,22 @@ function App() {
         hasMajorDefects: true,
         defectsList
       });
+    } else if (minorDefects) {
+      const defectsList = minorDefects.map((item: CheckItem) => 
+        `- ${item.label}${item.comment ? ` (${item.comment})` : ''}`
+      ).join('\n');
+      
+      // Stocker les informations sur les défectuosités mineures dans l'état
+      setMajorDefectsInfo({
+        hasMajorDefects: false,
+        defectsList,
+        hasMinorDefects: true
+      });
     } else {
       setMajorDefectsInfo({
         hasMajorDefects: false,
-        defectsList: ''
+        defectsList: '',
+        hasMinorDefects: false
       });
     }
     
@@ -1513,10 +1536,13 @@ function App() {
       
       // Vérifier s'il y a des défectuosités majeures pour le message final
       const majorDefects = hasMajorDefects();
-      let majorDefectsMessage = '';
+      const minorDefects = hasMinorDefects();
+      let defectsMessage = '';
       
       if (majorDefects) {
-        majorDefectsMessage = 'ATTENTION: Des défectuosités majeures ont été détectées. Veuillez contacter votre chef d\'équipe ou superviseur immédiatement.';
+        defectsMessage = 'ATTENTION: Des défectuosités majeures ont été détectées. Veuillez contacter votre chef d\'équipe ou superviseur immédiatement.';
+      } else if (minorDefects) {
+        defectsMessage = 'Des défectuosités mineures ont été détectées. Veuillez contacter votre chef d\'équipe ou superviseur.';
       }
       
       const currentDateTime = getCurrentDateTime();
@@ -1528,9 +1554,9 @@ function App() {
         const dataSent = await sendInspectionToMakecom('Defectuosites');
         if (dataSent) {
           console.log("Envoi des données Défectuosités réussi");
-          // Ajouter le message sur les défectuosités majeures si nécessaire
+          // Ajouter le message sur les défectuosités si nécessaire
           const successMsg = "L'inspection a été générée et envoyée avec succès.";
-          setSubmissionMessage(majorDefectsMessage ? `${successMsg}\n\n${majorDefectsMessage}` : successMsg);
+          setSubmissionMessage(defectsMessage ? `${successMsg}\n\n${defectsMessage}` : successMsg);
         } else {
           console.log("Échec de l'envoi des données Défectuosités");
           setSubmissionMessage("L'inspection a été générée mais l'envoi a échoué.");
@@ -1566,17 +1592,31 @@ function App() {
   const generateDefectuositesHTML = () => {
     // Vérifier s'il y a des défectuosités majeures
     const majorDefects = hasMajorDefects();
-    const majorDefectsWarning = majorDefects 
-      ? `<div style="background-color: #ffebee; border: 2px solid #c62828; padding: 15px; margin: 20px 0; border-radius: 5px;">
-          <h3 style="color: #c62828; margin-top: 0;">⚠️ ATTENTION: DÉFECTUOSITÉS MAJEURES DÉTECTÉES</h3>
-          <p>Les défectuosités majeures suivantes nécessitent une attention immédiate. Veuillez contacter votre chef d'équipe ou superviseur.</p>
-          <ul style="margin-bottom: 0;">
-            ${majorDefects.map((item: CheckItem) => 
-              `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`
-            ).join('')}
-          </ul>
-        </div>` 
-      : '';
+    const minorDefects = hasMinorDefects();
+    
+    let defectsWarning = '';
+    
+    if (majorDefects) {
+      defectsWarning = `<div style="background-color: #ffebee; border: 2px solid #c62828; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <h3 style="color: #c62828; margin-top: 0;">⚠️ ATTENTION: DÉFECTUOSITÉS MAJEURES DÉTECTÉES</h3>
+        <p>Les défectuosités majeures suivantes nécessitent une attention immédiate. Veuillez contacter votre chef d'équipe ou superviseur.</p>
+        <ul style="margin-bottom: 0;">
+          ${majorDefects.map((item: CheckItem) => 
+            `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`
+          ).join('')}
+        </ul>
+      </div>`;
+    } else if (minorDefects) {
+      defectsWarning = `<div style="background-color: #fff8e1; border: 2px solid #ffa000; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <h3 style="color: #ffa000; margin-top: 0;">⚠️ DÉFECTUOSITÉS MINEURES DÉTECTÉES</h3>
+        <p>Les défectuosités mineures suivantes nécessitent une attention. Veuillez contacter votre chef d'équipe ou superviseur.</p>
+        <ul style="margin-bottom: 0;">
+          ${minorDefects.map((item: CheckItem) => 
+            `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`
+          ).join('')}
+        </ul>
+      </div>`;
+    }
 
     // Regrouper les éléments par catégorie
     const categorized = defectuositesItems.reduce<Record<string, CheckItem[]>>((acc, item) => {
@@ -1600,7 +1640,8 @@ function App() {
           th { background-color: #f2f2f2; text-align: left; }
           .category { background-color: #e9ecef; font-weight: bold; }
           .conformed { background-color: #d4edda; }
-          .defect { background-color: #f8d7da; }
+          .defect-major { background-color: #f8d7da; }
+          .defect-minor { background-color: #fff3cd; }
           .comment { font-style: italic; color: #721c24; }
           .header-info { margin-bottom: 20px; }
           .header-info p { margin: 5px 0; }
@@ -1616,7 +1657,7 @@ function App() {
           <p><strong>Date et heure:</strong> ${getCurrentDateTime()}</p>
         </div>
         
-        ${majorDefectsWarning}
+        ${defectsWarning}
         
         <table>
           <thead>
@@ -1633,12 +1674,13 @@ function App() {
               </tr>
               ${items.map(item => {
                 const status = item.isConform ? 'Conforme' : (item.checked ? 'Défectueux' : 'Non vérifié');
-                const rowClass = item.isConform ? 'conformed' : (item.checked ? 'defect' : '');
                 const isMajor = item.checked && item.id.includes('-') && /[A-Z]/.test(item.id.split('-')[1]);
+                const isMinor = item.checked && item.id.includes('-') && !/[A-Z]/.test(item.id.split('-')[1]);
+                const rowClass = item.isConform ? 'conformed' : (isMajor ? 'defect-major' : (isMinor ? 'defect-minor' : ''));
                 
                 return `
                   <tr class="${rowClass}">
-                    <td>${isMajor ? '⚠️ ' : ''}${item.label}</td>
+                    <td>${isMajor ? '⚠️ ' : (isMinor ? '⚠️ ' : '')}${item.label}</td>
                     <td>${status}</td>
                     <td>${item.comment || ''}</td>
                   </tr>
@@ -2374,52 +2416,48 @@ function App() {
                         <tr 
                           className={`${item.disabled ? 'bg-gray-200 text-gray-500' : 
                             (item.isConform ? 'bg-green-100' : 
-                            (item.checked ? 'bg-red-100' : ''))} 
+                            (item.checked 
+                              ? (item.id.includes('-') && /[A-Z]/.test(item.id.split('-')[1]) ? 'bg-red-100' : 'bg-amber-100') 
+                              : ''))} 
                             ${!item.disabled ? 'transition-colors' : ''}`}
                         >
                           <td className="border border-gray-300 p-2 text-sm">
                             {/* Extraire l'identifiant du ID et l'ajouter au début du label */}
-                            {item.id.split('-')[1]} - {item.label}
+                            <span className="font-mono text-xs text-gray-500 mr-2">
+                              {item.id.split('-')[1]}
+                            </span>
+                            {item.label}
                           </td>
                           <td className="border border-gray-300 p-2 text-center">
-                            <div className="flex items-center space-x-2">
-                              <span className="mr-1 text-xs">Conforme</span>
-                              <input 
-                                type="checkbox" 
-                                checked={!!item.isConform}
-                                onChange={() => !item.disabled && handleDefectuositesCheckChange(item.id, true)}
-                                className="w-4 h-4 accent-green-600"
-                                disabled={item.disabled}
-                              />
-                            </div>
+                            <input 
+                              type="checkbox" 
+                              checked={item.isConform || false}
+                              disabled={item.disabled}
+                              onChange={() => handleDefectuositesCheckChange(item.id, true)}
+                              className="w-5 h-5 accent-green-600"
+                            />
                           </td>
                           <td className="border border-gray-300 p-2 text-center">
-                            <div className="flex items-center space-x-2">
-                              <span className="mr-1 text-xs">Défectuosité</span>
-                              <input 
-                                type="checkbox" 
-                                checked={item.checked}
-                                onChange={() => !item.disabled && handleDefectuositesCheckChange(item.id, false)}
-                                className="w-4 h-4 accent-red-600"
-                                disabled={item.disabled}
-                              />
-                            </div>
+                            <input 
+                              type="checkbox" 
+                              checked={item.checked}
+                              disabled={item.disabled}
+                              onChange={() => handleDefectuositesCheckChange(item.id)}
+                              className="w-5 h-5 accent-red-600"
+                            />
                           </td>
                         </tr>
                         {/* Zone de commentaire qui apparaît uniquement si la défectuosité est cochée */}
                         {item.checked && !item.disabled && (
-                          <tr className="bg-red-50">
+                          <tr className={item.id.includes('-') && /[A-Z]/.test(item.id.split('-')[1]) ? 'bg-red-50' : 'bg-amber-50'}>
                             <td colSpan={3} className="border border-gray-300 p-2">
-                              <label htmlFor={`comment-${item.id}`} className="block text-xs font-medium text-gray-600 mb-1">
-                                Commentaire sur la défectuosité:
-                              </label>
-                              <textarea
-                                id={`comment-${item.id}`}
-                                className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                                placeholder="Décrivez la défectuosité constatée..."
+                              <label className="block text-sm font-medium mb-1 text-gray-700">Commentaire sur la défectuosité :</label>
+                              <textarea 
                                 value={item.comment || ''}
                                 onChange={(e) => handleDefectuositesCommentChange(item.id, e.target.value)}
+                                className="w-full p-2 border rounded-md"
                                 rows={2}
+                                placeholder="Détails sur la défectuosité..."
                               />
                             </td>
                           </tr>
@@ -2489,6 +2527,20 @@ function App() {
                           <pre className="whitespace-pre-wrap text-sm">{majorDefectsInfo.defectsList}</pre>
                         </div>
                         <p className="mt-4">Voulez-vous quand même envoyer ce formulaire ?</p>
+                      </div>
+                    </div>
+                  </>
+                ) : majorDefectsInfo.hasMinorDefects ? (
+                  <>
+                    <div className="flex items-start mb-4">
+                      <AlertTriangle className="text-amber-500 mr-3 mt-0.5" size={24} />
+                      <div>
+                        <p className="font-bold text-amber-600">Des défectuosités mineures ont été détectées</p>
+                        <p className="text-amber-600 mt-2">Veuillez contacter votre chef d'équipe ou superviseur.</p>
+                        <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                          <pre className="whitespace-pre-wrap text-sm">{majorDefectsInfo.defectsList}</pre>
+                        </div>
+                        <p className="mt-4">Voulez-vous envoyer ce formulaire ?</p>
                       </div>
                     </div>
                   </>
