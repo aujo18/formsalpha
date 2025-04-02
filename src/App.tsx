@@ -1793,30 +1793,33 @@ function App() {
                       </td>
                     </tr>
                     
-                    {Object.entries(subcategories).forEach(([subcategory, items]) => {
-                      html += `
+                    {Object.entries(subcategories).map(([subcategory, items]) => (
+                      <React.Fragment key={subcategory}>
                         <tr>
-                          <td colspan="2" class="subcategory">${subcategory}</td>
+                          <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
+                            {subcategory}
+                          </td>
                         </tr>
-                      `;
-                      
-                      items.forEach(item => {
-                        let itemLabel = item.label;
-                        
-                        if (item.id === 'electrode1' && expireDateElectrode1) {
-                          itemLabel += ` (Expiration: ${expireDateElectrode1})`;
-                        } else if (item.id === 'electrode2' && expireDateElectrode2) {
-                          itemLabel += ` (Expiration: ${expireDateElectrode2})`;
-                        }
-                        
-                        html += `
-                          <tr>
-                            <td>${itemLabel}</td>
-                            <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
-                          </tr>
-                        `;
-                      });
-                    });
+                        {items.map(item => {
+                          let itemLabel = item.label;
+                          
+                          if (item.id === 'electrode1' && expireDateElectrode1) {
+                            itemLabel += ` (Expiration: ${expireDateElectrode1})`;
+                          } else if (item.id === 'electrode2' && expireDateElectrode2) {
+                            itemLabel += ` (Expiration: ${expireDateElectrode2})`;
+                          }
+                          
+                          return (
+                            <tr key={item.id}>
+                              <td className="border border-gray-300 p-2">{itemLabel}</td>
+                              <td className={`border border-gray-300 p-2 text-center ${item.checked ? 'text-green-600 font-bold' : 'text-red-600'}`}>
+                                {item.checked ? '✓' : '✗'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </React.Fragment>
+                    ))}
                   </React.Fragment>
                 ))}
                 
