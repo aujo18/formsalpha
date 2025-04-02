@@ -38,7 +38,7 @@ function App() {
   // URLs des API d'intégration
   const API_URL_MDSA = 'https://hook.us1.make.com/6npqjkskt1d71ir3aypy7h6434s98b8u'; // URL de l'API pour MDSA
   const API_URL_VEHICULE = 'https://hook.us1.make.com/5unm52j98tg1nr5tz9esxk3jd2msj367'; // URL de l'API pour Véhicule
-  const API_URL_DEFECTUOSITES = 'https://hook.us1.make.com/5unm52j98tg1nr5tz9esxk3jd2msj367'; // URL de l'API pour Défectuosités (même que véhicule pour l'instant)
+  const API_URL_DEFECTUOSITES = 'https://hook.us1.make.com/3xist7l1lcnruqvffssuyfv9sddmjxom'; // URL de l'API pour Défectuosités
   
   // Valeurs pour la glycémie
   const [glycemieNormal, setGlycemieNormal] = useState('');
