@@ -10,11 +10,14 @@
     
     // Force le rechargement des icônes si nécessaire
     if (navigator.userAgent.match(/iPhone|iPad|iPod/)) {
+      // Assurer que l'icône principale est bien utilisée
       const appleIconLink = document.querySelector('link[rel="apple-touch-icon"]');
       if (appleIconLink) {
+        // Forcer une mise à jour en ajoutant un timestamp
         const newLink = document.createElement('link');
         newLink.rel = 'apple-touch-icon';
-        newLink.href = appleIconLink.href + '?v=' + new Date().getTime();
+        // Utiliser la même icône que dans le manifeste
+        newLink.href = '/pwa-192x192.png?v=' + new Date().getTime();
         document.head.appendChild(newLink);
         setTimeout(() => {
           document.head.removeChild(appleIconLink);
