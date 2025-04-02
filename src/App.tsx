@@ -1415,7 +1415,7 @@ function App() {
     );
   };
 
-  // Fonction pour gérer la case "Tout est conforme" par section
+  // Modifier la fonction handleSectionAllConform pour vérifier si une section contient au moins un élément cliquable
   const handleSectionAllConform = (category: string) => {
     setDefectuositesItems(prevItems => 
       prevItems.map(item => {
@@ -1433,6 +1433,12 @@ function App() {
     );
   };
 
+  // Fonction utilitaire pour vérifier si une section est entièrement désactivée
+  const isSectionDisabled = (category: string) => {
+    const itemsInCategory = defectuositesItems.filter(item => item.category === category);
+    return itemsInCategory.length > 0 && itemsInCategory.every(item => item.disabled);
+  };
+
   // Fonction pour vérifier s'il y a des défectuosités majeures (identifiées par une lettre dans l'ID)
   const hasMajorDefects = () => {
     const majorDefects = defectuositesItems.filter(item => 
@@ -1441,7 +1447,7 @@ function App() {
     return majorDefects.length > 0 ? majorDefects : null;
   };
 
-  // Validation du formulaire Défectuosités
+  // Vérifier si tous les champs requis sont remplis
   const validateDefectuositesForm = () => {
     // Vérifier les champs obligatoires
     if (!matricule) return "Veuillez entrer votre matricule";
@@ -1458,19 +1464,20 @@ function App() {
     // Vérifier s'il y a des défectuosités majeures
     const majorDefects = hasMajorDefects();
     
+    // Afficher la boîte de dialogue de confirmation standard, avec un message supplémentaire si nécessaire
+    let confirmationMessage = "Voulez-vous soumettre ce formulaire de défectuosités ?";
+    
     if (majorDefects) {
-      const defectsList = majorDefects.map(item => 
+      const defectsList = majorDefects.map((item: CheckItem) => 
         `- ${item.label}${item.comment ? ` (${item.comment})` : ''}`
       ).join('\n');
       
-      if (window.confirm(
-        `ATTENTION : Des défectuosités majeures ont été détectées :\n\n${defectsList}\n\nVeuillez contacter immédiatement votre chef d'équipe ou superviseur.\n\nVoulez-vous quand même envoyer ce formulaire ?`
-      )) {
-        // Afficher la boîte de dialogue de confirmation standard
-        setShowConfirmation(true);
-      }
-    } else {
-      // Pas de défectuosités majeures, afficher la boîte de dialogue de confirmation standard
+      confirmationMessage = `ATTENTION : Des défectuosités majeures ont été détectées :\n\n${defectsList}\n\nVeuillez contacter immédiatement votre chef d'équipe ou superviseur.\n\nVoulez-vous quand même envoyer ce formulaire ?`;
+    }
+    
+    // Utiliser window.confirm avec le message approprié
+    if (window.confirm(confirmationMessage)) {
+      // Si l'utilisateur confirme, montrer la boîte de dialogue de confirmation standard
       setShowConfirmation(true);
     }
   };
@@ -1552,7 +1559,7 @@ function App() {
           <h3 style="color: #c62828; margin-top: 0;">⚠️ ATTENTION: DÉFECTUOSITÉS MAJEURES DÉTECTÉES</h3>
           <p>Les défectuosités majeures suivantes nécessitent une attention immédiate. Veuillez contacter votre chef d'équipe ou superviseur.</p>
           <ul style="margin-bottom: 0;">
-            ${majorDefects.map(item => 
+            ${majorDefects.map((item: CheckItem) => 
               `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`
             ).join('')}
           </ul>
@@ -2337,14 +2344,16 @@ function App() {
                     <tr>
                       <td colSpan={3} className="border border-gray-300 p-2 bg-[#4f6683]/10 font-semibold flex justify-between items-center">
                         <span>{category}</span>
-                        <div className="flex items-center">
-                          <span className="text-xs mr-2">Tout est conforme</span>
-                          <input 
-                            type="checkbox" 
-                            onChange={() => handleSectionAllConform(category)}
-                            className="w-5 h-5 accent-green-600"
-                          />
-                        </div>
+                        {!isSectionDisabled(category) && (
+                          <div className="flex items-center">
+                            <span className="text-xs mr-2">Tout est conforme</span>
+                            <input 
+                              type="checkbox" 
+                              onChange={() => handleSectionAllConform(category)}
+                              className="w-5 h-5 accent-green-600"
+                            />
+                          </div>
+                        )}
                       </td>
                     </tr>
                     
