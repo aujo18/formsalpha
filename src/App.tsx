@@ -207,32 +207,35 @@ function App() {
     { id: 'pneus9-D', label: 'Pneu en contact avec une partie fixe du véhicule, qui est à plat ou présente une fuite d\'air ou un renflement', category: '9. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
     
     // 10. PORTIÈRES ET AUTRES ISSUES
-    { id: 'portieres10-1', label: 'Portière ou issue ne s\'ouvre ou ne se ferme pas correctement', category: '10. PORTIÈRES ET AUTRES ISSUES', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'portieres10-A', label: 'Issue de secours obstruée', category: '10. PORTIÈRES ET AUTRES ISSUES', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'portieres10-1', label: 'Portière du conducteur s\'ouvre avec difficulté ou ne s\'ouvre pas', category: '10. PORTIÈRES ET AUTRES ISSUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'portieres10-A', label: 'Portière de l\'habitacle ne se ferme pas de façon sécuritaire', category: '10. PORTIÈRES ET AUTRES ISSUES', subcategory: 'Défectuosités majeures', checked: false },
     
-    // 11. PARE-BRISE ET VITRES
-    { id: 'parebrise11-1', label: 'Fissure dans le pare-brise dans la zone balayée par l\'essuie-glace', category: '11. PARE-BRISE ET VITRES', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'parebrise11-2', label: 'Pare-brise ou vitre cassé, approuvé par le fabricant', category: '11. PARE-BRISE ET VITRES', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'parebrise11-A', label: 'Absence de pare-brise', category: '11. PARE-BRISE ET VITRES', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'parebrise11-B', label: 'Surface vitrée obstruée du côté du conducteur', category: '11. PARE-BRISE ET VITRES', subcategory: 'Défectuosités majeures', checked: false },
+    // 11. RÉTROVISEURS ET VITRAGE
+    { id: 'retroviseurs11-1', label: 'Pare-Brise ou vitre latérale située d\'un côté ou de l\'autre du poste de conduite n\'offrent pas la visibilité requise au conducteur parce qu\'endommagés', category: '11. RÉTROVISEURS ET VITRAGE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'retroviseurs11-2', label: 'Rétroviseur extérieur requis par le Code manquant, endommagé ou ne peut être ajusté et demeurer à la position choisie', category: '11. RÉTROVISEURS ET VITRAGE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'retroviseurs11-3', label: 'Rétroviseur extérieur mal fixé ou présente une arête vive', category: '11. RÉTROVISEURS ET VITRAGE', subcategory: 'Défectuosités mineures', checked: false },
     
-    // 12. RÉTROVISEURS
-    { id: 'retroviseurs12-1', label: 'Absence d\'un rétroviseur extérieur exigé par le Code', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'retroviseurs12-2', label: 'Rétroviseur mal fixé ou qui présente une arête vive', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'retroviseurs12-3', label: 'Rétroviseur réfléchissant mal', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
+    // 12. ROUES, MOYEUX ET PIÈCES DE FIXATION
+    { id: 'roues12-1', label: 'Lubrifiant sous le niveau minimal ou fuite de lubrifiant du roulement de roue autre qu\'un suintement', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'roues12-2', label: 'Support ou le montage fixant la roue de secours est non solidement fixé pour la maintenir', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'roues12-A', label: 'Lubrifiant du roulement de roue qui est absent ou qui n\'est pas visible par une fenêtre d\'inspection', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'roues12-B', label: 'Pièce de fixation manquante, fissurée, cassée ou mal fixée', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'roues12-C', label: 'Roue endommagée ou porte une marque de réparation par soudage', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
     
-    // 13. PORTIÈRE ET AUTRES ISSUES
-    { id: 'portieres13-1', label: 'Portière ou issue ne s\'ouvre ou ne se ferme pas correctement', category: '13. PORTIÈRE ET AUTRES ISSUES', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'portieres13-A', label: 'Issue de secours obstruée', category: '13. PORTIÈRE ET AUTRES ISSUES', subcategory: 'Défectuosités majeures', checked: false },
+    // 13. SIÈGE
+    { id: 'siege13-1', label: 'Siège du conducteur inadéquat ou ne demeure pas dans la position choisie', category: '13. SIÈGE', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'siege13-A', label: 'Ceinture de sécurité du siège du conducteur manquante, modifiée ou inadequate', category: '13. SIÈGE', subcategory: 'Défectuosités majeures', checked: false },
     
     // 14. SUSPENSION
-    { id: 'suspension14-1', label: 'Fuite d\'huile dans un amortisseur', category: '14. SUSPENSION', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'suspension14-2', label: 'Pièce de fixation d\'une jumelle de ressort, d\'un ressort, d\'une suspension pneumatique, d\'une barre de torsion ou d\'une barre stabilisatrice manquante, mal fixée ou détériorée', category: '14. SUSPENSION', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'suspension14-A', label: 'Ressort cassé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'suspension14-B', label: 'Jambe de force, barre de torsion, barre stabilisatrice ou bras de suspension cassé ou absente', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'suspension14-C', label: 'Lame maîtresse ou 25% et plus des lames d\'un ressort cassées', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'suspension14-D', label: 'Élément de fixation de l\'essieu manquant ou mal fixé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'suspension14-E', label: 'Ballon de suspension gonflé insuffisamment ou dégonflé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-1', label: 'Lame de ressort autre qu\'une lame maîtresse ou ressort hélicoidal cassé', category: '14. SUSPENSION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'suspension14-2', label: 'Fuite d\'air dans la suspension, ballon réparé ou endommagé au point d\'exposer la toile', category: '14. SUSPENSION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'suspension14-A', label: 'Lame maîtresse, coussin de caoutchouc ou 25% et plus des lames d\'un ressort de l\'assemblage cassés ou manquants', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-B', label: 'Fuite d\'air dans le système non compensée par le compresseur ou ballon absent ou dégonflé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-C', label: 'Élément de fixation de l\'essieu manquant, mal fixé, fissuré ou cassé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-D', label: 'Lame en composite fissurée sur plus de 75% de sa longueur ou comporte une intersection de fissures', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-E', label: 'Lame de ressort ou ressort hélicoidal déplacé vient en contact avec une pièce en mouvement', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-F', label: 'Ressort helicoidal cassé au point que le véhicule est affaissé complètement ou barre de torsion cassée', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-G', label: 'Essieu cassé ou élément de localisation de l\'essieu ou de la roue manquant, mal fixé, fissuré, cassé ou endommagé affectant le parallelisme ou causant le déplacement d\'un essieu ou d\'une roue par rapport à sa position', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
     
     // 15. SYSTÈME D'ALIMENTATION EN CARBURANT
     { id: 'carburant15-1', label: 'Bouchon du réservoir absent', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités mineures', checked: false },
