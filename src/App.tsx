@@ -2076,8 +2076,8 @@ function App() {
                         {items.map((item) => (
                           <tr 
                             key={item.id}
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
-                            onClick={() => handleVehiculeCheckChange(item.id)}
+                            className={`${item.disabled ? 'bg-gray-200 text-gray-500' : (item.checked ? 'bg-green-100' : '')} ${!item.disabled ? 'cursor-pointer transition-colors' : ''}`}
+                            onClick={() => !item.disabled && handleVehiculeCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
                               {item.label}
@@ -2169,8 +2169,8 @@ function App() {
                         {items.map((item) => (
                           <tr 
                             key={item.id}
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
-                            onClick={() => handleVehiculeCheckChange(item.id)}
+                            className={`${item.disabled ? 'bg-gray-200 text-gray-500' : (item.checked ? 'bg-green-100' : '')} ${!item.disabled ? 'cursor-pointer transition-colors' : ''}`}
+                            onClick={() => !item.disabled && handleVehiculeCheckChange(item.id)}
                           >
                             <td className="border border-gray-300 p-2 text-sm">
                               {item.label}
@@ -2386,19 +2386,21 @@ function App() {
                     {items.map((item) => (
                       <tr 
                         key={item.id}
-                        className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
-                        onClick={() => handleDefectuositesCheckChange(item.id)}
+                        className={`${item.disabled ? 'bg-gray-200 text-gray-500' : (item.checked ? 'bg-green-100' : '')} ${!item.disabled ? 'cursor-pointer transition-colors' : ''}`}
+                        onClick={() => !item.disabled && handleDefectuositesCheckChange(item.id)}
                       >
                         <td className="border border-gray-300 p-2 text-sm">
-                          {item.label}
+                          {/* Extraire l'identifiant du ID et l'ajouter au début du label */}
+                          {item.id.split('-')[1]} - {item.label}
                         </td>
                         <td className="border border-gray-300 p-2 text-center">
                           <input 
                             type="checkbox" 
                             checked={item.checked}
                             onClick={(e) => e.stopPropagation()}
-                            onChange={() => handleDefectuositesCheckChange(item.id)}
+                            onChange={() => !item.disabled && handleDefectuositesCheckChange(item.id)}
                             className="w-5 h-5 accent-[#4f6683]"
+                            disabled={item.disabled}
                             required
                           />
                         </td>
