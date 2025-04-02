@@ -274,7 +274,7 @@ function App() {
     {
       id: 'cambi-header',
       label: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       disabled: true, // En-tête, pas cliquable
       isConform: false
@@ -282,105 +282,105 @@ function App() {
     {
       id: 'cambi-V1-A', // Lettre majuscule pour indiquer défectuosité majeure
       label: 'Le système de radiocommunication: Vérifier l\'équipement en fonction de la politique de l\'entreprise',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v2',
       label: 'Matériel d\'urgence: Fusées éclairantes (8)',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-V3-B', // Lettre majuscule pour indiquer défectuosité majeure
       label: 'Gyrophare',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v4',
       label: 'Les serrures',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v5',
       label: 'Les joints d\'étanchéité',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v6',
       label: 'Avertisseurs audibles',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v7',
       label: 'Autres portes et compartiments externes',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v8',
       label: 'Plafonnier',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-V9-C', // Lettre majuscule pour indiquer défectuosité majeure
       label: 'Air conditionné',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-V10-D', // Lettre majuscule pour indiquer défectuosité majeure
       label: 'Sirène bien fixée et fonctionnelle',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v11',
       label: 'Liquides: Refroidissement, Huile à transmission et moteur, Lave-glace',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v12',
       label: 'Clé(s) supplémentaire(s)',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v13',
       label: 'Outil de localisation routière',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v14',
       label: 'Extincteur de type ABC: 1 de 5 kg ou 2 de 2,5 kg',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     },
     {
       id: 'cambi-v15',
       label: 'Documentation: Preuve d\'assurance, Immatriculation, Constat à l\'amiable, Enveloppe SST, Formulaires papier, Carte de crédit',
-      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
       checked: false,
       isConform: false
     }
