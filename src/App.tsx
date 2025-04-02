@@ -195,9 +195,78 @@ function App() {
     { id: 'phares8-A', label: 'Aucun phare de croisement ne s\'allume', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités majeures', checked: false },
     { id: 'phares8-B', label: 'À l\'arrière d\'un véhicule d\'une seule unité ou du dernier véhicule d\'un ensemble de véhicules: *Aucun feu de changement de direction droit ou gauche ne s\'allume *Aucun feu de freinage ne s\'allume *Aucun des feux de position ne s\'allume', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités majeures', checked: false },
     
+    // 9. PNEUS
+    { id: 'pneus9-1', label: 'Indicateur d\'usure d\'un pneu touche la chaussée', category: '9. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus9-2', label: 'Pneu qui présente une matière étrangère pouvant causer une crevaison', category: '9. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus9-3', label: 'Pneu fissuré ou coupé exposant la toile de renforcement ou la ceinture d\'acier', category: '9. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus9-4', label: 'Pneu déformé, déchiqueté ou dont des morceaux sont détachés', category: '9. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus9-5', label: 'Valve usée, endommagée ou coupée', category: '9. PNEUS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'pneus9-A', label: 'Pneu simple dont la profondeur de deux rainures adjacentes mesurées dans un indicateur d\'usure est inférieure à 1,6 mm', category: '9. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus9-B', label: 'Pneu jumelé dont la profondeur d\'une rainure mesurée dans un indicateur d\'usure est inférieure à 1,6 mm', category: '9. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus9-C', label: 'Pneu simple ou jumelé dont la bande de roulement ou le flanc présente une déchirure exposant la toile de renforcement ou la ceinture d\'acier', category: '9. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus9-D', label: 'Pneu en contact avec une partie fixe du véhicule', category: '9. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus9-E', label: 'Pneu crevé ou dont la pression est nettement insuffisante', category: '9. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'pneus9-F', label: 'Pneu dont un renflement indique un défaut de la carcasse', category: '9. PNEUS', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 10. PORTIÈRES ET AUTRES ISSUES
+    { id: 'portieres10-1', label: 'Portière ou issue ne s\'ouvre ou ne se ferme pas correctement', category: '10. PORTIÈRES ET AUTRES ISSUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'portieres10-A', label: 'Issue de secours obstruée', category: '10. PORTIÈRES ET AUTRES ISSUES', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 11. RETENUE DE LA CARGAISON
+    { id: 'cargaison11-1', label: 'Équipement de retenue ou d\'arrimage endommagé', category: '11. RETENUE DE LA CARGAISON', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'cargaison11-2', label: 'Équipement d\'arrimage mal ajusté', category: '11. RETENUE DE LA CARGAISON', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'cargaison11-A', label: 'Arrimage non fixé, mal fixé ou insuffisant qui permet un déplacement de la cargaison', category: '11. RETENUE DE LA CARGAISON', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 12. RÉTROVISEURS
+    { id: 'retroviseurs12-1', label: 'Absence d\'un rétroviseur extérieur exigé par le Code', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'retroviseurs12-2', label: 'Rétroviseur mal fixé ou qui présente une arête vive', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'retroviseurs12-3', label: 'Rétroviseur réfléchissant mal', category: '12. RÉTROVISEURS', subcategory: 'Défectuosités mineures', checked: false },
+    
+    // 13. ROUES, MOYEUX ET PIÈCES DE FIXATION
+    { id: 'roues13-1', label: 'Écrou, boulon ou goujon de roue manquant, mal fixé ou endommagé', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'roues13-2', label: 'Trace de fuite du joint d\'huile de roue', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'roues13-A', label: 'Roue, jante ou cercle de roue endommagé', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'roues13-B', label: 'Fissure dans un disque ou toute autre composante de montage d\'une roue', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'roues13-C', label: 'Mauvais appariement des roues', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'roues13-D', label: 'Fuite d\'huile d\'un moyeu qui affecte le freinage', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'roues13-E', label: 'Réparation par soudage d\'une jante ou d\'un disque de roue', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'roues13-F', label: 'Lubrifiant absent ou insuffisant dans un moyeu muni d\'un hublot', category: '13. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 14. SUSPENSION
+    { id: 'suspension14-1', label: 'Fuite d\'huile dans un amortisseur', category: '14. SUSPENSION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'suspension14-2', label: 'Pièce de fixation d\'une jumelle de ressort, d\'un ressort, d\'une suspension pneumatique, d\'une barre de torsion ou d\'une barre stabilisatrice manquante, mal fixée ou détériorée', category: '14. SUSPENSION', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'suspension14-A', label: 'Ressort cassé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-B', label: 'Jambe de force, barre de torsion, barre stabilisatrice ou bras de suspension cassé ou absente', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-C', label: 'Lame maîtresse ou 25% et plus des lames d\'un ressort cassées', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-D', label: 'Élément de fixation de l\'essieu manquant ou mal fixé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'suspension14-E', label: 'Ballon de suspension gonflé insuffisamment ou dégonflé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 15. SYSTÈME D'ALIMENTATION EN CARBURANT
+    { id: 'carburant15-1', label: 'Bouchon du réservoir absent', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'carburant15-2', label: 'Réservoir mal fixé et qui risque de se détacher', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'carburant15-A', label: 'Fuite de carburant autre qu\'un suintement', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 16. SYSTÈME D'ÉCHAPPEMENT
+    { id: 'echappement16-1', label: 'Élément du système d\'échappement mal fixé ou qui présente un risque de brûlure', category: '16. SYSTÈME D\'ÉCHAPPEMENT', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'echappement16-A', label: 'Fuite de gaz d\'échappement ailleurs qu\'aux endroits prévus lors de la fabrication', category: '16. SYSTÈME D\'ÉCHAPPEMENT', subcategory: 'Défectuosités majeures', checked: false },
+    
     // 17. PASSERELLE D'ACCÈS (Désactivé car ne s'applique pas aux véhicules ambulanciers)
     { id: 'passerelle17-1', label: 'Passerelle d\'accès mal fixée', category: '17. PASSERELLE D\'ACCÈS (Ne s\'applique pas)', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
     { id: 'passerelle17-A', label: 'Passerelle d\'accès qui risque de céder sous le poids', category: '17. PASSERELLE D\'ACCÈS (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    
+    // 18. SYSTÈME DE FREINS
+    { id: 'freins18-1', label: 'Avertisseur sonore ou visuel qui ne s\'éteint pas après le démarrage du moteur', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freins18-2', label: 'Course de la pédale de frein trop grande', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freins18-3', label: 'Témoin indiquant un déséquilibre des freins', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freins18-4', label: 'Niveau de liquide de frein sous le niveau minimal requis', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freins18-5', label: 'Témoin indiquant un problème de fonctionnement du système de freinage antiblocage', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freins18-A', label: 'Colonne de direction se déplace par rapport à sa position normale ou volant ajustable ne demeure pas à la position choisie', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freins18-B', label: 'Niveau du liquide de la servodirection n\'est pas celui prescrit par le fabricant', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freins18-C', label: 'Courroie de la pompe présente une coupure', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freins18-D', label: 'Fuite de liquide de frein pour les freins hydrauliques', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freins18-E', label: 'Frein qui ne fonctionne pas', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freins18-F', label: 'Avertisseur de basse pression ne fonctionne pas', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freins18-G', label: 'Frein de stationnement ne fonctionne pas', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
     
     // 19. SIÈGES (Désactivé car ne s'applique pas aux véhicules ambulanciers)
     { id: 'sieges19-1', label: 'Siège du conducteur inadéquat ou qui n\'est pas solidement fixé', category: '19. SIÈGES (Ne s\'applique pas)', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
