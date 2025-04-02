@@ -164,7 +164,7 @@ function App() {
     { id: 'chassis2-2', label: 'Élément fixe de la carrosserie absent ou mal fixé', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités mineures', checked: false },
     { id: 'chassis2-A', label: 'Longeron ou traverse de châssis fissuré, cassé, perforé par la rouille, affaissé ou déformé et affectant l\'intégrité du véhicule', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités majeures', checked: false },
     { id: 'chassis2-B', label: 'Élément de fixation manquant, cassé ou relâché à un point d\'attache de la carrosserie', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'chassis2-C', label: 'Plus de 25% des goupilles de glissière d\'un train roulant manquantes ou non fixées', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités majeures', checked: false, disabled: false },
+    { id: 'chassis2-C', label: 'Plus de 25% des goupilles de glissière d\'un train roulant manquantes ou non fixées', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
     
     // 3. CHAUFFAGE ET DÉGIVRAGE
     { id: 'chauffage3-1', label: 'Soufflerie du pare-brise ne fonctionne pas', category: '3. CHAUFFAGE ET DÉGIVRAGE', subcategory: 'Défectuosités mineures', checked: false },
@@ -216,9 +216,9 @@ function App() {
     { id: 'retroviseurs11-3', label: 'Rétroviseur extérieur mal fixé ou présente une arête vive', category: '11. RÉTROVISEURS ET VITRAGE', subcategory: 'Défectuosités mineures', checked: false },
     
     // 12. ROUES, MOYEUX ET PIÈCES DE FIXATION
-    { id: 'roues12-1', label: 'Écrou, boulon ou goujon de fixation manquant, cassé ou desserré', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false, disabled: false },
+    { id: 'roues12-1', label: 'Écrou, boulon ou goujon de fixation manquant, cassé ou desserré', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
     { id: 'roues12-2', label: 'Support ou le montage fixant la roue de secours est non solidement fixé pour la maintenir', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'roues12-A', label: 'Une roue qui présente une fissure ou un trou de boulon déformé ou agrandi', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false, disabled: false },
+    { id: 'roues12-A', label: 'Une roue qui présente une fissure ou un trou de boulon déformé ou agrandi', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
     { id: 'roues12-B', label: 'Pièce de fixation manquante, fissurée, cassée ou mal fixée', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
     { id: 'roues12-C', label: 'Roue endommagée ou porte une marque de réparation par soudage', category: '12. ROUES, MOYEUX ET PIÈCES DE FIXATION', subcategory: 'Défectuosités majeures', checked: false },
     
@@ -232,7 +232,7 @@ function App() {
     { id: 'suspension14-A', label: 'Lame maîtresse, coussin de caoutchouc ou 25% et plus des lames d\'un ressort de l\'assemblage cassés ou manquants', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
     { id: 'suspension14-B', label: 'Fuite d\'air dans le système non compensée par le compresseur ou ballon absent ou dégonflé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
     { id: 'suspension14-C', label: 'Élément de fixation de l\'essieu manquant, mal fixé, fissuré ou cassé', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'suspension14-D', label: 'Lame en composite fissurée sur plus de 75% de sa longueur ou comporte une intersection de fissures', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false, disabled: false },
+    { id: 'suspension14-D', label: 'Lame en composite fissurée sur plus de 75% de sa longueur ou comporte une intersection de fissures', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
     { id: 'suspension14-E', label: 'Lame de ressort ou ressort hélicoidal déplacé vient en contact avec une pièce en mouvement', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
     { id: 'suspension14-F', label: 'Ressort helicoidal cassé au point que le véhicule est affaissé complètement ou barre de torsion cassée', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
     { id: 'suspension14-G', label: 'Essieu cassé ou élément de localisation de l\'essieu ou de la roue manquant, mal fixé, fissuré, cassé ou endommagé affectant le parallelisme ou causant le déplacement d\'un essieu ou d\'une roue par rapport à sa position', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
@@ -247,8 +247,8 @@ function App() {
     { id: 'echappement16-A', label: 'Fuite de gaz d\'échappement qui s\'infiltre dans l\'habitacle lorsque le plancher est perforé', category: '16. SYSTÈME D\'ÉCHAPPEMENT', subcategory: 'Défectuosités majeures', checked: false },
     
     // 17. SYSTÈME DE FREINS ÉLECTRIQUES
-    { id: 'freinsElec17-1', label: 'Raccord ou câble électrique mat fixé à un point d\'attache ou de connexion', category: '17. SYSTÈME DE FREINS ÉLECTRIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: false },
-    { id: 'freinsElec17-A', label: 'Réduction importante de la capacité de freinage du frein de service', category: '17. SYSTÈME DE FREINS ÉLECTRIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: false },
+    { id: 'freinsElec17-1', label: 'Raccord ou câble électrique mat fixé à un point d\'attache ou de connexion', category: '17. SYSTÈME DE FREINS ÉLECTRIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'freinsElec17-A', label: 'Réduction importante de la capacité de freinage du frein de service', category: '17. SYSTÈME DE FREINS ÉLECTRIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
     
     // 18. SYSTÈME DE FREINS HYDRAULIQUES
     { id: 'freinsHyd18-1', label: 'Niveau de liquide dans le réservoir du maître-cylindre est sous le niveau minimal requis', category: '18. SYSTÈME DE FREINS HYDRAULIQUES', subcategory: 'Défectuosités mineures', checked: false },
@@ -258,15 +258,15 @@ function App() {
     { id: 'freinsHyd18-5', label: 'Frein de stationnement ne fonctionne pas correctement', category: '18. SYSTÈME DE FREINS HYDRAULIQUES', subcategory: 'Défectuosités mineures', checked: false },
     
     // 19. SYSTÈME DE FREINS PNEUMATIQUES
-    { id: 'freinsPneum19-1', label: 'Avertisseur sonore de basse pression ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: false },
-    { id: 'freinsPneum19-2', label: 'Les avertisseurs lumineux et visuels de basse pression ne fonctionnent pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: false },
-    { id: 'freinsPneum19-3', label: 'Régulateur de pression ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: false },
-    { id: 'freinsPneum19-4', label: 'Fuite d\'air audible ou dont le taux en une minute dépasse 20 kPa (3 lb/po) unités pour un véhicule d\'une seule unité, 28 kPa (4 lb/po) pour un véhicule de deux unités et 35 kPa (5lb/po\') pour un véhicule de trois unités', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: false },
-    { id: 'freinsPneum19-5', label: 'Frein de stationnement ou d\'urgence ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: false },
-    { id: 'freinsPneum19-A', label: 'Aucun avertisseur sonore, lumineux et visuel de basse pression ne fonctionne', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: false },
-    { id: 'freinsPneum19-B', label: 'Compresseur d\'air ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: false },
-    { id: 'freinsPneum19-C', label: 'Fuite d\'air dont le taux en une minute dépasse 40 kPa (6 lb/po) pour un véhicule d\'une seule unité, 48 kPa (7 b/po\') pour un de deux unités et 62 kPa (8 lb/po\') pour un de trois unités', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: false },
-    { id: 'freinsPneum19-D', label: 'Reduction importante de la capacité de freinage du frein de service', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: false }
+    { id: 'freinsPneum19-1', label: 'Avertisseur sonore de basse pression ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'freinsPneum19-2', label: 'Les avertisseurs lumineux et visuels de basse pression ne fonctionnent pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'freinsPneum19-3', label: 'Régulateur de pression ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'freinsPneum19-4', label: 'Fuite d\'air audible ou dont le taux en une minute dépasse 20 kPa (3 lb/po) unités pour un véhicule d\'une seule unité, 28 kPa (4 lb/po) pour un véhicule de deux unités et 35 kPa (5lb/po\') pour un véhicule de trois unités', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'freinsPneum19-5', label: 'Frein de stationnement ou d\'urgence ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'freinsPneum19-A', label: 'Aucun avertisseur sonore, lumineux et visuel de basse pression ne fonctionne', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    { id: 'freinsPneum19-B', label: 'Compresseur d\'air ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    { id: 'freinsPneum19-C', label: 'Fuite d\'air dont le taux en une minute dépasse 40 kPa (6 lb/po) pour un véhicule d\'une seule unité, 48 kPa (7 b/po\') pour un de deux unités et 62 kPa (8 lb/po\') pour un de trois unités', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    { id: 'freinsPneum19-D', label: 'Reduction importante de la capacité de freinage du frein de service', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true }
   ]);
   
   // Obtenir la date et l'heure actuelles au format lisible
