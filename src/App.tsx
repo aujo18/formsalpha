@@ -1455,12 +1455,28 @@ function App() {
     return minorDefects.length > 0 ? minorDefects : null;
   };
 
-  // Vérifier si tous les champs requis sont remplis
+  // Mettre à jour la fonction de validation pour vérifier que toutes les cases ont été cochées
   const validateDefectuositesForm = () => {
     // Vérifier les champs obligatoires
     if (!matricule) return "Veuillez entrer votre matricule";
     if (!numeroVehicule) return "Veuillez entrer le numéro du véhicule";
     if (!pointDeService) return "Veuillez sélectionner le point de service";
+    
+    // Vérifier que toutes les cases non désactivées ont été vérifiées (conforme ou défectuosité)
+    const uncheckedItems = defectuositesItems.filter(item => 
+      !item.disabled && !item.checked && !item.isConform
+    );
+    
+    if (uncheckedItems.length > 0) {
+      // Si moins de 5 éléments non vérifiés, les lister
+      if (uncheckedItems.length <= 5) {
+        const itemsList = uncheckedItems.map(item => `- ${item.label}`).join('\n');
+        return `Les éléments suivants n'ont pas été vérifiés :\n${itemsList}\n\nVeuillez cocher chaque élément comme conforme ou défectueux avant de soumettre le formulaire.`;
+      } else {
+        // Si plus de 5 éléments, afficher juste le nombre
+        return `${uncheckedItems.length} éléments n'ont pas été vérifiés. Veuillez cocher chaque élément comme conforme ou défectueux avant de soumettre le formulaire.`;
+      }
+    }
     
     return null;
   };
@@ -1476,9 +1492,16 @@ function App() {
     hasMinorDefects: false
   });
 
-  // Modifier la fonction handleSubmitForm3 pour ne pas afficher d'alerte séparée
+  // Mettre à jour la fonction handleSubmitForm3 pour ne pas afficher d'alerte séparée
   const handleSubmitForm3 = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Vérifier si tous les éléments ont été vérifiés
+    const validationError = validateDefectuositesForm();
+    if (validationError) {
+      setError(validationError);
+      return; // Arrêter la soumission si validation échoue
+    }
     
     // Vérifier s'il y a des défectuosités majeures
     const majorDefects = hasMajorDefects();
