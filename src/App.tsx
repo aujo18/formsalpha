@@ -14,6 +14,8 @@ interface CheckItem {
   value?: string; // Pour stocker des valeurs comme PSI ou glycémie
   expireDate?: string; // Pour stocker les dates d'expiration
   disabled?: boolean; // Pour désactiver les items qui ne s'appliquent pas
+  isConform?: boolean; // Pour indiquer si l'élément est conforme
+  comment?: string; // Pour stocker un commentaire sur l'élément défectueux
 }
 
 function App() {
@@ -1373,19 +1375,43 @@ function App() {
   };
 
   // Fonction pour gérer les cases à cocher du formulaire Défectuosités
-  const handleDefectuositesCheckChange = (itemId: string) => {
+  const handleDefectuositesCheckChange = (itemId: string, isConformCheck: boolean = false) => {
     setDefectuositesItems(prevItems => 
       prevItems.map(item => {
         // Ne pas modifier les items désactivés
         if (item.disabled) return item;
         
-        return item.id === itemId 
-          ? { 
-              ...item, 
-              checked: !item.checked
-            } 
-          : item
+        if (item.id === itemId) {
+          if (isConformCheck) {
+            // Si on coche "conforme", on décoche "défectuosité" et vice versa
+            return {
+              ...item,
+              isConform: !item.isConform,
+              checked: false, // Décoche la défectuosité si "conforme" est coché
+              comment: !item.isConform ? '' : item.comment // Effacer le commentaire si on coche "conforme"
+            };
+          } else {
+            // Si on coche "défectuosité", on décoche "conforme"
+            return {
+              ...item,
+              checked: !item.checked,
+              isConform: false, // Décoche "conforme" si "défectuosité" est cochée
+            };
+          }
+        }
+        return item;
       })
+    );
+  };
+
+  // Fonction pour gérer le changement de commentaire
+  const handleDefectuositesCommentChange = (itemId: string, comment: string) => {
+    setDefectuositesItems(prevItems => 
+      prevItems.map(item => 
+        item.id === itemId 
+          ? { ...item, comment } 
+          : item
+      )
     );
   };
 
@@ -1525,31 +1551,18 @@ function App() {
             color: red;
             text-align: center;
           }
-          footer {
-            margin-top: 40px;
-            font-size: 0.8rem;
-            text-align: center;
+          .comment {
+            font-style: italic;
             color: #666;
+            margin-top: 5px;
+            padding-left: 10px;
+            border-left: 3px solid #f0ad4e;
           }
-
-          .not-checked {
-            color: red;
-            text-align: center;
+          .row-conform {
+            background-color: #dff0d8;
           }
-          .category-disabled {
-            background-color: #e0e0e0;
-            font-weight: bold;
-            color: #888;
-            font-style: italic;
-          }
-          .subcategory-disabled {
-            background-color: #f0f0f0;
-            font-style: italic;
-            color: #888;
-          }
-          .row-disabled {
-            background-color: #f5f5f5;
-            color: #888;
+          .row-defect {
+            background-color: #f2dede;
           }
           footer {
             margin-top: 40px;
@@ -1580,84 +1593,51 @@ function App() {
         <table>
           <thead>
             <tr>
-              <th style="width: 80%;">Élément</th>
-              <th style="width: 20%;">Défectuosité constatée</th>
+              <th style="width: 60%;">Élément</th>
+              <th style="width: 20%;">Conforme</th>
+              <th style="width: 20%;">Défectuosité</th>
             </tr>
           </thead>
           <tbody>
     `;
     
-    // Regrouper par catégorie et sous-catégorie
+    // Regrouper par catégorie
     const groupedItems = defectuositesItems.reduce((acc, item) => {
       if (!acc[item.category || 'Autres']) {
-        acc[item.category || 'Autres'] = {};
+        acc[item.category || 'Autres'] = [];
       }
-      if (!acc[item.category || 'Autres'][item.subcategory || 'Général']) {
-        acc[item.category || 'Autres'][item.subcategory || 'Général'] = [];
-      }
-      acc[item.category || 'Autres'][item.subcategory || 'Général'].push(item);
+      acc[item.category || 'Autres'].push(item);
       return acc;
-    }, {} as Record<string, Record<string, CheckItem[]>>);
+    }, {} as Record<string, CheckItem[]>);
     
-    // Ajouter les lignes par catégorie et sous-catégorie
-    Object.entries(groupedItems).forEach(([category, subcategories]) => {
+    // Ajouter les lignes par catégorie
+    Object.entries(groupedItems).forEach(([category, items]) => {
       html += `
         <tr>
-          <td colspan="2" class="category">${category}</td>
+          <td colspan="3" class="category">${category}</td>
         </tr>
       `;
       
-      Object.entries(subcategories).forEach(([subcategory, items]) => {
+      items.forEach(item => {
+        const rowClass = item.isConform ? 'row-conform' : (item.checked ? 'row-defect' : '');
         html += `
-          <tr>
-            <td colspan="2" class="subcategory">${subcategory}</td>
+          <tr class="${rowClass}">
+            <td>${item.label}</td>
+            <td class="checked">${item.isConform ? '✓' : ''}</td>
+            <td class="not-checked">${item.checked ? '✓' : ''}</td>
           </tr>
         `;
         
-        items.forEach(item => {
+        // Ajouter le commentaire si disponible et si défectueux
+        if (item.checked && item.comment) {
           html += `
-            <tr>
-              <td>${item.label}</td>
-              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
+            <tr class="${rowClass}">
+              <td colspan="3" class="comment">
+                <strong>Commentaire:</strong> ${item.comment}
+              </td>
             </tr>
           `;
-        });
-      });
-    });
-
-    // Ajouter les lignes par catégorie et sous-catégorie
-    Object.entries(groupedItems).forEach(([category, subcategories]) => {
-      // Vérifier si cette catégorie est désactivée (en utilisant le premier élément de n'importe quelle sous-catégorie)
-      let isDisabled = false;
-      
-      // Trouver au moins un élément dans cette catégorie
-      Object.values(subcategories).forEach(items => {
-        if (items.length > 0 && items[0].disabled) {
-          isDisabled = true;
         }
-      });
-      
-      html += `
-        <tr>
-          <td colspan="2" class="${isDisabled ? 'category-disabled' : 'category'}">${category}</td>
-        </tr>
-      `;
-      
-      Object.entries(subcategories).forEach(([subcategory, items]) => {
-        html += `
-          <tr>
-            <td colspan="2" class="${isDisabled ? 'subcategory-disabled' : 'subcategory'}">${subcategory}</td>
-          </tr>
-        `;
-        
-        items.forEach(item => {
-          html += `
-            <tr class="${isDisabled ? 'row-disabled' : ''}">
-              <td>${item.label}</td>
-              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
-            </tr>
-          `;
-        });
       });
     });
     
@@ -2359,8 +2339,9 @@ function App() {
             <table className="min-w-full border-collapse border border-gray-300">
               <thead>
                 <tr>
-                  <th className="border border-gray-300 p-2 bg-[#4f6683] text-white w-4/5">DÉFAUTÉS</th>
-                  <th className="border border-gray-300 p-2 bg-[#4f6683] text-white w-1/5">Vérifié</th>
+                  <th className="border border-gray-300 p-2 bg-[#4f6683] text-white w-3/5">DÉFAUTS</th>
+                  <th className="border border-gray-300 p-2 bg-[#4f6683] text-white w-1/5">Conforme</th>
+                  <th className="border border-gray-300 p-2 bg-[#4f6683] text-white w-1/5">Défectuosité</th>
                 </tr>
               </thead>
               <tbody>
@@ -2374,39 +2355,73 @@ function App() {
                 ).map(([category, items]) => (
                   <React.Fragment key={category}>
                     <tr>
-                      <td colSpan={2} className="border border-gray-300 p-2 bg-[#4f6683]/10 font-semibold">
+                      <td colSpan={3} className="border border-gray-300 p-2 bg-[#4f6683]/10 font-semibold">
                         {category}
                       </td>
                     </tr>
                     
                     {items.map((item) => (
-                      <tr 
-                        key={item.id}
-                        className={`${item.disabled ? 'bg-gray-200 text-gray-500' : (item.checked ? 'bg-green-100' : '')} ${!item.disabled ? 'cursor-pointer transition-colors' : ''}`}
-                        onClick={() => !item.disabled && handleDefectuositesCheckChange(item.id)}
-                      >
-                        <td className="border border-gray-300 p-2 text-sm">
-                          {/* Extraire l'identifiant du ID et l'ajouter au début du label */}
-                          {item.id.split('-')[1]} - {item.label}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={item.checked}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={() => !item.disabled && handleDefectuositesCheckChange(item.id)}
-                            className="w-5 h-5 accent-[#4f6683]"
-                            disabled={item.disabled}
-                            required
-                          />
-                        </td>
-                      </tr>
+                      <React.Fragment key={item.id}>
+                        <tr 
+                          className={`${item.disabled ? 'bg-gray-200 text-gray-500' : 
+                            (item.isConform ? 'bg-green-100' : 
+                            (item.checked ? 'bg-red-100' : ''))} 
+                            ${!item.disabled ? 'transition-colors' : ''}`}
+                        >
+                          <td className="border border-gray-300 p-2 text-sm">
+                            {/* Extraire l'identifiant du ID et l'ajouter au début du label */}
+                            {item.id.split('-')[1]} - {item.label}
+                          </td>
+                          <td className="border border-gray-300 p-2 text-center">
+                            <div className="flex items-center space-x-2">
+                              <span className="mr-1 text-xs">Conforme</span>
+                              <input 
+                                type="checkbox" 
+                                checked={!!item.isConform}
+                                onChange={() => !item.disabled && handleDefectuositesCheckChange(item.id, true)}
+                                className="w-4 h-4 accent-green-600"
+                                disabled={item.disabled}
+                              />
+                            </div>
+                          </td>
+                          <td className="border border-gray-300 p-2 text-center">
+                            <div className="flex items-center space-x-2">
+                              <span className="mr-1 text-xs">Défectuosité</span>
+                              <input 
+                                type="checkbox" 
+                                checked={item.checked}
+                                onChange={() => !item.disabled && handleDefectuositesCheckChange(item.id, false)}
+                                className="w-4 h-4 accent-red-600"
+                                disabled={item.disabled}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                        {/* Zone de commentaire qui apparaît uniquement si la défectuosité est cochée */}
+                        {item.checked && !item.disabled && (
+                          <tr className="bg-red-50">
+                            <td colSpan={3} className="border border-gray-300 p-2">
+                              <label htmlFor={`comment-${item.id}`} className="block text-xs font-medium text-gray-600 mb-1">
+                                Commentaire sur la défectuosité:
+                              </label>
+                              <textarea
+                                id={`comment-${item.id}`}
+                                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                                placeholder="Décrivez la défectuosité constatée..."
+                                value={item.comment || ''}
+                                onChange={(e) => handleDefectuositesCommentChange(item.id, e.target.value)}
+                                rows={2}
+                              />
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))}
                   </React.Fragment>
                 ))}
                 
                 <tr>
-                  <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100">
+                  <td colSpan={3} className="border border-gray-300 p-2 bg-gray-100">
                     <div className="text-xs text-center italic mb-2">
                       Veuillez cocher les défectuosités constatées sur le véhicule
                     </div>
