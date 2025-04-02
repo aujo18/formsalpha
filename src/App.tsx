@@ -238,35 +238,35 @@ function App() {
     { id: 'suspension14-G', label: 'Essieu cassé ou élément de localisation de l\'essieu ou de la roue manquant, mal fixé, fissuré, cassé ou endommagé affectant le parallelisme ou causant le déplacement d\'un essieu ou d\'une roue par rapport à sa position', category: '14. SUSPENSION', subcategory: 'Défectuosités majeures', checked: false },
     
     // 15. SYSTÈME D'ALIMENTATION EN CARBURANT
-    { id: 'carburant15-1', label: 'Bouchon du réservoir absent', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'carburant15-2', label: 'Réservoir mal fixé et qui risque de se détacher', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'carburant15-A', label: 'Fuite de carburant autre qu\'un suintement', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'carburant15-A', label: 'Réservoir mal fixé et il y a risque de séparation', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'carburant15-B', label: 'Bouchon absent', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'carburant15-C', label: 'Fuite de carburant autre qu\'un suintement', category: '15. SYSTÈME D\'ALIMENTATION EN CARBURANT', subcategory: 'Défectuosités majeures', checked: false },
     
     // 16. SYSTÈME D'ÉCHAPPEMENT
-    { id: 'echappement16-1', label: 'Élément du système d\'échappement mal fixé ou qui présente un risque de brûlure', category: '16. SYSTÈME D\'ÉCHAPPEMENT', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'echappement16-A', label: 'Fuite de gaz d\'échappement ailleurs qu\'aux endroits prévus lors de la fabrication', category: '16. SYSTÈME D\'ÉCHAPPEMENT', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'echappement16-1', label: 'Fuite de gaz d\'échappement ailleurs qu\'aux endroits prévus lors de la fabrication', category: '16. SYSTÈME D\'ÉCHAPPEMENT', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'echappement16-A', label: 'Fuite de gaz d\'échappement qui s\'infiltre dans l\'habitacle lorsque le plancher est perforé', category: '16. SYSTÈME D\'ÉCHAPPEMENT', subcategory: 'Défectuosités majeures', checked: false },
     
-    // 17. PASSERELLE D'ACCÈS (Désactivé car ne s'applique pas aux véhicules ambulanciers)
-    { id: 'passerelle17-1', label: 'Passerelle d\'accès mal fixée', category: '17. PASSERELLE D\'ACCÈS (Ne s\'applique pas)', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
-    { id: 'passerelle17-A', label: 'Passerelle d\'accès qui risque de céder sous le poids', category: '17. PASSERELLE D\'ACCÈS (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    // 17. SYSTÈME DE FREINS ÉLECTRIQUES
+    { id: 'freinsElec17-1', label: 'Raccord ou câble électrique mat fixé à un point d\'attache ou de connexion', category: '17. SYSTÈME DE FREINS ÉLECTRIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsElec17-A', label: 'Réduction importante de la capacité de freinage du frein de service', category: '17. SYSTÈME DE FREINS ÉLECTRIQUES', subcategory: 'Défectuosités majeures', checked: false },
     
-    // 18. SYSTÈME DE FREINS
-    { id: 'freins18-1', label: 'Avertisseur sonore ou visuel qui ne s\'éteint pas après le démarrage du moteur', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'freins18-2', label: 'Course de la pédale de frein trop grande', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'freins18-3', label: 'Témoin indiquant un déséquilibre des freins', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'freins18-4', label: 'Niveau de liquide de frein sous le niveau minimal requis', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'freins18-5', label: 'Témoin indiquant un problème de fonctionnement du système de freinage antiblocage', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'freins18-A', label: 'Colonne de direction se déplace par rapport à sa position normale ou volant ajustable ne demeure pas à la position choisie', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'freins18-B', label: 'Niveau du liquide de la servodirection n\'est pas celui prescrit par le fabricant', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'freins18-C', label: 'Courroie de la pompe présente une coupure', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'freins18-D', label: 'Fuite de liquide de frein pour les freins hydrauliques', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'freins18-E', label: 'Frein qui ne fonctionne pas', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'freins18-F', label: 'Avertisseur de basse pression ne fonctionne pas', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'freins18-G', label: 'Frein de stationnement ne fonctionne pas', category: '18. SYSTÈME DE FREINS', subcategory: 'Défectuosités majeures', checked: false },
+    // 18. SYSTÈME DE FREINS HYDRAULIQUES
+    { id: 'freinsHyd18-1', label: 'Niveau de liquide dans le réservoir du maître-cylindre est sous le niveau minimal requis', category: '18. SYSTÈME DE FREINS HYDRAULIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsHyd18-2', label: 'Pédale de frein descend au plancher', category: '18. SYSTÈME DE FREINS HYDRAULIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsHyd18-3', label: 'Témoin lumineux allumé pendant que le moteur est en marche ou ne s\'allume pas lorsque la clé de contact est à la position marche ou démarrage', category: '18. SYSTÈME DE FREINS HYDRAULIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsHyd18-4', label: 'Témoin lumineux ne s\'allume pas lorsque le frein de stationnement est serré ou ne s\'éteint pas lorsqu\'il est desserré', category: '18. SYSTÈME DE FREINS HYDRAULIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsHyd18-5', label: 'Frein de stationnement ne fonctionne pas correctement', category: '18. SYSTÈME DE FREINS HYDRAULIQUES', subcategory: 'Défectuosités mineures', checked: false },
     
-    // 19. SIÈGES (Désactivé car ne s'applique pas aux véhicules ambulanciers)
-    { id: 'sieges19-1', label: 'Siège du conducteur inadéquat ou qui n\'est pas solidement fixé', category: '19. SIÈGES (Ne s\'applique pas)', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
-    { id: 'sieges19-A', label: 'Siège du conducteur qui risque de se déplacer de façon imprévue', category: '19. SIÈGES (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true }
+    // 19. SYSTÈME DE FREINS PNEUMATIQUES
+    { id: 'freinsPneum19-1', label: 'Avertisseur sonore de basse pression ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsPneum19-2', label: 'Les avertisseurs lumineux et visuels de basse pression ne fonctionnent pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsPneum19-3', label: 'Régulateur de pression ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsPneum19-4', label: 'Fuite d\'air audible ou dont le taux en une minute dépasse 20 kPa (3 lb/po) unités pour un véhicule d\'une seule unité, 28 kPa (4 lb/po) pour un véhicule de deux unités et 35 kPa (5lb/po\') pour un véhicule de trois unités', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsPneum19-5', label: 'Frein de stationnement ou d\'urgence ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités mineures', checked: false },
+    { id: 'freinsPneum19-A', label: 'Aucun avertisseur sonore, lumineux et visuel de basse pression ne fonctionne', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freinsPneum19-B', label: 'Compresseur d\'air ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freinsPneum19-C', label: 'Fuite d\'air dont le taux en une minute dépasse 40 kPa (6 lb/po) pour un véhicule d\'une seule unité, 48 kPa (7 b/po\') pour un de deux unités et 62 kPa (8 lb/po\') pour un de trois unités', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false },
+    { id: 'freinsPneum19-D', label: 'Reduction importante de la capacité de freinage du frein de service', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false }
   ]);
   
   // Obtenir la date et l'heure actuelles au format lisible
