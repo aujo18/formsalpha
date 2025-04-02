@@ -268,7 +268,122 @@ function App() {
     { id: 'freinsPneum19-A', label: 'Aucun avertisseur sonore, lumineux et visuel de basse pression ne fonctionne', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
     { id: 'freinsPneum19-B', label: 'Compresseur d\'air ne fonctionne pas correctement', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
     { id: 'freinsPneum19-C', label: 'Fuite d\'air dont le taux en une minute dépasse 40 kPa (6 lb/po) pour un véhicule d\'une seule unité, 48 kPa (7 b/po\') pour un de deux unités et 62 kPa (8 lb/po\') pour un de trois unités', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
-    { id: 'freinsPneum19-D', label: 'Reduction importante de la capacité de freinage du frein de service', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true }
+    { id: 'freinsPneum19-D', label: 'Reduction importante de la capacité de freinage du frein de service', category: '19. SYSTÈME DE FREINS PNEUMATIQUES', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    
+    // Nouvelle section: VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI
+    {
+      id: 'cambi-header',
+      label: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      disabled: true, // En-tête, pas cliquable
+      isConform: false
+    },
+    {
+      id: 'cambi-V1-A', // Lettre majuscule pour indiquer défectuosité majeure
+      label: 'Le système de radiocommunication: Vérifier l\'équipement en fonction de la politique de l\'entreprise',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v2',
+      label: 'Matériel d\'urgence: Fusées éclairantes (8)',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-V3-B', // Lettre majuscule pour indiquer défectuosité majeure
+      label: 'Gyrophare',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v4',
+      label: 'Les serrures',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v5',
+      label: 'Les joints d\'étanchéité',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v6',
+      label: 'Avertisseurs audibles',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v7',
+      label: 'Autres portes et compartiments externes',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v8',
+      label: 'Plafonnier',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-V9-C', // Lettre majuscule pour indiquer défectuosité majeure
+      label: 'Air conditionné',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-V10-D', // Lettre majuscule pour indiquer défectuosité majeure
+      label: 'Sirène bien fixée et fonctionnelle',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v11',
+      label: 'Liquides: Refroidissement, Huile à transmission et moteur, Lave-glace',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v12',
+      label: 'Clé(s) supplémentaire(s)',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v13',
+      label: 'Outil de localisation routière',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v14',
+      label: 'Extincteur de type ABC: 1 de 5 kg ou 2 de 2,5 kg',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    },
+    {
+      id: 'cambi-v15',
+      label: 'Documentation: Preuve d\'assurance, Immatriculation, Constat à l\'amiable, Enveloppe SST, Formulaires papier, Carte de crédit',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES',
+      checked: false,
+      isConform: false
+    }
   ]);
   
   // Obtenir la date et l'heure actuelles au format lisible
