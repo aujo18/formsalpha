@@ -13,6 +13,7 @@ interface CheckItem {
   checked: boolean;
   value?: string; // Pour stocker des valeurs comme PSI ou glycémie
   expireDate?: string; // Pour stocker les dates d'expiration
+  disabled?: boolean; // Pour désactiver les items qui ne s'appliquent pas
 }
 
 function App() {
@@ -148,15 +149,15 @@ function App() {
   
   // Items pour le formulaire Défectuosités
   const [defectuositesItems, setDefectuositesItems] = useState<CheckItem[]>([
-    // 1. ATTELAGE
-    { id: 'attelage1-1', label: 'Élément(s) de fixation du dispositif d\'attelage manquant(s), endommagé(s)', category: '1. ATTELAGE', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'attelage1-2', label: 'Attache de sûreté ou raccord manquant, détérioré ou mal fixé', category: '1. ATTELAGE', subcategory: 'Défectuosités mineures', checked: false },
-    { id: 'attelage1-A', label: 'Plaque d\'attelage ou pivot d\'attelage fissuré, mal fixé ou absence d\'attelage, fissure ou mal fixé', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'attelage1-B', label: 'Mouvement entre la sellette et le cadre', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'attelage1-C', label: 'Plus de 20% des éléments de fixation du mécanisme manquants ou desserrés', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'attelage1-D', label: '25% ou plus des poupées de blocage sont manquantes ou inopérantes', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'attelage1-E', label: 'Mécanisme d\'attelage mal fermé ou mal verrouillé', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'attelage1-F', label: 'Élément du mécanisme d\'attelage manquant, mal fixé, mal ajusté ou endommagé au point où il y a risque de rupture ou de séparation', category: '1. ATTELAGE', subcategory: 'Défectuosités majeures', checked: false },
+    // 1. ATTELAGE (Désactivé car ne s'applique pas aux véhicules ambulanciers)
+    { id: 'attelage1-1', label: 'Élément(s) de fixation du dispositif d\'attelage manquant(s), endommagé(s)', category: '1. ATTELAGE (Ne s\'applique pas)', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'attelage1-2', label: 'Attache de sûreté ou raccord manquant, détérioré ou mal fixé', category: '1. ATTELAGE (Ne s\'applique pas)', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'attelage1-A', label: 'Plaque d\'attelage ou pivot d\'attelage fissuré, mal fixé ou absence d\'attelage, fissure ou mal fixé', category: '1. ATTELAGE (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    { id: 'attelage1-B', label: 'Mouvement entre la sellette et le cadre', category: '1. ATTELAGE (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    { id: 'attelage1-C', label: 'Plus de 20% des éléments de fixation du mécanisme manquants ou desserrés', category: '1. ATTELAGE (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    { id: 'attelage1-D', label: '25% ou plus des poupées de blocage sont manquantes ou inopérantes', category: '1. ATTELAGE (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    { id: 'attelage1-E', label: 'Mécanisme d\'attelage mal fermé ou mal verrouillé', category: '1. ATTELAGE (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    { id: 'attelage1-F', label: 'Élément du mécanisme d\'attelage manquant, mal fixé, mal ajusté ou endommagé au point où il y a risque de rupture ou de séparation', category: '1. ATTELAGE (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
     
     // 2. CHÂSSIS ET CARROSSERIE
     { id: 'chassis2-1', label: 'Longeron fissuré ou traverse fissurée ou cassée', category: '2. CHÂSSIS ET CARROSSERIE', subcategory: 'Défectuosités mineures', checked: false },
@@ -192,7 +193,15 @@ function App() {
     // 8. PHARES ET FEUX
     { id: 'phares8-1', label: 'Phare de croisement, feu de position, feu de changement de direction, feu de freinage ou feu de la plaque d\'immatriculation ne s\'allume pas', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités mineures', checked: false },
     { id: 'phares8-A', label: 'Aucun phare de croisement ne s\'allume', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités majeures', checked: false },
-    { id: 'phares8-B', label: 'À l\'arrière d\'un véhicule d\'une seule unité ou du dernier véhicule d\'un ensemble de véhicules: *Aucun feu de changement de direction droit ou gauche ne s\'allume *Aucun feu de freinage ne s\'allume *Aucun des feux de position ne s\'allume', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités majeures', checked: false }
+    { id: 'phares8-B', label: 'À l\'arrière d\'un véhicule d\'une seule unité ou du dernier véhicule d\'un ensemble de véhicules: *Aucun feu de changement de direction droit ou gauche ne s\'allume *Aucun feu de freinage ne s\'allume *Aucun des feux de position ne s\'allume', category: '8. PHARES ET FEUX', subcategory: 'Défectuosités majeures', checked: false },
+    
+    // 17. PASSERELLE D'ACCÈS (Désactivé car ne s'applique pas aux véhicules ambulanciers)
+    { id: 'passerelle17-1', label: 'Passerelle d\'accès mal fixée', category: '17. PASSERELLE D\'ACCÈS (Ne s\'applique pas)', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'passerelle17-A', label: 'Passerelle d\'accès qui risque de céder sous le poids', category: '17. PASSERELLE D\'ACCÈS (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true },
+    
+    // 19. SIÈGES (Désactivé car ne s'applique pas aux véhicules ambulanciers)
+    { id: 'sieges19-1', label: 'Siège du conducteur inadéquat ou qui n\'est pas solidement fixé', category: '19. SIÈGES (Ne s\'applique pas)', subcategory: 'Défectuosités mineures', checked: false, disabled: true },
+    { id: 'sieges19-A', label: 'Siège du conducteur qui risque de se déplacer de façon imprévue', category: '19. SIÈGES (Ne s\'applique pas)', subcategory: 'Défectuosités majeures', checked: false, disabled: true }
   ]);
   
   // Obtenir la date et l'heure actuelles au format lisible
@@ -1301,14 +1310,17 @@ function App() {
   // Fonction pour gérer les cases à cocher du formulaire Défectuosités
   const handleDefectuositesCheckChange = (itemId: string) => {
     setDefectuositesItems(prevItems => 
-      prevItems.map(item => 
-        item.id === itemId 
+      prevItems.map(item => {
+        // Ne pas modifier les items désactivés
+        if (item.disabled) return item;
+        
+        return item.id === itemId 
           ? { 
               ...item, 
               checked: !item.checked
             } 
           : item
-      )
+      })
     );
   };
 
@@ -1454,6 +1466,32 @@ function App() {
             text-align: center;
             color: #666;
           }
+
+          .not-checked {
+            color: red;
+            text-align: center;
+          }
+          .category-disabled {
+            background-color: #e0e0e0;
+            font-weight: bold;
+            color: #888;
+            font-style: italic;
+          }
+          .subcategory-disabled {
+            background-color: #f0f0f0;
+            font-style: italic;
+            color: #888;
+          }
+          .row-disabled {
+            background-color: #f5f5f5;
+            color: #888;
+          }
+          footer {
+            margin-top: 40px;
+            font-size: 0.8rem;
+            text-align: center;
+            color: #666;
+          }
         </style>
       </head>
       <body>
@@ -1514,6 +1552,42 @@ function App() {
         items.forEach(item => {
           html += `
             <tr>
+              <td>${item.label}</td>
+              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
+            </tr>
+          `;
+        });
+      });
+    });
+
+    // Ajouter les lignes par catégorie et sous-catégorie
+    Object.entries(groupedItems).forEach(([category, subcategories]) => {
+      // Vérifier si cette catégorie est désactivée (en utilisant le premier élément de n'importe quelle sous-catégorie)
+      let isDisabled = false;
+      
+      // Trouver au moins un élément dans cette catégorie
+      Object.values(subcategories).forEach(items => {
+        if (items.length > 0 && items[0].disabled) {
+          isDisabled = true;
+        }
+      });
+      
+      html += `
+        <tr>
+          <td colspan="2" class="${isDisabled ? 'category-disabled' : 'category'}">${category}</td>
+        </tr>
+      `;
+      
+      Object.entries(subcategories).forEach(([subcategory, items]) => {
+        html += `
+          <tr>
+            <td colspan="2" class="${isDisabled ? 'subcategory-disabled' : 'subcategory'}">${subcategory}</td>
+          </tr>
+        `;
+        
+        items.forEach(item => {
+          html += `
+            <tr class="${isDisabled ? 'row-disabled' : ''}">
               <td>${item.label}</td>
               <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
             </tr>
@@ -1719,72 +1793,30 @@ function App() {
                       </td>
                     </tr>
                     
-                    {Object.entries(subcategories).map(([subcategory, items]) => (
-                      <React.Fragment key={`${category}-${subcategory}`}>
-                        {subcategory !== 'default' && (
-                          <tr>
-                            <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
-                              {subcategory}
-                            </td>
-                          </tr>
-                        )}
+                    {Object.entries(subcategories).forEach(([subcategory, items]) => {
+                      html += `
+                        <tr>
+                          <td colspan="2" class="subcategory">${subcategory}</td>
+                        </tr>
+                      `;
+                      
+                      items.forEach(item => {
+                        let itemLabel = item.label;
                         
-                        {items.map((item) => (
-                          <tr 
-                            key={item.id} 
-                            className={`cursor-pointer transition-colors ${item.checked ? 'bg-green-100' : ''}`}
-                            onClick={() => handleMdsaCheckChange(item.id)}
-                          >
-                            <td className="border border-gray-300 p-2 text-sm">
-                              {item.label}
-                              
-                              {/* Ajouter champ de date d'expiration pour les électrodes */}
-                              {item.id === 'electrode1' && item.checked && (
-                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                                  <label htmlFor="expireDateElectrode1" className="block text-xs font-medium text-gray-700 mb-1">
-                                    Date d'expiration:
-                                  </label>
-                                  <input
-                                    type="date"
-                                    id="expireDateElectrode1"
-                                    value={expireDateElectrode1}
-                                    onChange={(e) => setExpireDateElectrode1(e.target.value)}
-                                    className="p-1 border border-gray-300 rounded w-full"
-                                    required
-                                  />
-                                </div>
-                              )}
-                              
-                              {item.id === 'electrode2' && item.checked && (
-                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                                  <label htmlFor="expireDateElectrode2" className="block text-xs font-medium text-gray-700 mb-1">
-                                    Date d'expiration:
-                                  </label>
-                                  <input
-                                    type="date"
-                                    id="expireDateElectrode2"
-                                    value={expireDateElectrode2}
-                                    onChange={(e) => setExpireDateElectrode2(e.target.value)}
-                                    className="p-1 border border-gray-300 rounded w-full"
-                                    required
-                                  />
-                                </div>
-                              )}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-center">
-                              <input 
-                                type="checkbox" 
-                                checked={item.checked}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={() => handleMdsaCheckChange(item.id)}
-                                className="w-5 h-5 accent-[#b22a2e]"
-                                required
-                              />
-                            </td>
+                        if (item.id === 'electrode1' && expireDateElectrode1) {
+                          itemLabel += ` (Expiration: ${expireDateElectrode1})`;
+                        } else if (item.id === 'electrode2' && expireDateElectrode2) {
+                          itemLabel += ` (Expiration: ${expireDateElectrode2})`;
+                        }
+                        
+                        html += `
+                          <tr>
+                            <td>${itemLabel}</td>
+                            <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
                           </tr>
-                        ))}
-                      </React.Fragment>
-                    ))}
+                        `;
+                      });
+                    });
                   </React.Fragment>
                 ))}
                 
