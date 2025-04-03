@@ -1074,32 +1074,34 @@ function App() {
             </tr>
       `;
       
-      Object.entries(subcategories).forEach(([subcategory, items]) => {
-        if (subcategory !== 'default') {
-          html += `
+      Object.entries(subcategories).forEach(([subcategory, items]) => (
+        <React.Fragment key={subcategory}>
+          {subcategory !== 'default' && (
             <tr>
-              <td colspan="2" class="subcategory">${subcategory}</td>
+              <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
+                {subcategory}
+              </td>
             </tr>
-          `;
-        }
-        
-        items.forEach(item => {
-          let itemLabel = item.label;
+          )}
           
-          if (item.id === 'electrode1' && expireDateElectrode1) {
-            itemLabel += ` (Expiration: ${expireDateElectrode1})`;
-          } else if (item.id === 'electrode2' && expireDateElectrode2) {
-            itemLabel += ` (Expiration: ${expireDateElectrode2})`;
-          }
-          
-          html += `
-            <tr>
-              <td>${itemLabel}</td>
-              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
-            </tr>
-          `;
-        });
-      });
+          items.forEach(item => {
+            let itemLabel = item.label;
+            
+            if (item.id === 'electrode1' && expireDateElectrode1) {
+              itemLabel += ` (Expiration: ${expireDateElectrode1})`;
+            } else if (item.id === 'electrode2' && expireDateElectrode2) {
+              itemLabel += ` (Expiration: ${expireDateElectrode2})`;
+            }
+            
+            html += `
+              <tr>
+                <td>${itemLabel}</td>
+                <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
+              </tr>
+            `;
+          });
+        </React.Fragment>
+      ))}
     });
     
     html += `
@@ -1826,6 +1828,20 @@ function App() {
     return html;
   };
 
+  // Fonction pour cocher tous les éléments d'une catégorie MDSA
+  const handleCategoryAllChecked = (category: string) => {
+    setMdsaItems(prevItems => 
+      prevItems.map(item => 
+        item.category === category
+          ? { 
+              ...item, 
+              checked: true
+            } 
+          : item
+      )
+    );
+  };
+
   // Page d'accueil avec les options de formulaire
   if (currentForm === null) {
     return (
@@ -2005,18 +2021,31 @@ function App() {
                   <React.Fragment key={category}>
                     <tr>
                       <td colSpan={2} className="border border-gray-300 p-2 bg-[#b22a2e]/10 font-semibold">
-                        {category}
+                        <div className="flex justify-between items-center">
+                          <span>{category}</span>
+                          <div className="flex items-center">
+                            <span className="text-xs mr-2">Tout vérifié</span>
+                            <input 
+                              type="checkbox" 
+                              onChange={() => handleCategoryAllChecked(category)}
+                              className="w-5 h-5 accent-green-600 cursor-pointer"
+                            />
+                          </div>
+                        </div>
                       </td>
                     </tr>
                     
                     {Object.entries(subcategories).map(([subcategory, items]) => (
                       <React.Fragment key={subcategory}>
-                        <tr>
-                          <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
-                            {subcategory}
-                          </td>
-                        </tr>
-                        {items.map(item => {
+                        {subcategory !== 'default' && (
+                          <tr>
+                            <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
+                              {subcategory}
+                            </td>
+                          </tr>
+                        )}
+                        
+                        items.forEach(item => {
                           let itemLabel = item.label;
                           
                           if (item.id === 'electrode1' && expireDateElectrode1) {
@@ -2025,15 +2054,13 @@ function App() {
                             itemLabel += ` (Expiration: ${expireDateElectrode2})`;
                           }
                           
-                          return (
-                            <tr key={item.id}>
-                              <td className="border border-gray-300 p-2">{itemLabel}</td>
-                              <td className={`border border-gray-300 p-2 text-center ${item.checked ? 'text-green-600 font-bold' : 'text-red-600'}`}>
-                                {item.checked ? '✓' : '✗'}
-                              </td>
+                          html += `
+                            <tr>
+                              <td>${itemLabel}</td>
+                              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
                             </tr>
-                          );
-                        })}
+                          `;
+                        });
                       </React.Fragment>
                     ))}
                   </React.Fragment>
