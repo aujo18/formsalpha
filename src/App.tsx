@@ -272,6 +272,14 @@ function App() {
     
     // Nouvelle section: VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI
     {
+      id: 'cambi-header',
+      label: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
+      category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
+      checked: false,
+      disabled: true, // En-tête, pas cliquable
+      isConform: false
+    },
+    {
       id: 'cambi-V1-A', // Lettre majuscule pour indiquer défectuosité majeure
       label: 'Le système de radiocommunication: Vérifier l\'équipement en fonction de la politique de l\'entreprise',
       category: 'VÉRIFICATIONS SPÉCIFIQUES EXIGÉES PAR LE GROUPE CAMBI',
