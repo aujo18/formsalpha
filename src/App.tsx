@@ -405,6 +405,20 @@ function App() {
     );
   };
 
+  // Fonction pour cocher tous les éléments d'une catégorie MDSA
+  const handleCategoryAllChecked = (category: string) => {
+    setMdsaItems(prevItems => 
+      prevItems.map(item => 
+        item.category === category
+          ? { 
+              ...item, 
+              checked: true
+            } 
+          : item
+      )
+    );
+  };
+
   // Fonction pour mettre à jour la date d'expiration d'un item du MDSA
   const handleMdsaExpireDateChange = (itemId: string, date: string) => {
     setMdsaItems(prevItems => 
@@ -2005,35 +2019,73 @@ function App() {
                   <React.Fragment key={category}>
                     <tr>
                       <td colSpan={2} className="border border-gray-300 p-2 bg-[#b22a2e]/10 font-semibold">
-                        {category}
+                        <div className="flex justify-between items-center">
+                          <span>{category}</span>
+                          <div className="flex items-center">
+                            <span className="text-xs mr-2">Tout vérifié</span>
+                            <input 
+                              type="checkbox" 
+                              onChange={() => handleCategoryAllChecked(category)}
+                              className="w-5 h-5 accent-green-600 cursor-pointer"
+                            />
+                          </div>
+                        </div>
                       </td>
                     </tr>
                     
                     {Object.entries(subcategories).map(([subcategory, items]) => (
                       <React.Fragment key={subcategory}>
-                        <tr>
-                          <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
-                            {subcategory}
-                          </td>
-                        </tr>
-                        {items.map(item => {
-                          let itemLabel = item.label;
-                          
-                          if (item.id === 'electrode1' && expireDateElectrode1) {
-                            itemLabel += ` (Expiration: ${expireDateElectrode1})`;
-                          } else if (item.id === 'electrode2' && expireDateElectrode2) {
-                            itemLabel += ` (Expiration: ${expireDateElectrode2})`;
-                          }
-                          
-                          return (
-                            <tr key={item.id}>
-                              <td className="border border-gray-300 p-2">{itemLabel}</td>
-                              <td className={`border border-gray-300 p-2 text-center ${item.checked ? 'text-green-600 font-bold' : 'text-red-600'}`}>
-                                {item.checked ? '✓' : '✗'}
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        {subcategory !== 'default' && (
+                          <tr>
+                            <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
+                              {subcategory}
+                            </td>
+                          </tr>
+                        )}
+                        
+                        {items.map(item => (
+                          <tr 
+                            key={item.id}
+                            className={`${item.checked ? 'bg-green-100' : ''} cursor-pointer transition-colors`}
+                            onClick={() => handleMdsaCheckChange(item.id)}
+                          >
+                            <td className="border border-gray-300 p-2 text-sm">
+                              {item.label}
+                              {item.id === 'electrode1' && (
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="date"
+                                    value={expireDateElectrode1}
+                                    onChange={(e) => setExpireDateElectrode1(e.target.value)}
+                                    className="p-1 border border-gray-300 rounded w-full"
+                                    placeholder="Date d'expiration"
+                                  />
+                                </div>
+                              )}
+                              {item.id === 'electrode2' && (
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="date"
+                                    value={expireDateElectrode2}
+                                    onChange={(e) => setExpireDateElectrode2(e.target.value)}
+                                    className="p-1 border border-gray-300 rounded w-full"
+                                    placeholder="Date d'expiration"
+                                  />
+                                </div>
+                              )}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-center">
+                              <input 
+                                type="checkbox" 
+                                checked={item.checked}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={() => handleMdsaCheckChange(item.id)}
+                                className="w-5 h-5 accent-[#b22a2e]"
+                                required
+                              />
+                            </td>
+                          </tr>
+                        ))}
                       </React.Fragment>
                     ))}
                   </React.Fragment>
