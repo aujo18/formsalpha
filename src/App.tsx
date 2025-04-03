@@ -1834,6 +1834,20 @@ function App() {
     return html;
   };
 
+  // Fonction pour cocher tous les éléments d'une catégorie MDSA
+  const handleCategoryAllChecked = (category: string) => {
+    setMdsaItems(prevItems => 
+      prevItems.map(item => 
+        item.category === category
+          ? { 
+              ...item, 
+              checked: true
+            } 
+          : item
+      )
+    );
+  };
+
   // Page d'accueil avec les options de formulaire
   if (currentForm === null) {
     return (
@@ -2013,17 +2027,29 @@ function App() {
                   <React.Fragment key={category}>
                     <tr>
                       <td colSpan={2} className="border border-gray-300 p-2 bg-[#b22a2e]/10 font-semibold">
-                        {category}
+                        <div className="flex justify-between items-center">
+                          <span>{category}</span>
+                          <div className="flex items-center">
+                            <span className="text-xs mr-2">Tout vérifié</span>
+                            <input 
+                              type="checkbox" 
+                              onChange={() => handleCategoryAllChecked(category)}
+                              className="w-5 h-5 accent-green-600 cursor-pointer"
+                            />
+                          </div>
+                        </div>
                       </td>
                     </tr>
                     
                     {Object.entries(subcategories).map(([subcategory, items]) => (
                       <React.Fragment key={subcategory}>
-                        <tr>
-                          <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
-                            {subcategory}
-                          </td>
-                        </tr>
+                        {subcategory !== 'default' && (
+                          <tr>
+                            <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
+                              {subcategory}
+                            </td>
+                          </tr>
+                        )}
                         {items.map(item => {
                           let itemLabel = item.label;
                           
@@ -2035,18 +2061,21 @@ function App() {
                           
                           return (
                             <React.Fragment key={item.id}>
-                              <tr className={item.checked ? 'bg-green-50' : ''}>
+                              <tr 
+                                className={`cursor-pointer ${item.checked ? 'bg-green-50' : ''}`}
+                                onClick={() => handleMdsaCheckChange(item.id)}
+                              >
                                 <td className="border border-gray-300 p-2">{itemLabel}</td>
                                 <td className="border border-gray-300 p-2 text-center">
                                   <input 
                                     type="checkbox" 
                                     checked={item.checked}
-                                    onChange={() => handleMdsaCheckChange(item.id)}
+                                    onChange={(e) => {
+                                      e.stopPropagation(); // Évite le double déclenchement
+                                      handleMdsaCheckChange(item.id);
+                                    }}
                                     className="w-5 h-5 accent-green-600 cursor-pointer"
                                   />
-                                  <span className={`ml-2 ${item.checked ? 'text-green-600 font-bold' : 'text-red-600'}`}>
-                                    {item.checked ? '✓' : '✗'}
-                                  </span>
                                 </td>
                               </tr>
                               {(item.id === 'electrode1' || item.id === 'electrode2') && item.checked && (
