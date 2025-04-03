@@ -433,8 +433,16 @@ function App() {
     );
   };
 
+  // Fonction pour vérifier si une section est entièrement désactivée
+  const isSectionDisabled = (category: string | undefined) => {
+    if (!category) return false;
+    const itemsInCategory = defectuositesItems.filter(item => item.category === category);
+    return itemsInCategory.length > 0 && itemsInCategory.every(item => item.disabled);
+  };
+
   // Fonction pour gérer la case "Tout est conforme" par section
-  const handleSectionAllConform = (category: string) => {
+  const handleSectionAllConform = (category: string | undefined) => {
+    if (!category) return;
     setDefectuositesItems(prevItems => 
       prevItems.map(item => {
         // Ne modifie que les items qui appartiennent à la catégorie sélectionnée et qui ne sont pas désactivés
@@ -448,12 +456,6 @@ function App() {
         return item;
       })
     );
-  };
-
-  // Fonction pour vérifier si une section est entièrement désactivée
-  const isSectionDisabled = (category: string) => {
-    const itemsInCategory = defectuositesItems.filter(item => item.category === category);
-    return itemsInCategory.length > 0 && itemsInCategory.every(item => item.disabled);
   };
 
   // Fonction pour vérifier s'il y a des défectuosités majeures (identifiées par une lettre dans l'ID)
