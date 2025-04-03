@@ -813,6 +813,12 @@ function App() {
                                 <div className={`w-6 h-6 mx-auto rounded-full flex items-center justify-center ${item.checked ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                   {item.checked ? '✓' : '✗'}
                                 </div>
+                                <input 
+                                  type="checkbox"
+                                  checked={item.checked}
+                                  onChange={() => handleMdsaCheckChange(item.id)}
+                                  className="hidden"
+                                />
                               </td>
                             </tr>
                           );
@@ -1104,6 +1110,12 @@ function App() {
                             <div className={`w-6 h-6 mx-auto rounded-full flex items-center justify-center ${item.checked ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                               {item.checked ? '✓' : '✗'}
                             </div>
+                            <input 
+                              type="checkbox"
+                              checked={item.checked}
+                              onChange={() => handleVehiculeCheckChange(item.id)}
+                              className="hidden"
+                            />
                           </td>
                         </tr>
                       ))}
