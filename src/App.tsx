@@ -2034,12 +2034,40 @@ function App() {
                           }
                           
                           return (
-                            <tr key={item.id}>
-                              <td className="border border-gray-300 p-2">{itemLabel}</td>
-                              <td className={`border border-gray-300 p-2 text-center ${item.checked ? 'text-green-600 font-bold' : 'text-red-600'}`}>
-                                {item.checked ? '✓' : '✗'}
-                              </td>
-                            </tr>
+                            <React.Fragment key={item.id}>
+                              <tr className={item.checked ? 'bg-green-50' : ''}>
+                                <td className="border border-gray-300 p-2">{itemLabel}</td>
+                                <td className="border border-gray-300 p-2 text-center">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={item.checked}
+                                    onChange={() => handleMdsaCheckChange(item.id)}
+                                    className="w-5 h-5 accent-green-600 cursor-pointer"
+                                  />
+                                  <span className={`ml-2 ${item.checked ? 'text-green-600 font-bold' : 'text-red-600'}`}>
+                                    {item.checked ? '✓' : '✗'}
+                                  </span>
+                                </td>
+                              </tr>
+                              {(item.id === 'electrode1' || item.id === 'electrode2') && item.checked && (
+                                <tr className="bg-blue-50">
+                                  <td colSpan={2} className="border border-gray-300 p-2">
+                                    <label className="block text-sm font-medium mb-1 text-gray-700">
+                                      Date d'expiration des {item.id === 'electrode1' ? 'électrodes adulte' : 'électrodes Uni-Padz'} :
+                                    </label>
+                                    <input 
+                                      type="date"
+                                      value={item.id === 'electrode1' ? expireDateElectrode1 : expireDateElectrode2}
+                                      onChange={(e) => item.id === 'electrode1' 
+                                        ? setExpireDateElectrode1(e.target.value)
+                                        : setExpireDateElectrode2(e.target.value)}
+                                      className="p-2 border border-gray-300 rounded-md w-full"
+                                      required={item.checked}
+                                    />
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
                           );
                         })}
                       </React.Fragment>
