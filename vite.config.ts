@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Inspection AMC (CAMBI)',
-        short_name: 'Inspection AMC',
+        name: 'Inspection Laurentides-Lanaudière (CAMBI)',
+        short_name: 'Inspection L-L',
         description: 'Application d\'inspection pour CAMBI',
         theme_color: '#b22a2e',
         icons: [

@@ -1846,8 +1846,8 @@ function App() {
       <div className="min-h-screen bg-gray-100 p-4 md:p-8">
         <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-8">
           <div className="flex items-center">
-            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-10 mr-3 filter brightness-0 invert" />
-            <h1 className="text-2xl font-bold">Inspection AMC (CAMBI)</h1>
+            <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
+            <h1 className="text-xl font-bold">Inspection Laurentides-Lanaudière</h1>
           </div>
         </header>
         
@@ -1889,8 +1889,8 @@ function App() {
           </button>
         </div>
         
-        <footer className="mt-8 text-center text-gray-500 text-sm">
-          <p>© 2025 Inspection AMC (CAMBI) - Tous droits réservés</p>
+        <footer className="mt-10 text-center text-gray-500 text-sm">
+          <p>© 2023 CAMBI · Inspection Laurentides-Lanaudière v1.0</p>
         </footer>
       </div>
     );
@@ -2059,6 +2059,7 @@ function App() {
                                     onChange={(e) => setExpireDateElectrode1(e.target.value)}
                                     className="p-1 border border-gray-300 rounded w-full"
                                     placeholder="Date d'expiration"
+                                    required
                                   />
                                 </div>
                               )}
@@ -2070,6 +2071,7 @@ function App() {
                                     onChange={(e) => setExpireDateElectrode2(e.target.value)}
                                     className="p-1 border border-gray-300 rounded w-full"
                                     placeholder="Date d'expiration"
+                                    required
                                   />
                                 </div>
                               )}
