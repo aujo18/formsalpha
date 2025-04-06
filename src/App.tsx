@@ -1890,7 +1890,7 @@ function App() {
         </div>
         
         <footer className="mt-10 text-center text-gray-500 text-sm">
-          <p>© 2023 CAMBI · Inspection Laurentides-Lanaudière v1.0</p>
+          <p>© 2025 CAMBI · Inspection Laurentides-Lanaudière v1.0</p>
         </footer>
       </div>
     );
