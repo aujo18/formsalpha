@@ -15,6 +15,13 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Liste des numéros de MDSA préenregistrés
+  const presetMdsaNumbers = [
+    'AR18J035601',
+    'AR18J035318',
+    'AR18J035139'
+  ];
+
   // Initialiser le scanner au montage
   useEffect(() => {
     // Cleanup fonction pour assurer la libération des ressources
@@ -228,6 +235,10 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
     }
   };
 
+  const handlePresetClick = (mdsaNumber: string) => {
+    setInputValue(mdsaNumber);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg w-full max-w-md overflow-hidden">
@@ -324,6 +335,22 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
               >
                 Utiliser
               </button>
+            </div>
+            
+            {/* Numéros MDSA préenregistrés */}
+            <div className="mt-3">
+              <p className="text-sm font-medium text-gray-700 mb-2">Numéros MDSA rapides :</p>
+              <div className="flex flex-wrap gap-2">
+                {presetMdsaNumbers.map((number) => (
+                  <button
+                    key={number}
+                    onClick={() => handlePresetClick(number)}
+                    className="text-xs py-1 px-2 bg-blue-100 text-blue-800 rounded border border-blue-300 hover:bg-blue-200"
+                  >
+                    {number}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           
