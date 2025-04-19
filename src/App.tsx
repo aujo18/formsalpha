@@ -1941,31 +1941,33 @@ function App() {
         </header>
         
         <form ref={form1Ref} onSubmit={handleSubmitForm1} className="bg-white rounded-xl shadow-md p-4 mb-20">
-          <div className="flex flex-col mb-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-            <div className="md:w-1/3">
-              <label htmlFor="numeroMoniteur" className="block text-sm font-medium text-gray-700 mb-1">
-                Numéro du moniteur :
-              </label>
-              <div className="flex">
-                <input
-                  type="text"
-                  id="numeroMoniteur"
-                  value={numeroMoniteur}
-                  onChange={(e) => setNumeroMoniteur(e.target.value)}
-                  className="flex-1 p-2 border rounded-l-md focus:ring-2 focus:ring-[#b22a2e] focus:border-transparent"
-                  placeholder="Scanner ou entrer le numéro"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowScanner(true)}
-                  className="bg-[#b22a2e] text-white p-2 rounded-r-md hover:bg-[#b22a2e]/90"
-                >
-                  <Camera size={20} />
-                </button>
-              </div>
+          {/* Champ numéro du moniteur avec scan en premier (pleine largeur) */}
+          <div className="mb-4">
+            <label htmlFor="numeroMoniteur" className="block text-sm font-medium text-gray-700 mb-1">
+              Numéro du moniteur :
+            </label>
+            <div className="flex">
+              <input
+                type="text"
+                id="numeroMoniteur"
+                value={numeroMoniteur}
+                onChange={(e) => setNumeroMoniteur(e.target.value)}
+                className="flex-1 p-2 border rounded-l-md focus:ring-2 focus:ring-[#b22a2e] focus:border-transparent"
+                placeholder="Scanner ou entrer le numéro"
+              />
+              <button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className="bg-[#b22a2e] text-white p-2 rounded-r-md hover:bg-[#b22a2e]/90 z-10"
+              >
+                <Camera size={20} />
+              </button>
             </div>
-            
-            <div className="md:w-1/3">
+          </div>
+
+          {/* Autres champs en dessous */}
+          <div className="flex flex-col mb-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+            <div className="md:w-1/2">
               <label htmlFor="pointDeService" className="block text-sm font-medium text-gray-700 mb-1">
                 Point de service (PDS) :
               </label>
@@ -1983,13 +1985,28 @@ function App() {
               </select>
             </div>
             
-            <div className="md:w-1/3">
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-                Date et heure :
+            <div className="md:w-1/2">
+              <label htmlFor="matricule" className="block text-sm font-medium text-gray-700 mb-1">
+                Matricule du TAP:
               </label>
-              <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-100">
-                {getCurrentDateTime()}
-              </div>
+              <input
+                type="text"
+                id="matricule"
+                value={matricule}
+                onChange={(e) => handleMatriculeChange(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#b22a2e] focus:border-[#b22a2e]"
+                required
+                placeholder="Ex: N-0100"
+              />
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+              Date et heure :
+            </label>
+            <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-100">
+              {getCurrentDateTime()}
             </div>
           </div>
           

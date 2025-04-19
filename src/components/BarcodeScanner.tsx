@@ -91,8 +91,9 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
       // Configuration simple compatible avec tous les appareils
       const config = {
         fps: 10,
-        qrbox: { width: 250, height: 100 },
+        qrbox: { width: 250, height: 250 },
         formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
           Html5QrcodeSupportedFormats.CODE_39,
           Html5QrcodeSupportedFormats.CODE_128,
           Html5QrcodeSupportedFormats.CODE_93,
@@ -173,7 +174,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
         top: 50%;
         left: 50%;
         width: 250px;
-        height: 100px;
+        height: 250px;
         transform: translate(-50%, -50%);
         border: 2px solid #b22a2e;
         border-radius: 8px;
@@ -184,7 +185,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScanSuccess, onClose 
 
       // Ajouter du texte guide
       const guide = document.createElement('div');
-      guide.textContent = 'Alignez le code-barre ici';
+      guide.textContent = 'Alignez le code QR ou code-barre ici';
       guide.style.cssText = `
         position: absolute;
         top: -30px;
