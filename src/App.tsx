@@ -714,7 +714,7 @@ function App() {
     
     // Titre du document
     doc.setFontSize(18);
-    doc.text('Inspection Véhicule', 105, 15, { align: 'center' });
+    doc.text('Inspection Médicale', 105, 15, { align: 'center' });
     
     // Informations générales
     doc.setFontSize(12);
@@ -831,7 +831,7 @@ function App() {
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(10);
-      doc.text(`Inspection Véhicule - Page ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+      doc.text(`Inspection Médicale - Page ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
     }
     
     return doc;
@@ -1136,7 +1136,7 @@ function App() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Inspection Véhicule</title>
+        <title>Inspection Médicale</title>
         <meta charset="UTF-8">
         <style>
           body {
@@ -1190,7 +1190,7 @@ function App() {
         </style>
       </head>
       <body>
-        <h1>Inspection Véhicule</h1>
+        <h1>Inspection Médicale</h1>
         
         <div class="info">
           <p><strong>Matricule:</strong> ${matricule}</p>
@@ -1252,7 +1252,7 @@ function App() {
         </table>
         
         <footer>
-          Inspection Véhicule - Généré le ${getCurrentDateTime()}
+          Inspection Médicale - Généré le ${getCurrentDateTime()}
         </footer>
       </body>
       </html>
