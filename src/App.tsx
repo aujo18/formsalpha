@@ -1871,7 +1871,7 @@ function App() {
             <div className="bg-[#102947]/10 p-4 rounded-full mb-4">
               <ClipboardCheck size={48} className="text-[#102947]" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Inspection Véhicule</h2>
+            <h2 className="text-xl font-semibold mb-2">Inspection Médicale</h2>
             <p className="text-gray-600 text-center">Vérification du materiel de l'ambulance</p>
             <ChevronRight className="mt-4 text-[#102947]" />
           </button>
@@ -1883,8 +1883,8 @@ function App() {
             <div className="bg-[#4f6683]/10 p-4 rounded-full mb-4">
               <ClipboardCheck size={48} className="text-[#4f6683]" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Liste des Défectuosités</h2>
-            <p className="text-gray-600 text-center">Véhicules lourds ambulanciers</p>
+            <h2 className="text-xl font-semibold mb-2">Inspection Mécanique</h2>
+            <p className="text-gray-600 text-center">Véhicules ambulanciers</p>
             <ChevronRight className="mt-4 text-[#4f6683]" />
           </button>
         </div>
@@ -2206,14 +2206,14 @@ function App() {
     );
   }
 
-  // Formulaire 2: Inspection Véhicule
+  // Formulaire 2: Inspection Médicale
   if (currentForm === 'form2') {
     return (
       <div className="min-h-screen bg-gray-100 p-4 md:p-6">
         <header className="bg-[#102947] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
           <div className="flex items-center">
             <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
-            <h1 className="text-xl font-bold">Inspection Véhicule</h1>
+            <h1 className="text-xl font-bold">Inspection Médicale</h1>
           </div>
           <button onClick={goBack} className="flex items-center text-white">
             <ChevronLeft size={20} /> Retour
@@ -2512,14 +2512,14 @@ function App() {
     );
   }
 
-  // Formulaire 3: Liste des Défectuosités
+  // Formulaire 3: Inspection Mécanique
   if (currentForm === 'form3') {
     return (
       <div className="min-h-screen bg-gray-100 p-4 md:p-6">
         <header className="bg-[#4f6683] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
           <div className="flex items-center">
             <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
-            <h1 className="text-xl font-bold">Liste des Défectuosités</h1>
+            <h1 className="text-xl font-bold">Inspection Mécanique</h1>
           </div>
           <button onClick={goBack} className="flex items-center text-white">
             <ChevronLeft size={20} /> Retour
