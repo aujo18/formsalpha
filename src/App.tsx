@@ -2050,32 +2050,63 @@ function App() {
                       </td>
                     </tr>
                     
-                    {Object.entries(subcategories).forEach(([subcategory, items]) => {
-                      if (subcategory !== 'default') {
-                        html += `
+                    {Object.entries(subcategories).map(([subcategory, items]) => (
+                      <React.Fragment key={subcategory}>
+                        {subcategory !== 'default' && (
                           <tr>
-                            <td colspan="2" class="subcategory">${subcategory}</td>
+                            <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
+                              {subcategory}
+                            </td>
                           </tr>
-                        `;
-                      }
-                      
-                      items.forEach(item => {
-                        let itemLabel = item.label;
+                        )}
                         
-                        if (item.id === 'electrode1' && expireDateElectrode1) {
-                          itemLabel += ` (Expiration: ${expireDateElectrode1})`;
-                        } else if (item.id === 'electrode2' && expireDateElectrode2) {
-                          itemLabel += ` (Expiration: ${expireDateElectrode2})`;
-                        }
-                        
-                        html += `
-                          <tr>
-                            <td>${itemLabel}</td>
-                            <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
+                        {items.map(item => (
+                          <tr 
+                            key={item.id}
+                            className={`${item.checked ? 'bg-green-100' : ''} cursor-pointer transition-colors`}
+                            onClick={() => handleMdsaCheckChange(item.id)}
+                          >
+                            <td className="border border-gray-300 p-2 text-sm">
+                              {item.label}
+                              {item.id === 'electrode1' && (
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="date"
+                                    value={expireDateElectrode1}
+                                    onChange={(e) => setExpireDateElectrode1(e.target.value)}
+                                    className="p-1 border border-gray-300 rounded w-full"
+                                    placeholder="Date d'expiration"
+                                    required
+                                  />
+                                </div>
+                              )}
+                              {item.id === 'electrode2' && (
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="date"
+                                    value={expireDateElectrode2}
+                                    onChange={(e) => setExpireDateElectrode2(e.target.value)}
+                                    className="p-1 border border-gray-300 rounded w-full"
+                                    placeholder="Date d'expiration"
+                                    required
+                                  />
+                                </div>
+                              )}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-center">
+                              <input 
+                                type="checkbox" 
+                                checked={item.checked}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={() => handleMdsaCheckChange(item.id)}
+                                className="w-5 h-5 accent-[#b22a2e]"
+                                required
+                              />
+                            </td>
                           </tr>
-                        `;
-                      });
-                    });
+                        ))}
+                      </React.Fragment>
+                    ))}
                   </React.Fragment>
                 ))}
                 
