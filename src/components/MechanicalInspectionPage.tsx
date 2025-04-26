@@ -243,8 +243,8 @@ const MechanicalInspectionPage: React.FC<MechanicalInspectionPageProps> = ({
     const minor = getMinorDefects();
     setMajorDefectsInfo({ 
       hasMajorDefects: !!major,
-      defectsList: major?.map(item => `- ${item.label}${item.comment ? ` (${item.comment})` : ''}`).join('\n') || '',
-      hasMinorDefects: !!minor && !major // Only set minor if no major defects
+      defectsList: (major || minor)?.map(item => `- ${item.label}${item.comment ? ` (${item.comment})` : ''}`).join('\n') || '',
+      hasMinorDefects: !!minor && !major 
     });
     setShowConfirmation(true);
   };
