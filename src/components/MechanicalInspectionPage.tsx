@@ -199,9 +199,9 @@ const MechanicalInspectionPage: React.FC<MechanicalInspectionPageProps> = ({
     const minorDefects = getMinorDefects();
     let defectsWarning = '';
     if (majorDefects) {
-      defectsWarning = `<div style="background-color:#ffebee;border:2px solid #c62828;padding:15px;margin:20px 0;border-radius:5px;"><h3 style="color:#c62828;margin-top:0;">⚠️ ATTENTION: DÉFECTUOSITÉS MAJEURES</h3><p>Contacter immédiatement le chef d'équipe.</p><ul style="margin-bottom:0;">${majorDefects.map(item => `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`).join('')}</ul></div>`;
+      defectsWarning = `<div style="background-color:#ffebee;border:2px solid #c62828;padding:15px;margin:20px 0;border-radius:5px;"><h3 style="color:#c62828;margin-top:0;">⚠️ ATTENTION: DÉFECTUOSITÉS MAJEURES</h3><p>-</p><ul style="margin-bottom:0;">${majorDefects.map(item => `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`).join('')}</ul></div>`;
     } else if (minorDefects) {
-      defectsWarning = `<div style="background-color:#fff8e1;border:2px solid #ffa000;padding:15px;margin:20px 0;border-radius:5px;"><h3 style="color:#ffa000;margin-top:0;">⚠️ DÉFECTUOSITÉS MINEURES</h3><p>Contacter le chef d'équipe.</p><ul style="margin-bottom:0;">${minorDefects.map(item => `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`).join('')}</ul></div>`;
+      defectsWarning = `<div style="background-color:#fff8e1;border:2px solid #ffa000;padding:15px;margin:20px 0;border-radius:5px;"><h3 style="color:#ffa000;margin-top:0;">⚠️ DÉFECTUOSITÉS MINEURES</h3><p>-</p><ul style="margin-bottom:0;">${minorDefects.map(item => `<li><strong>${item.label}</strong>${item.comment ? ` - ${item.comment}` : ''}</li>`).join('')}</ul></div>`;
     }
 
     const categorized = defectuositesItems.reduce<Record<string, CheckItem[]>>((acc, item) => {
