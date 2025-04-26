@@ -225,8 +225,15 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
                 <React.Fragment key={category}>
                   <tr><td colSpan={2} className="border border-gray-300 p-2 bg-[#102947]/10 font-semibold">{category}</td></tr>
                   {items.map((item) => (
-                    <tr key={item.id} className={`${item.disabled ? 'bg-gray-200' : (item.checked ? 'bg-green-100' : '')} ${!item.disabled ? 'cursor-pointer' : ''}`} onClick={() => !item.disabled && handleVehiculeCheckChange(item.id)} role="checkbox" aria-checked={item.checked} tabIndex={item.disabled ? -1 : 0} onKeyDown={(e) => { if (!item.disabled && (e.key === ' ' || e.key === 'Enter')) handleVehiculeCheckChange(item.id); }}>
-                      <td className="border border-gray-300 p-2 text-sm">
+                    <tr 
+                      key={item.id}
+                      className={`${item.disabled ? 'bg-gray-200' : (item.checked ? 'bg-green-100' : '')} ${!item.disabled ? 'cursor-pointer' : ''} transition-colors`}
+                      role="checkbox" 
+                      aria-checked={item.checked}
+                      tabIndex={item.disabled ? -1 : 0} 
+                      onKeyDown={(e) => { if (!item.disabled && (e.key === ' ' || e.key === 'Enter')) handleVehiculeCheckChange(item.id); }}
+                    >
+                      <td className="border border-gray-300 p-2 text-sm" onClick={() => !item.disabled && handleVehiculeCheckChange(item.id)}>
                         {item.label}
                         {item.id === 'trousse3' && item.checked && <div className="mt-2" onClick={e => e.stopPropagation()}><input type="number" value={cylindre1PSI} onChange={e => setCylindre1PSI(e.target.value)} className="p-1 border rounded w-32" placeholder="PSI" required aria-label="PSI Cylindre 1"/></div>}
                         {item.id === 'trousse4' && item.checked && <div className="mt-2" onClick={e => e.stopPropagation()}><input type="number" value={cylindre2PSI} onChange={e => setCylindre2PSI(e.target.value)} className="p-1 border rounded w-32" placeholder="PSI" required aria-label="PSI Cylindre 2"/></div>}
@@ -240,7 +247,16 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
                         )}
                       </td>
                       <td className="border border-gray-300 p-2 text-center w-20">
-                        <input type="checkbox" checked={item.checked} disabled={item.disabled} onClick={e => e.stopPropagation()} onChange={() => {}} className="w-5 h-5 accent-[#102947] cursor-pointer" required={item.id !== 'trousse7'} tabIndex={-1} aria-labelledby={`lab-${item.id}`}/>
+                        <input 
+                          type="checkbox" 
+                          checked={item.checked}
+                          disabled={item.disabled}
+                          onChange={() => handleVehiculeCheckChange(item.id)}
+                          className="w-5 h-5 accent-[#102947] cursor-pointer"
+                          required={item.id !== 'trousse7'} 
+                          tabIndex={-1} 
+                          aria-labelledby={`lab-${item.id}`}
+                        />
                         <span id={`lab-${item.id}`} className="sr-only">{item.label}</span>
                       </td>
                     </tr>

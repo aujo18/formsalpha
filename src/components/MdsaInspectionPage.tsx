@@ -254,14 +254,30 @@ const MdsaInspectionPage: React.FC<MdsaInspectionPageProps> = ({
                     <React.Fragment key={subcategory}>
                       {subcategory !== 'default' && <tr><td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">{subcategory}</td></tr>}
                       {items.map(item => (
-                        <tr key={item.id} className={`${item.checked ? 'bg-green-100' : ''} cursor-pointer transition-colors`} onClick={() => handleMdsaCheckChange(item.id)} role="checkbox" aria-checked={item.checked} tabIndex={0} onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleMdsaCheckChange(item.id); }}>
-                          <td className="border border-gray-300 p-2 text-sm">
+                        <tr 
+                          key={item.id}
+                          className={`${item.checked ? 'bg-green-100' : ''} ${!item.disabled ? 'cursor-pointer' : ''} transition-colors`}
+                          role="checkbox"
+                          aria-checked={item.checked}
+                          tabIndex={item.disabled ? -1 : 0} 
+                          onKeyDown={(e) => { if (!item.disabled && (e.key === ' ' || e.key === 'Enter')) handleMdsaCheckChange(item.id); }}
+                        >
+                          <td className="border border-gray-300 p-2 text-sm" onClick={() => !item.disabled && handleMdsaCheckChange(item.id)}>
                             {item.label}
                             {item.id === 'electrode1' && <div className="mt-2" onClick={e => e.stopPropagation()}><label htmlFor="exp1" className="sr-only">Exp Adult</label><input type="date" id="exp1" value={expireDateElectrode1} onChange={e => setExpireDateElectrode1(e.target.value)} className="p-1 border rounded w-full" required aria-label="Exp Adult" /></div>}
                             {item.id === 'electrode2' && <div className="mt-2" onClick={e => e.stopPropagation()}><label htmlFor="exp2" className="sr-only">Exp Uni</label><input type="date" id="exp2" value={expireDateElectrode2} onChange={e => setExpireDateElectrode2(e.target.value)} className="p-1 border rounded w-full" required aria-label="Exp Uni" /></div>}
                           </td>
                           <td className="border border-gray-300 p-2 text-center w-20">
-                            <input type="checkbox" checked={item.checked} onClick={e => e.stopPropagation()} onChange={() => { /* No-op, handled by TR click */ }} className="w-5 h-5 accent-[#b22a2e] cursor-pointer" required tabIndex={-1} aria-labelledby={`lab-${item.id}`} />
+                            <input 
+                              type="checkbox" 
+                              checked={item.checked}
+                              onChange={() => handleMdsaCheckChange(item.id)}
+                              className="w-5 h-5 accent-[#b22a2e] cursor-pointer"
+                              disabled={item.disabled}
+                              required
+                              tabIndex={-1} 
+                              aria-labelledby={`lab-${item.id}`}
+                            />
                             <span id={`lab-${item.id}`} className="sr-only">{item.label}</span>
                           </td>
                         </tr>
