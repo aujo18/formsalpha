@@ -179,9 +179,9 @@ function App() {
     setPointDeService,
     getCurrentDateTime,
     sendInspectionToMakecom,
-    onSubmissionComplete,
-    numeroVehicule, // Ajouté pour Médical et Mécanique
-    handleVehiculeNumberChange // Ajouté pour Médical et Mécanique
+    onSubmissionComplete: handleSubmissionComplete,
+    numeroVehicule,
+    handleVehiculeNumberChange
   };
 
   if (currentForm === 'form1') {

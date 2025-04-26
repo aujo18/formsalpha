@@ -168,8 +168,6 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
       const success = await sendInspectionToMakecom('Véhicule', webhookData);
       if (success) {
         onSubmissionComplete("L'inspection Véhicule a été générée et envoyée avec succès.");
-        setNumeroVehicule(''); // Réinitialise le numéro véhicule via App?
-        setPointDeService(''); // Réinitialise le PDS via App?
         setCylindre1PSI(''); setCylindre2PSI(''); setGrosCylindrePSI('');
         setGlycemieNormal(''); setGlycemieHigh(''); setGlycemieLow('');
         setVehiculeItems(prev => prev.map(item => ({ ...item, checked: false })));
