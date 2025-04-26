@@ -266,9 +266,9 @@ const MechanicalInspectionPage: React.FC<MechanicalInspectionPageProps> = ({
       const minor = getMinorDefects();
       let message = "L'inspection Mécanique a été générée et envoyée avec succès.";
       if (major) {
-        message += "\n\nATTENTION: Défectuosités MAJEURES détectées. Contacter le superviseur.";
+        message += "\n\nATTENTION: Défectuosités MAJEURES détectées. Contacter immédiatement le superviseur ou le chef d'équipe.";
       } else if (minor) {
-        message += "\n\nDéfectuosités mineures détectées. Contacter le superviseur.";
+        message += "\n\nDéfectuosités mineures détectées. Contacter le superviseur ou le chef d'équipe.";
       }
       if (success) {
         onSubmissionComplete(message);
@@ -370,11 +370,11 @@ const MechanicalInspectionPage: React.FC<MechanicalInspectionPageProps> = ({
               <div className="flex justify-between items-center mb-4"><h3 id="confirm-title" className="text-lg font-semibold">Confirmation</h3><button onClick={() => setShowConfirmation(false)} className="text-gray-500 hover:text-gray-700" aria-label="Fermer"><X size={20} /></button></div>
               <div className="mb-6">
                 {majorDefectsInfo.hasMajorDefects ? (
-                  <div className="flex items-start mb-4"><AlertTriangle className="text-red-600 mr-3 mt-0.5 flex-shrink-0" size={24} aria-hidden="true" /><div><p className="font-bold text-red-600">ATTENTION: DÉFECTUOSITÉS MAJEURES</p><p className="text-red-600 mt-2">Contacter superviseur IMMÉDIATEMENT.</p><div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md"><pre className="whitespace-pre-wrap text-sm">{majorDefectsInfo.defectsList}</pre></div><p className="mt-4">Envoyer quand même?</p></div></div>
+                  <div className="flex items-start mb-4"><AlertTriangle className="text-red-600 mr-3 mt-0.5 flex-shrink-0" size={24} aria-hidden="true" /><div><p className="font-bold text-red-600">ATTENTION: DÉFECTUOSITÉS MAJEURES</p><p className="text-red-600 mt-2">Contacter IMMÉDIATEMENT le superviseur ou le chef d'équipe.</p><div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md"><pre className="whitespace-pre-wrap text-sm">{majorDefectsInfo.defectsList}</pre></div><p className="mt-4">Pret à être envoyé?</p></div></div>
                 ) : majorDefectsInfo.hasMinorDefects ? (
-                   <div className="flex items-start mb-4"><AlertTriangle className="text-amber-500 mr-3 mt-0.5 flex-shrink-0" size={24} aria-hidden="true" /><div><p className="font-bold text-amber-600">Défectuosités mineures</p><p className="text-amber-600 mt-2">Contacter superviseur.</p><div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md"><pre className="whitespace-pre-wrap text-sm">{majorDefectsInfo.defectsList}</pre></div><p className="mt-4">Envoyer?</p></div></div>
+                   <div className="flex items-start mb-4"><AlertTriangle className="text-amber-500 mr-3 mt-0.5 flex-shrink-0" size={24} aria-hidden="true" /><div><p className="font-bold text-amber-600">Défectuosités mineures</p><p className="text-amber-600 mt-2">Contacter le superviseur ou le chef d'équipe.</p><div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md"><pre className="whitespace-pre-wrap text-sm">{majorDefectsInfo.defectsList}</pre></div><p className="mt-4">Pret à être envoyé?</p></div></div>
                 ) : (
-                  <div className="flex items-start mb-4"><AlertCircle className="text-[#4f6683] mr-3 mt-0.5 flex-shrink-0" size={24} aria-hidden="true" /><p>Finaliser et envoyer cette inspection au système central?</p></div>
+                  <div className="flex items-start mb-4"><AlertCircle className="text-[#4f6683] mr-3 mt-0.5 flex-shrink-0" size={24} aria-hidden="true" /><p>Prêt à être envoyé?</p></div>
                 )}
               </div>
               <div className="flex justify-end space-x-4"><button onClick={() => setShowConfirmation(false)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100">Annuler</button><button onClick={confirmSubmit} className="px-4 py-2 bg-[#4f6683] text-white rounded-md hover:bg-[#4f6683]/90">Confirmer</button></div>
