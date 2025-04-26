@@ -56,7 +56,7 @@ function App() {
   // Valeurs pour les dates d'expiration des électrodes
   const [expireDateElectrode1, setExpireDateElectrode1] = useState('');
   const [expireDateElectrode2, setExpireDateElectrode2] = useState('');
-  
+
   // Clés d'API pour EmailJS - intégrées directement dans le code
   const emailjsServiceId = 'service_op8kvgli';
   const emailjsTemplateId = 'template_ifzi0wm';
@@ -1388,21 +1388,21 @@ function App() {
         setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}.`);
       }
       
-      setSubmitted(true);
+        setSubmitted(true);
       
-      // Réinitialiser le formulaire
-      setMatricule('');
-      setNumeroMoniteur('');
-      setPointDeService('');
-      setExpireDateElectrode1('');
-      setExpireDateElectrode2('');
+        // Réinitialiser le formulaire
+        setMatricule('');
+        setNumeroMoniteur('');
+        setPointDeService('');
+        setExpireDateElectrode1('');
+        setExpireDateElectrode2('');
       setMdsaItems(prevItems => 
-        prevItems.map(item => ({
-          ...item,
-          checked: false,
-          expireDate: ''
-        }))
-      );
+          prevItems.map(item => ({
+            ...item,
+            checked: false,
+            expireDate: ''
+          }))
+        );
     } catch (error) {
       console.error('Erreur lors de la génération ou envoi de l\'inspection MDSA:', error);
       setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -1453,24 +1453,24 @@ function App() {
         setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}.`);
       }
       
-      setSubmitted(true);
+        setSubmitted(true);
       
-      // Réinitialiser le formulaire
-      setMatricule('');
-      setNumeroVehicule('');
-      setPointDeService('');
-      setCylindre1PSI('');
-      setCylindre2PSI('');
+        // Réinitialiser le formulaire
+        setMatricule('');
+        setNumeroVehicule('');
+        setPointDeService('');
+        setCylindre1PSI('');
+        setCylindre2PSI('');
       setGrosCylindrePSI('');
-      setGlycemieNormal('');
-      setGlycemieHigh('');
-      setGlycemieLow('');
-      setVehiculeItems(prevItems => 
-        prevItems.map(item => ({
-          ...item,
-          checked: false
-        }))
-      );
+        setGlycemieNormal('');
+        setGlycemieHigh('');
+        setGlycemieLow('');
+        setVehiculeItems(prevItems => 
+          prevItems.map(item => ({
+            ...item,
+            checked: false
+          }))
+        );
     } catch (error) {
       console.error('Erreur lors de la génération ou envoi de l\'inspection Véhicule:', error);
       setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -1943,9 +1943,9 @@ function App() {
         <form ref={form1Ref} onSubmit={handleSubmitForm1} className="bg-white rounded-xl shadow-md p-4 mb-20">
           {/* Champ numéro du moniteur avec scan en premier (pleine largeur) */}
           <div className="mb-4">
-            <label htmlFor="numeroMoniteur" className="block text-sm font-medium text-gray-700 mb-1">
-              Numéro du moniteur :
-            </label>
+              <label htmlFor="numeroMoniteur" className="block text-sm font-medium text-gray-700 mb-1">
+                Numéro du moniteur :
+              </label>
             <div className="flex">
               <input
                 type="text"
@@ -1963,8 +1963,8 @@ function App() {
                 <Camera size={20} />
               </button>
             </div>
-          </div>
-
+            </div>
+            
           {/* Autres champs en dessous */}
           <div className="flex flex-col mb-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
             <div className="md:w-1/2">
@@ -2002,11 +2002,11 @@ function App() {
           </div>
 
           <div className="mb-6">
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-              Date et heure :
-            </label>
-            <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-100">
-              {getCurrentDateTime()}
+              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+                Date et heure :
+              </label>
+              <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-100">
+                {getCurrentDateTime()}
             </div>
           </div>
           
