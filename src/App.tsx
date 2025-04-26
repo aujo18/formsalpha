@@ -1,5 +1,6 @@
-import React, { useState, useRef, FormEvent } from 'react';
+import React, { useState, useRef } from 'react';
 import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle, Camera, RotateCcw, AlertTriangle } from 'lucide-react';
+import jsPDF from 'jspdf';
 import emailjs from '@emailjs/browser';
 import BarcodeScanner from './components/BarcodeScanner';
 
@@ -567,6 +568,275 @@ function App() {
     }
   };
 
+  // Fonction pour générer un PDF de l'inspection MDSA
+  const generateMdsaPDF = () => {
+    const doc = new jsPDF();
+    
+    // Titre du document
+    doc.setFontSize(18);
+    doc.text('Inspection MDSA', 105, 15, { align: 'center' });
+    
+    // Informations générales
+    doc.setFontSize(12);
+    doc.text(`Matricule: ${matricule}`, 14, 30);
+    doc.text(`Numéro du moniteur: ${numeroMoniteur}`, 14, 38);
+    doc.text(`Point de service: ${pointDeService}`, 14, 46);
+    doc.text(`Date et heure: ${getCurrentDateTime()}`, 14, 54);
+    
+    // Créer un tableau manuellement (sans autoTable)
+    let yPosition = 60;
+    
+    // En-tête du tableau
+    doc.setFillColor(178, 42, 46); // Rouge CAMBI #b22a2e
+    doc.setTextColor(255, 255, 255);
+    doc.rect(14, yPosition, 130, 10, 'F');
+    doc.rect(144, yPosition, 52, 10, 'F');
+    doc.text("Élément", 16, yPosition + 7);
+    doc.text("Vérifié", 160, yPosition + 7);
+    yPosition += 10;
+    
+    // Réinitialiser la couleur du texte
+    doc.setTextColor(0, 0, 0);
+    
+    // Lignes de données
+    let currentCategory = '';
+    
+    mdsaItems.forEach(item => {
+      // Nouvelle catégorie
+      if (item.category !== currentCategory) {
+        currentCategory = item.category || 'Autre';
+        
+        // Dessiner la ligne de catégorie
+        doc.setFillColor(230, 200, 200); // Rouge CAMBI clair pour les catégories
+        doc.rect(14, yPosition, 182, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text(currentCategory, 16, yPosition + 6);
+        doc.setFont('helvetica', 'normal');
+        yPosition += 8;
+        
+        // Vérifier si on a besoin d'une nouvelle page
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      }
+      
+      // Sous-catégorie si nécessaire
+      if (item.subcategory && (mdsaItems.find(i => i.category === item.category && i.subcategory === item.subcategory) === item)) {
+        doc.setFillColor(240, 240, 240);
+        doc.rect(14, yPosition, 182, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text(item.subcategory, 16, yPosition + 6);
+        doc.setFont('helvetica', 'normal');
+        yPosition += 8;
+        
+        // Vérifier si on a besoin d'une nouvelle page
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      }
+      
+      // Préparer le texte de l'élément
+      let itemText = item.label;
+      if (item.id === 'electrode1' && expireDateElectrode1) {
+        itemText += ` (Expiration: ${expireDateElectrode1})`;
+      } else if (item.id === 'electrode2' && expireDateElectrode2) {
+        itemText += ` (Expiration: ${expireDateElectrode2})`;
+      }
+      
+      // Couper le texte si nécessaire
+      const maxWidth = 125;
+      let lines = doc.splitTextToSize(itemText, maxWidth);
+      
+      // Dessiner la ligne d'élément
+      const lineHeight = lines.length * 7;
+      doc.rect(14, yPosition, 130, lineHeight + 5, 'S');
+      doc.rect(144, yPosition, 52, lineHeight + 5, 'S');
+      
+      // Ajouter le texte
+      for (let i = 0; i < lines.length; i++) {
+        doc.text(lines[i], 16, yPosition + 5 + (i * 7));
+      }
+      
+      // Ajouter la marque de vérification - AMÉLIORATION ICI
+      if (item.checked) {
+        // Dessiner un carré coloré avec un X à l'intérieur au lieu d'un simple checkmark
+        const checkboxSize = 10;
+        const centerX = 170;
+        const centerY = yPosition + 5 + (lineHeight/2);
+        
+        // Rectangle coloré
+        doc.setFillColor(178, 42, 46); // Rouge CAMBI #b22a2e
+        doc.rect(centerX - checkboxSize/2, centerY - checkboxSize/2, checkboxSize, checkboxSize, 'F');
+        
+        // X blanc à l'intérieur
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text('X', centerX - 1.5, centerY + 3);
+        
+        // Restaurer la couleur du texte
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+      } else {
+        // Case vide pour les éléments non cochés
+        const checkboxSize = 10;
+        const centerX = 170;
+        const centerY = yPosition + 5 + (lineHeight/2);
+        
+        // Rectangle vide
+        doc.rect(centerX - checkboxSize/2, centerY - checkboxSize/2, checkboxSize, checkboxSize, 'S');
+      }
+      
+      yPosition += lineHeight + 5;
+      
+      // Vérifier si on a besoin d'une nouvelle page
+      if (yPosition > 280) {
+        doc.addPage();
+        yPosition = 20;
+      }
+    });
+    
+    // Pied de page
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`Inspection MDSA - Page ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    return doc;
+  };
+  
+  // Fonction pour générer un PDF de l'inspection Véhicule
+  const generateVehiculePDF = () => {
+    const doc = new jsPDF();
+    
+    // Titre du document
+    doc.setFontSize(18);
+    doc.text('Inspection Médicale', 105, 15, { align: 'center' });
+    
+    // Informations générales
+    doc.setFontSize(12);
+    doc.text(`Matricule: ${matricule}`, 14, 30);
+    doc.text(`Numéro du véhicule: ${numeroVehicule}`, 14, 38);
+    doc.text(`Point de service: ${pointDeService}`, 14, 46);
+    doc.text(`Date et heure: ${getCurrentDateTime()}`, 14, 54);
+    
+    // Créer un tableau manuellement (sans autoTable)
+    let yPosition = 60;
+    
+    // En-tête du tableau
+    doc.setFillColor(16, 41, 71); // Bleu CAMBI #102947
+    doc.setTextColor(255, 255, 255);
+    doc.rect(14, yPosition, 130, 10, 'F');
+    doc.rect(144, yPosition, 52, 10, 'F');
+    doc.text("Élément", 16, yPosition + 7);
+    doc.text("Vérifié", 160, yPosition + 7);
+    yPosition += 10;
+    
+    // Réinitialiser la couleur du texte
+    doc.setTextColor(0, 0, 0);
+    
+    // Lignes de données
+    let currentCategory = '';
+    
+    vehiculeItems.forEach(item => {
+      // Nouvelle catégorie
+      if (item.category !== currentCategory) {
+        currentCategory = item.category || 'Autre';
+        
+        // Dessiner la ligne de catégorie
+        doc.setFillColor(200, 210, 230); // Bleu CAMBI clair pour les catégories
+        doc.rect(14, yPosition, 182, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text(currentCategory, 16, yPosition + 6);
+        doc.setFont('helvetica', 'normal');
+        yPosition += 8;
+        
+        // Vérifier si on a besoin d'une nouvelle page
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20;
+        }
+      }
+      
+      // Préparer le texte de l'élément
+      let itemText = item.label;
+      // Ajouter des informations supplémentaires pour les cylindres et la glycémie
+      if (item.id === 'trousse3' && cylindre1PSI) {
+        itemText += ` (PSI: ${cylindre1PSI})`;
+      } else if (item.id === 'trousse4' && cylindre2PSI) {
+        itemText += ` (PSI: ${cylindre2PSI})`;
+      } else if (item.id === 'armoire15' && grosCylindrePSI) {
+        itemText += ` (PSI: ${grosCylindrePSI})`;
+      } else if (item.id === 'trousse7' && (glycemieNormal || glycemieHigh || glycemieLow)) {
+        itemText += ` (Normal: ${glycemieNormal || '-'}, High: ${glycemieHigh || '-'}, Low: ${glycemieLow || '-'})`;
+      }
+      
+      // Couper le texte si nécessaire
+      const maxWidth = 125;
+      let lines = doc.splitTextToSize(itemText, maxWidth);
+      
+      // Dessiner la ligne d'élément
+      const lineHeight = lines.length * 7;
+      doc.rect(14, yPosition, 130, lineHeight + 5, 'S');
+      doc.rect(144, yPosition, 52, lineHeight + 5, 'S');
+      
+      // Ajouter le texte
+      for (let i = 0; i < lines.length; i++) {
+        doc.text(lines[i], 16, yPosition + 5 + (i * 7));
+      }
+      
+      // Ajouter la marque de vérification - AMÉLIORATION ICI
+      if (item.checked) {
+        // Dessiner un carré coloré avec un X à l'intérieur au lieu d'un simple checkmark
+        const checkboxSize = 10;
+        const centerX = 170;
+        const centerY = yPosition + 5 + (lineHeight/2);
+        
+        // Rectangle coloré
+        doc.setFillColor(16, 41, 71); // Bleu CAMBI #102947
+        doc.rect(centerX - checkboxSize/2, centerY - checkboxSize/2, checkboxSize, checkboxSize, 'F');
+        
+        // X blanc à l'intérieur
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text('X', centerX - 1.5, centerY + 3);
+        
+        // Restaurer la couleur du texte
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+      } else {
+        // Case vide pour les éléments non cochés
+        const checkboxSize = 10;
+        const centerX = 170;
+        const centerY = yPosition + 5 + (lineHeight/2);
+        
+        // Rectangle vide
+        doc.rect(centerX - checkboxSize/2, centerY - checkboxSize/2, checkboxSize, checkboxSize, 'S');
+      }
+      
+      yPosition += lineHeight + 5;
+      
+      // Vérifier si on a besoin d'une nouvelle page
+      if (yPosition > 280) {
+        doc.addPage();
+        yPosition = 20;
+      }
+    });
+    
+    // Pied de page
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.text(`Inspection Médicale - Page ${i} de ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    return doc;
+  };
+  
   // Fonction pour envoyer le PDF par e-mail
   const sendPdfByEmail = async (pdfBlob: Blob, formType: string) => {
     try {
@@ -642,15 +912,26 @@ function App() {
         if (requestBody.length > 5000000) { // 5MB est une estimation prudente
           console.warn(`Les données sont très volumineuses (${requestBody.length} octets), tentative de réduction...`);
           
-          // Utiliser le HTML directement au lieu du PDF
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
+          // Créer une version réduite du PDF si nécessaire
+          // Note: cela pourrait réduire la qualité
+          const doc = formType === 'MDSA' ? generateMdsaPDF() : generateVehiculePDF();
+          const pdfBlobReduced = doc.output('blob');
           
-          // Mettre à jour les données avec le contenu HTML
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
+          // Convertir à nouveau en base64
+          const readerReduced = new FileReader();
+          const pdfBase64ReducedPromise = new Promise<string>((resolve, reject) => {
+            readerReduced.onload = () => {
+              resolve(readerReduced.result as string);
+            };
+            readerReduced.onerror = () => reject(readerReduced.error);
+            readerReduced.readAsDataURL(pdfBlobReduced);
+          });
+          
+          const pdfBase64Reduced = await pdfBase64ReducedPromise;
+          
+          // Mettre à jour les données
+          webhookData.pdfData = pdfBase64Reduced;
+          requestBody = JSON.stringify(webhookData);
           console.log(`Données réduites à ${requestBody.length} octets`);
         }
         
@@ -807,41 +1088,35 @@ function App() {
             </tr>
       `;
       
-      Object.entries(subcategories).map(([subcategory, items]) => (
-        <React.Fragment key={subcategory}>
-          {subcategory !== 'default' && (
+      Object.entries(subcategories).forEach(([subcategory, items]) => {
+        if (subcategory !== 'default') {
+          html += `
             <tr>
-              <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
-                {subcategory}
-              </td>
+              <td colspan="2" class="subcategory">${subcategory}</td>
             </tr>
-          )}
+          `;
+        }
+        
+        items.forEach(item => {
+          let itemLabel = item.label;
           
-          {items.map((item) => (
-            <tr 
-              key={item.id}
-              className={`${item.checked ? 'bg-green-100' : ''} cursor-pointer transition-colors`}
-              onClick={() => handleMdsaCheckChange(item.id)}
-            >
-              <td className="border border-gray-300 p-2">{item.label}</td>
-              <td className="border border-gray-300 p-2 text-center w-20">
-                <input 
-                  type="checkbox" 
-                  checked={item.checked}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={() => handleMdsaCheckChange(item.id)}
-                  className="w-5 h-5 accent-[#b22a2e]"
-                />
-                <span className={`ml-2 ${item.checked ? 'text-green-600' : 'text-red-600'}`}>
-                  {item.checked ? '✓' : '✗'}
-                </span>
-              </td>
+          if (item.id === 'electrode1' && expireDateElectrode1) {
+            itemLabel += ` (Expiration: ${expireDateElectrode1})`;
+          } else if (item.id === 'electrode2' && expireDateElectrode2) {
+            itemLabel += ` (Expiration: ${expireDateElectrode2})`;
+          }
+          
+          html += `
+            <tr>
+              <td>${itemLabel}</td>
+              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
             </tr>
-          ))}
-        </React.Fragment>
-      ))}
-      
-      html += `
+          `;
+        });
+      });
+    });
+    
+    html += `
           </tbody>
         </table>
         
@@ -861,7 +1136,7 @@ function App() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Inspection Véhicule</title>
+        <title>Inspection Médicale</title>
         <meta charset="UTF-8">
         <style>
           body {
@@ -915,7 +1190,7 @@ function App() {
         </style>
       </head>
       <body>
-        <h1>Inspection Véhicule</h1>
+        <h1>Inspection Médicale</h1>
         
         <div class="info">
           <p><strong>Matricule:</strong> ${matricule}</p>
@@ -952,7 +1227,7 @@ function App() {
       items.forEach(item => {
         let itemLabel = item.label;
         
-        // Ajouter des informations supplémentaires pour les cylindres et la glycémie
+        // Ajouter les informations supplémentaires
         if (item.id === 'trousse3' && cylindre1PSI) {
           itemLabel += ` (PSI: ${cylindre1PSI})`;
         } else if (item.id === 'trousse4' && cylindre2PSI) {
@@ -977,7 +1252,7 @@ function App() {
         </table>
         
         <footer>
-          Inspection Véhicule - Généré le ${getCurrentDateTime()}
+          Inspection Médicale - Généré le ${getCurrentDateTime()}
         </footer>
       </body>
       </html>
@@ -1785,24 +2060,48 @@ function App() {
                           </tr>
                         )}
                         
-                        {items.map((item) => (
+                        {items.map(item => (
                           <tr 
                             key={item.id}
                             className={`${item.checked ? 'bg-green-100' : ''} cursor-pointer transition-colors`}
                             onClick={() => handleMdsaCheckChange(item.id)}
                           >
-                            <td className="border border-gray-300 p-2">{item.label}</td>
-                            <td className="border border-gray-300 p-2 text-center w-20">
+                            <td className="border border-gray-300 p-2 text-sm">
+                              {item.label}
+                              {item.id === 'electrode1' && (
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="date"
+                                    value={expireDateElectrode1}
+                                    onChange={(e) => setExpireDateElectrode1(e.target.value)}
+                                    className="p-1 border border-gray-300 rounded w-full"
+                                    placeholder="Date d'expiration"
+                                    required
+                                  />
+                                </div>
+                              )}
+                              {item.id === 'electrode2' && (
+                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="date"
+                                    value={expireDateElectrode2}
+                                    onChange={(e) => setExpireDateElectrode2(e.target.value)}
+                                    className="p-1 border border-gray-300 rounded w-full"
+                                    placeholder="Date d'expiration"
+                                    required
+                                  />
+                                </div>
+                              )}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-center">
                               <input 
                                 type="checkbox" 
                                 checked={item.checked}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={() => handleMdsaCheckChange(item.id)}
                                 className="w-5 h-5 accent-[#b22a2e]"
+                                required
                               />
-                              <span className={`ml-2 ${item.checked ? 'text-green-600' : 'text-red-600'}`}>
-                                {item.checked ? '✓' : '✗'}
-                              </span>
                             </td>
                           </tr>
                         ))}
