@@ -807,35 +807,41 @@ function App() {
             </tr>
       `;
       
-      Object.entries(subcategories).forEach(([subcategory, items]) => {
-        if (subcategory !== 'default') {
-          html += `
+      Object.entries(subcategories).map(([subcategory, items]) => (
+        <React.Fragment key={subcategory}>
+          {subcategory !== 'default' && (
             <tr>
-              <td colspan="2" class="subcategory">${subcategory}</td>
+              <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
+                {subcategory}
+              </td>
             </tr>
-          `;
-        }
-        
-        items.forEach(item => {
-          let itemLabel = item.label;
+          )}
           
-          if (item.id === 'electrode1' && expireDateElectrode1) {
-            itemLabel += ` (Expiration: ${expireDateElectrode1})`;
-          } else if (item.id === 'electrode2' && expireDateElectrode2) {
-            itemLabel += ` (Expiration: ${expireDateElectrode2})`;
-          }
-          
-          html += `
-            <tr>
-              <td>${itemLabel}</td>
-              <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
+          {items.map((item) => (
+            <tr 
+              key={item.id}
+              className={`${item.checked ? 'bg-green-100' : ''} cursor-pointer transition-colors`}
+              onClick={() => handleMdsaCheckChange(item.id)}
+            >
+              <td className="border border-gray-300 p-2">{item.label}</td>
+              <td className="border border-gray-300 p-2 text-center w-20">
+                <input 
+                  type="checkbox" 
+                  checked={item.checked}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={() => handleMdsaCheckChange(item.id)}
+                  className="w-5 h-5 accent-[#b22a2e]"
+                />
+                <span className={`ml-2 ${item.checked ? 'text-green-600' : 'text-red-600'}`}>
+                  {item.checked ? '✓' : '✗'}
+                </span>
+              </td>
             </tr>
-          `;
-        });
-      });
-    });
-    
-    html += `
+          ))}
+        </React.Fragment>
+      ))}
+      
+      html += `
           </tbody>
         </table>
         
@@ -1773,28 +1779,33 @@ function App() {
                       <React.Fragment key={subcategory}>
                         {subcategory !== 'default' && (
                           <tr>
-                            <td colSpan={2} className="subcategory">{subcategory}</td>
+                            <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
+                              {subcategory}
+                            </td>
                           </tr>
                         )}
                         
-                        {items.map(item => {
-                          let itemLabel = item.label;
-                          
-                          if (item.id === 'electrode1' && expireDateElectrode1) {
-                            itemLabel += ` (Expiration: ${expireDateElectrode1})`;
-                          } else if (item.id === 'electrode2' && expireDateElectrode2) {
-                            itemLabel += ` (Expiration: ${expireDateElectrode2})`;
-                          }
-                          
-                          return (
-                            <tr key={item.id}>
-                              <td>{itemLabel}</td>
-                              <td className={item.checked ? 'checked' : 'not-checked'}>
+                        {items.map((item) => (
+                          <tr 
+                            key={item.id}
+                            className={`${item.checked ? 'bg-green-100' : ''} cursor-pointer transition-colors`}
+                            onClick={() => handleMdsaCheckChange(item.id)}
+                          >
+                            <td className="border border-gray-300 p-2">{item.label}</td>
+                            <td className="border border-gray-300 p-2 text-center w-20">
+                              <input 
+                                type="checkbox" 
+                                checked={item.checked}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={() => handleMdsaCheckChange(item.id)}
+                                className="w-5 h-5 accent-[#b22a2e]"
+                              />
+                              <span className={`ml-2 ${item.checked ? 'text-green-600' : 'text-red-600'}`}>
                                 {item.checked ? '✓' : '✗'}
-                              </td>
-                            </tr>
-                          );
-                        })}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
                       </React.Fragment>
                     ))}
                   </React.Fragment>
