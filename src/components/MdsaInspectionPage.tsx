@@ -264,8 +264,20 @@ const MdsaInspectionPage: React.FC<MdsaInspectionPageProps> = ({
                         >
                           <td className="border border-gray-300 p-2 text-sm" onClick={() => !item.disabled && handleMdsaCheckChange(item.id)}>
                             {item.label}
-                            {item.id === 'electrode1' && <div className="mt-2" onClick={e => e.stopPropagation()}><label htmlFor="exp1" className="sr-only">Exp Adult</label><input type="date" id="exp1" value={expireDateElectrode1} onChange={e => setExpireDateElectrode1(e.target.value)} className="p-1 border rounded w-full" required aria-label="Exp Adult" /></div>}
-                            {item.id === 'electrode2' && <div className="mt-2" onClick={e => e.stopPropagation()}><label htmlFor="exp2" className="sr-only">Exp Uni</label><input type="date" id="exp2" value={expireDateElectrode2} onChange={e => setExpireDateElectrode2(e.target.value)} className="p-1 border rounded w-full" required aria-label="Exp Uni" /></div>}
+                            {item.id === 'electrode1' && 
+                              <div className="mt-2" onClick={e => e.stopPropagation()}>
+                                <label htmlFor="exp1" className="sr-only">Exp Adult</label>
+                                <input type="date" id="exp1" value={expireDateElectrode1} onChange={e => setExpireDateElectrode1(e.target.value)} className="p-1 border rounded w-full" required aria-label="Exp Adult" />
+                                <p className="text-xs text-gray-500 mt-1">Date d'expiration</p>
+                              </div>
+                            }
+                            {item.id === 'electrode2' && 
+                              <div className="mt-2" onClick={e => e.stopPropagation()}>
+                                <label htmlFor="exp2" className="sr-only">Exp Uni</label>
+                                <input type="date" id="exp2" value={expireDateElectrode2} onChange={e => setExpireDateElectrode2(e.target.value)} className="p-1 border rounded w-full" required aria-label="Exp Uni" />
+                                <p className="text-xs text-gray-500 mt-1">Date d'expiration</p>
+                              </div>
+                            }
                           </td>
                           <td className="border border-gray-300 p-2 text-center w-20">
                             <input 
