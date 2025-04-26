@@ -1,13 +1,6 @@
 import React, { useState, useRef, FormEvent } from 'react';
 import { Ambulance, ClipboardCheck, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Mail, Download, AlertCircle, Camera, RotateCcw, AlertTriangle } from 'lucide-react';
-import Papa from 'papaparse';
-import axios from 'axios';
-import './index.css';
-import HomePage from './components/HomePage';
-import MdsaForm from './components/forms/MdsaForm';
-import MedicalInspectionForm from './components/forms/MedicalInspectionForm';
-import MechanicalInspectionForm from './components/forms/MechanicalInspectionForm';
-import { CheckItem } from './types';
+import emailjs from '@emailjs/browser';
 import BarcodeScanner from './components/BarcodeScanner';
 
 // Interface pour les éléments à vérifier avec leur état de vérification
@@ -62,14 +55,18 @@ function App() {
   // Valeurs pour les dates d'expiration des électrodes
   const [expireDateElectrode1, setExpireDateElectrode1] = useState('');
   const [expireDateElectrode2, setExpireDateElectrode2] = useState('');
-
+  
   // Clés d'API pour EmailJS - intégrées directement dans le code
+  const emailjsServiceId = 'service_op8kvgli';
+  const emailjsTemplateId = 'template_ifzi0wm';
   // La clé peut être incorrecte, créons une solution de contournement
+  const emailjsPublicKey = 'cMhKyGbQG-coeizSG';
 
   // Initialisation d'EmailJS
   React.useEffect(() => {
     // Initialiser EmailJS avec la clé
     try {
+      emailjs.init(emailjsPublicKey);
       console.log("EmailJS initialisé avec succès");
     } catch (error) {
       console.error("Erreur lors de l'initialisation d'EmailJS:", error);
@@ -570,13 +567,134 @@ function App() {
     }
   };
 
-  // Fonction pour générer un PDF de l'inspection MDSA
-  };
-  
-  // Fonction pour générer un PDF de l'inspection Véhicule
-  };
-  
   // Fonction pour envoyer le PDF par e-mail
+  const sendPdfByEmail = async (pdfBlob: Blob, formType: string) => {
+    try {
+      console.log(`Début de la préparation de l'envoi pour ${formType}...`);
+      console.log(`Type du PDF blob:`, pdfBlob.type);
+      console.log(`Taille du PDF blob:`, pdfBlob.size, "bytes");
+      
+      // Convertir le PDF en base64 AVEC le préfixe data:application/pdf;base64,
+      const reader = new FileReader();
+      const pdfBase64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const fullBase64 = reader.result as string;
+          if (fullBase64) {
+            // Gardons le préfixe data:application/pdf;base64, pour Make.com
+            console.log(`PDF ${formType} converti en base64 avec succès, taille complète:`, fullBase64.length);
+            // Vérifions si le préfixe est correct
+            if (!fullBase64.startsWith('data:application/pdf;base64,')) {
+              console.warn(`Le préfixe base64 n'est pas comme attendu:`, fullBase64.substring(0, 30) + '...');
+            }
+            resolve(fullBase64);
+          } else {
+            reject(new Error("Échec de la conversion du PDF en base64"));
+          }
+        };
+        reader.onerror = () => {
+          console.error("Erreur lors de la lecture du PDF:", reader.error);
+          reject(reader.error);
+        };
+        // Utiliser readAsDataURL pour avoir le préfixe data:application/pdf;base64,
+        reader.readAsDataURL(pdfBlob);
+      });
+      
+      const pdfBase64 = await pdfBase64Promise;
+      
+      // Vérifier que la conversion a réussi et que les données semblent correctes
+      if (!pdfBase64 || pdfBase64.length < 100) {
+        throw new Error(`Conversion PDF en base64 incomplète ou incorrecte: ${pdfBase64.length} caractères`);
+      }
+      
+      // Préparation des données pour l'envoi
+      const currentDateTime = getCurrentDateTime();
+      const webhookUrl = formType === 'MDSA' ? API_URL_MDSA : API_URL_VEHICULE;
+      
+      console.log(`Utilisation du webhook pour ${formType}:`, webhookUrl);
+      
+      // Créer un nom de fichier unique et significatif
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `inspection_${formType.toLowerCase()}_${formType === 'MDSA' ? numeroMoniteur : numeroVehicule}_${timestamp}.pdf`;
+      
+      // Préparation des données pour le webhook Make.com
+      const webhookData = {
+        type: formType,
+        matricule: matricule,
+        dateTime: currentDateTime,
+        pointDeService: pointDeService,
+        numeroIdentifiant: formType === 'MDSA' ? numeroMoniteur : numeroVehicule,
+        pdfData: pdfBase64,
+        fileName: fileName,
+        mimeType: "application/pdf" // Ajout explicite du type MIME
+      };
+      
+      console.log(`Préparation des données pour webhook ${formType} complète`);
+      console.log(`Nom du fichier: ${fileName}`);
+      console.log(`Type d'inspection: ${formType}`);
+      console.log(`Envoi des données au webhook ${formType}...`);
+      
+      // Envoi au webhook Make.com
+      try {
+        // Créer un corps de requête simplifié si les données sont trop volumineuses
+        let requestBody = JSON.stringify(webhookData);
+        
+        // Vérifier la taille des données JSON (limite approximative pour Make.com)
+        if (requestBody.length > 5000000) { // 5MB est une estimation prudente
+          console.warn(`Les données sont très volumineuses (${requestBody.length} octets), tentative de réduction...`);
+          
+          // Utiliser le HTML directement au lieu du PDF
+          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
+          
+          // Mettre à jour les données avec le contenu HTML
+          const dataWithHTML = {
+            ...webhookData,
+            htmlContent
+          };
+          requestBody = JSON.stringify(dataWithHTML);
+          console.log(`Données réduites à ${requestBody.length} octets`);
+        }
+        
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: requestBody
+        });
+        
+        console.log(`Réponse du webhook ${formType} - Status:`, response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Erreur de réponse du webhook ${formType}:`, errorText);
+          throw new Error(`Erreur du serveur: ${response.status} - ${errorText}`);
+        }
+        
+        const responseText = await response.text();
+        console.log(`Réponse complète du webhook ${formType}:`, responseText);
+        
+        console.log(`Données envoyées avec succès au webhook ${formType}`);
+        
+        // Message de succès
+        alert(`L'inspection ${formType} a été envoyée avec succès aux superviseurs et chefs d'équipe.`);
+        
+        return true;
+      } catch (fetchError) {
+        console.error(`Erreur lors de la requête fetch pour ${formType}:`, fetchError);
+        throw fetchError;
+      }
+    } catch (error) {
+      console.error(`Erreur détaillée lors de l'envoi pour ${formType}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      alert(`Problème lors de l'envoi de l'inspection ${formType}: ${errorMessage}\nL'inspection a été générée mais n'a pas pu être envoyée.`);
+      
+      // Créer une URL de téléchargement pour le PDF comme solution de secours
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setGeneratedPdfUrl(pdfUrl);
+      
+      throw error;
+    }
+  };
 
   const handleSubmitForm1 = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -737,7 +855,7 @@ function App() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Inspection Médicale</title>
+        <title>Inspection Véhicule</title>
         <meta charset="UTF-8">
         <style>
           body {
@@ -775,143 +893,23 @@ function App() {
             background-color: #fef3c7;
             font-weight: bold;
           }
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
-          // Utiliser directement le HTML au lieu du PDF pour l'envoi des données
-          const htmlContent = formType === 'MDSA' ? generateMdsaHTML() : generateVehiculeHTML();
-          
-          // Utiliser le HTML comme contenu
-          const dataWithHTML = {
-            ...webhookData,
-            htmlContent
-          };
-          requestBody = JSON.stringify(dataWithHTML);
+          .checked {
+            color: green;
+            font-weight: bold;
+          }
+          .not-checked {
+            color: red;
+          }
+          footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+          }
+        </style>
+      </head>
       <body>
-        <h1>Inspection Médicale</h1>
+        <h1>Inspection Véhicule</h1>
         
         <div class="info">
           <p><strong>Matricule:</strong> ${matricule}</p>
@@ -948,7 +946,7 @@ function App() {
       items.forEach(item => {
         let itemLabel = item.label;
         
-        // Ajouter les informations supplémentaires
+        // Ajouter des informations supplémentaires pour les cylindres et la glycémie
         if (item.id === 'trousse3' && cylindre1PSI) {
           itemLabel += ` (PSI: ${cylindre1PSI})`;
         } else if (item.id === 'trousse4' && cylindre2PSI) {
@@ -973,7 +971,7 @@ function App() {
         </table>
         
         <footer>
-          Inspection Médicale - Généré le ${getCurrentDateTime()}
+          Inspection Véhicule - Généré le ${getCurrentDateTime()}
         </footer>
       </body>
       </html>
@@ -1109,21 +1107,21 @@ function App() {
         setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}.`);
       }
       
-        setSubmitted(true);
+      setSubmitted(true);
       
-        // Réinitialiser le formulaire
-        setMatricule('');
-        setNumeroMoniteur('');
-        setPointDeService('');
-        setExpireDateElectrode1('');
-        setExpireDateElectrode2('');
+      // Réinitialiser le formulaire
+      setMatricule('');
+      setNumeroMoniteur('');
+      setPointDeService('');
+      setExpireDateElectrode1('');
+      setExpireDateElectrode2('');
       setMdsaItems(prevItems => 
-          prevItems.map(item => ({
-            ...item,
-            checked: false,
-            expireDate: ''
-          }))
-        );
+        prevItems.map(item => ({
+          ...item,
+          checked: false,
+          expireDate: ''
+        }))
+      );
     } catch (error) {
       console.error('Erreur lors de la génération ou envoi de l\'inspection MDSA:', error);
       setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -1174,24 +1172,24 @@ function App() {
         setSubmissionMessage(`L'inspection a été générée mais l'envoi a échoué: ${sendError instanceof Error ? sendError.message : 'Erreur inconnue'}.`);
       }
       
-        setSubmitted(true);
+      setSubmitted(true);
       
-        // Réinitialiser le formulaire
-        setMatricule('');
-        setNumeroVehicule('');
-        setPointDeService('');
-        setCylindre1PSI('');
-        setCylindre2PSI('');
+      // Réinitialiser le formulaire
+      setMatricule('');
+      setNumeroVehicule('');
+      setPointDeService('');
+      setCylindre1PSI('');
+      setCylindre2PSI('');
       setGrosCylindrePSI('');
-        setGlycemieNormal('');
-        setGlycemieHigh('');
-        setGlycemieLow('');
-        setVehiculeItems(prevItems => 
-          prevItems.map(item => ({
-            ...item,
-            checked: false
-          }))
-        );
+      setGlycemieNormal('');
+      setGlycemieHigh('');
+      setGlycemieLow('');
+      setVehiculeItems(prevItems => 
+        prevItems.map(item => ({
+          ...item,
+          checked: false
+        }))
+      );
     } catch (error) {
       console.error('Erreur lors de la génération ou envoi de l\'inspection Véhicule:', error);
       setError(`Échec de la génération ou de l'envoi: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
@@ -1206,12 +1204,6 @@ function App() {
     } else {
       setCurrentForm(null);
     }
-    <p className="text-gray-600 text-center">Vérification du moniteur défibrillateur semi-automatique</p>
-    <ChevronRight className="mt-4 text-[#b22a2e]" />
-  </button>
-  
-  <button 
-    onClick={() => setCurrentForm('form2')}
   };
 
   // Fonction pour gérer le résultat du scan de code-barres
@@ -1670,9 +1662,9 @@ function App() {
         <form ref={form1Ref} onSubmit={handleSubmitForm1} className="bg-white rounded-xl shadow-md p-4 mb-20">
           {/* Champ numéro du moniteur avec scan en premier (pleine largeur) */}
           <div className="mb-4">
-              <label htmlFor="numeroMoniteur" className="block text-sm font-medium text-gray-700 mb-1">
-                Numéro du moniteur :
-              </label>
+            <label htmlFor="numeroMoniteur" className="block text-sm font-medium text-gray-700 mb-1">
+              Numéro du moniteur :
+            </label>
             <div className="flex">
               <input
                 type="text"
@@ -1690,8 +1682,8 @@ function App() {
                 <Camera size={20} />
               </button>
             </div>
-            </div>
-            
+          </div>
+
           {/* Autres champs en dessous */}
           <div className="flex flex-col mb-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
             <div className="md:w-1/2">
@@ -1729,11 +1721,11 @@ function App() {
           </div>
 
           <div className="mb-6">
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-                Date et heure :
-              </label>
-              <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-100">
-                {getCurrentDateTime()}
+            <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+              Date et heure :
+            </label>
+            <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-100">
+              {getCurrentDateTime()}
             </div>
           </div>
           
@@ -1777,63 +1769,32 @@ function App() {
                       </td>
                     </tr>
                     
-                    {Object.entries(subcategories).map(([subcategory, items]) => (
-                      <React.Fragment key={subcategory}>
-                        {subcategory !== 'default' && (
+                    {Object.entries(subcategories).forEach(([subcategory, items]) => {
+                      if (subcategory !== 'default') {
+                        html += `
                           <tr>
-                            <td colSpan={2} className="border border-gray-300 p-2 bg-gray-100 font-medium">
-                              {subcategory}
-                            </td>
+                            <td colspan="2" class="subcategory">${subcategory}</td>
                           </tr>
-                        )}
+                        `;
+                      }
+                      
+                      items.forEach(item => {
+                        let itemLabel = item.label;
                         
-                        {items.map(item => (
-                          <tr 
-                            key={item.id}
-                            className={`${item.checked ? 'bg-green-100' : ''} cursor-pointer transition-colors`}
-                            onClick={() => handleMdsaCheckChange(item.id)}
-                          >
-                            <td className="border border-gray-300 p-2 text-sm">
-                              {item.label}
-                              {item.id === 'electrode1' && (
-                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                                  <input
-                                    type="date"
-                                    value={expireDateElectrode1}
-                                    onChange={(e) => setExpireDateElectrode1(e.target.value)}
-                                    className="p-1 border border-gray-300 rounded w-full"
-                                    placeholder="Date d'expiration"
-                                    required
-                                  />
-                                </div>
-                              )}
-                              {item.id === 'electrode2' && (
-                                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                                  <input
-                                    type="date"
-                                    value={expireDateElectrode2}
-                                    onChange={(e) => setExpireDateElectrode2(e.target.value)}
-                                    className="p-1 border border-gray-300 rounded w-full"
-                                    placeholder="Date d'expiration"
-                                    required
-                                  />
-                                </div>
-                              )}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-center">
-                              <input 
-                                type="checkbox" 
-                                checked={item.checked}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={() => handleMdsaCheckChange(item.id)}
-                                className="w-5 h-5 accent-[#b22a2e]"
-                                required
-                              />
-                            </td>
+                        if (item.id === 'electrode1' && expireDateElectrode1) {
+                          itemLabel += ` (Expiration: ${expireDateElectrode1})`;
+                        } else if (item.id === 'electrode2' && expireDateElectrode2) {
+                          itemLabel += ` (Expiration: ${expireDateElectrode2})`;
+                        }
+                        
+                        html += `
+                          <tr>
+                            <td>${itemLabel}</td>
+                            <td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td>
                           </tr>
-                        ))}
-                      </React.Fragment>
-                    ))}
+                        `;
+                      });
+                    });
                   </React.Fragment>
                 ))}
                 
