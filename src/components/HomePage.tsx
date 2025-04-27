@@ -57,6 +57,20 @@ const HomePage: React.FC<HomePageProps> = ({ onFormSelect }) => {
           <p className="text-gray-600 text-sm mb-4">Vérification des défectuosités du véhicule.</p>
           <ChevronRight className="mt-auto text-[#4f6683]" />
         </button>
+
+        {/* Bouton Nettoyage et Inventaire Mensuel */}
+        <button 
+          onClick={() => onFormSelect('form4')}
+          className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col items-center text-center"
+          aria-label="Démarrer le Nettoyage et Inventaire Mensuel"
+        >
+          <div className="bg-[#006400]/10 p-4 rounded-full mb-4">
+            <ClipboardCheck size={48} className="text-[#006400]" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Nettoyage et Inventaire</h2>
+          <p className="text-gray-600 text-sm mb-4">Vérification mensuelle du nettoyage et de l'inventaire.</p>
+          <ChevronRight className="mt-auto text-[#006400]" />
+        </button>
       </div>
       
       <footer className="mt-10 text-center text-gray-500 text-sm">

@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import axios from 'axios'; // Garder axios si sendInspectionToMakecom reste ici
+import axios from 'axios'; // Assurer que seul axios est importé, pas isAxiosError
 
 // Importer les nouveaux composants
 import HomePage from './components/HomePage'; // Assurez-vous que ce composant existe et est correct
 import MdsaInspectionPage from './components/MdsaInspectionPage';
 import MedicalInspectionPage from './components/MedicalInspectionPage';
 import MechanicalInspectionPage from './components/MechanicalInspectionPage';
+import MonthlyCleaningInventoryPage from './components/MonthlyCleaningInventoryPage';
 
 // Importer les types (si nécessaire, sinon les composants les importent)
 // import { CheckItem } from './types';
@@ -27,6 +28,7 @@ function App() {
   const API_URL_MDSA = 'https://hook.us1.make.com/6npqjkskt1d71ir3aypy7h6434s98b8u';
   const API_URL_VEHICULE = 'https://hook.us2.make.com/c2vcdzy31bs3wmtubt46jx4a4f61xirq';
   const API_URL_DEFECTUOSITES = 'https://hook.us1.make.com/3xist7l1lcnruqvffssuyfv9sddmjxom';
+  const API_URL_CLEANING_INVENTORY = 'https://hook.example.com/votre_webhook_ici'; // <-- REMPLACEZ CETTE URL
 
   // Fonction utilitaire partagée
   const getCurrentDateTime = () => {
@@ -77,7 +79,10 @@ function App() {
       case 'MDSA': webhookUrl = API_URL_MDSA; break;
       case 'Véhicule': webhookUrl = API_URL_VEHICULE; break;
       case 'Defectuosites': webhookUrl = API_URL_DEFECTUOSITES; break;
-      default: throw new Error(`Type de formulaire inconnu pour webhook: ${formType}`);
+      case 'NettoyageInventaire': webhookUrl = API_URL_CLEANING_INVENTORY; break; // <-- Nouveau cas
+      default: 
+        console.error(`Type de formulaire inconnu pour webhook: ${formType}`);
+        throw new Error(`Type de formulaire inconnu pour webhook: ${formType}`);
     }
 
     console.log(`Envoi vers ${webhookUrl} pour ${formType}`);
@@ -98,15 +103,20 @@ function App() {
         return true;
     } catch (error) {
         console.error(`Erreur détaillée lors de l'envoi pour ${formType}:`, error);
-        // Tenter d'extraire un message plus précis si c'est une erreur axios
         let errorMessage = 'Erreur inconnue';
-        if (axios.isAxiosError(error)) {
-            errorMessage = error.response?.data || error.message;
-        } else if (error instanceof Error) {
+        // Vérifier si l'objet error a la propriété isAxiosError et qu'elle est true
+        if (typeof error === 'object' && error !== null && 'isAxiosError' in error && (error as any).isAxiosError) {
+            // Si c'est une erreur Axios, essayer d'extraire des détails
+            const axiosError = error as any; // Caster en any pour accéder aux propriétés spécifiques d'Axios
+            errorMessage = axiosError.response?.data?.message || axiosError.response?.data || axiosError.message || 'Erreur Axios inconnue';
+        } else if (error instanceof Error) { // Si c'est une erreur standard
             errorMessage = error.message;
+        } else if (typeof error === 'string') { // Si c'est une chaîne
+            errorMessage = error;
         }
+        // Gérer les autres types d'erreurs si nécessaire...
+
         console.error(`Problème lors de l'envoi de l'inspection ${formType}: ${errorMessage}`);
-        // Relancer l'erreur pour que le composant appelant puisse la gérer
         throw new Error(`Échec de l'envoi (${formType}): ${errorMessage}`);
     }
   };
@@ -194,6 +204,12 @@ function App() {
 
   if (currentForm === 'form3') {
     return <MechanicalInspectionPage {...commonProps} />;
+  }
+
+  // Ajouter la condition pour le nouveau formulaire
+  if (currentForm === 'form4') {
+    // Passer les commonProps qui incluent maintenant sendInspection... et onSubmission...
+    return <MonthlyCleaningInventoryPage {...commonProps} />;
   }
 
   // Fallback si currentForm a une valeur inattendue
