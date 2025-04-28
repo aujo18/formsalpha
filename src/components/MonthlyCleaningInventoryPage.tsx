@@ -23,7 +23,6 @@ interface InventoryItemRow {
 
 // Structure de l'état pour les données de zone
 interface ZoneData {
-  date: string;
   matricule: string;
   cleanedChecked: boolean;
 }
@@ -205,6 +204,12 @@ const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   { id: 'fin_drap_sterile', zone: 'Fin - Sans Zone', material: 'Drap stérile de 150 cm x 240 cm à usage unique pour les brûlés', expectedQuantity: '2' },
 ];
 
+// Etat pour la désinfection
+interface DisinfectionStatus {
+  avant: boolean;
+  arriere: boolean;
+}
+
 // Composant principal
 const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> = ({
   goBack,
@@ -214,27 +219,29 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
   numeroVehicule,
   handleVehiculeNumberChange,
 }) => {
-  // Extraire les zones uniques pour initialiser l'état zoneData
   const uniqueZones = useMemo(() => 
      Array.from(new Set(INITIAL_INVENTORY_ITEMS.map(item => item.zone)))
   , []);
 
-  // État pour les données par zone
+  // État pour les données par zone (SANS date initiale)
   const [zoneData, setZoneData] = useState<Record<string, ZoneData>>(() => 
     uniqueZones.reduce((acc, zoneName) => {
-      acc[zoneName] = { date: '', matricule: '', cleanedChecked: false };
+      acc[zoneName] = { matricule: '', cleanedChecked: false };
       return acc;
     }, {} as Record<string, ZoneData>)
   );
 
-  // État pour les cases à cocher des items individuels
+  // État cases à cocher items (inchangé)
   const [itemCheckedStatus, setItemCheckedStatus] = useState<ItemCheckedStatus>({});
+
+  // Nouvel état pour la désinfection
+  const [disinfectionStatus, setDisinfectionStatus] = useState<DisinfectionStatus>({ avant: false, arriere: false });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Handler pour les changements dans les données de zone
-  const handleZoneChange = useCallback((zoneName: string, field: keyof ZoneData, value: string | boolean) => {
+  // Handler données de zone (adapté SANS date)
+  const handleZoneChange = useCallback((zoneName: string, field: 'matricule' | 'cleanedChecked', value: string | boolean) => {
     setZoneData(currentData => ({
       ...currentData,
       [zoneName]: {
@@ -244,7 +251,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     }));
   }, []);
 
-  // Handler pour les changements des cases à cocher des items
+  // Handler cases items (inchangé)
   const handleItemCheckChange = useCallback((itemId: string) => {
     setItemCheckedStatus(currentStatus => ({
       ...currentStatus,
@@ -252,10 +259,18 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     }));
   }, []);
 
+  // Nouveau handler pour les cases désinfection
+  const handleDisinfectionChange = useCallback((part: keyof DisinfectionStatus) => {
+    setDisinfectionStatus(currentStatus => ({
+      ...currentStatus,
+      [part]: !currentStatus[part],
+    }));
+  }, []);
+
   // Génération HTML mise à jour
   const generateCleaningInventoryHTML = (): string => {
     let html = `
-      <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Inventaire Médical Transit</title>
+      <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nettoyage et Inventaire</title>
       <style>
         body { font-family: Arial, sans-serif; margin: 15px; color: #333; font-size: 10px; }
         h1 { color: #b22a2e; text-align: center; margin-bottom: 15px; }
@@ -273,44 +288,48 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         .checked { color: green; font-weight: bold; }
         .not-checked { color: red; }
         footer { text-align: center; margin-top: 15px; font-size: 10px; color: #666; }
+        .disinfection-section { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .disinfection-section p { margin: 5px 0; font-weight: bold; }
       </style></head><body>
-      <h1>Inventaire Médical Transit</h1>
+      <h1>Nettoyage et Inventaire</h1>
       <div class="info">
         <p><strong>Véhicule #:</strong> ${numeroVehicule || 'Non spécifié'}</p>
-        <p><strong>Rapport soumis le:</strong> ${getCurrentDateTime()}</p>
+        <p><strong>Date et heure:</strong> ${getCurrentDateTime()}</p>
       </div>
+
+      <div class="disinfection-section">
+        <p>Désinfection:</p>
+        <p>Habitacle Avant: ${disinfectionStatus.avant ? '✓ Fait' : '✗ Non fait'}</p>
+        <p>Habitacle Arrière: ${disinfectionStatus.arriere ? '✓ Fait' : '✗ Non fait'}</p>
+      </div>
+
       <table><thead><tr>
-          {/* En-têtes principaux */}
           <th class="material-col">Matériel / Zone</th>
-          <th class="qty-col">Qté Attendue / Date</th>
-          <th class="check-col">Vérifié / Matricule</th>
+          <th class="qty-col">Qté Attendue / Matricule Zone</th>
+          <th class="check-col">Vérifié (Item)</th>
           <th class="check-col">Nettoyé (Zone)</th>
         </tr></thead><tbody>
     `;
 
     let currentZone = '';
     INITIAL_INVENTORY_ITEMS.forEach(item => {
-      // Afficher l'en-tête de zone quand elle change
       if (item.zone !== currentZone) {
         currentZone = item.zone;
         const zoneInfo = zoneData[currentZone];
-        // Ligne 1: Nom de la zone
         html += `<tr><td colspan="4" class="zone-header-name">${currentZone}</td></tr>`;
-        // Ligne 2: Données de la zone
         html += '<tr class="zone-header-data">';
         html += '<td><i>Informations de zone</i></td>';
-        html += `<td>${zoneInfo.date || '-'}</td>`;
         html += `<td>${zoneInfo.matricule || '-'}</td>`;
+        html += '<td></td>';
         html += `<td class="check-col ${zoneInfo.cleanedChecked ? 'checked' : 'not-checked'}">${zoneInfo.cleanedChecked ? '✓' : '✗'}</td>`;
         html += '</tr>';
       }
-      // Ligne de l'item
       const isItemChecked = !!itemCheckedStatus[item.id];
       html += '<tr>';
       html += `<td class="material-col">${item.material}</td>`;
       html += `<td class="qty-col">${item.expectedQuantity}</td>`;
       html += `<td class="check-col ${isItemChecked ? 'checked' : 'not-checked'}">${isItemChecked ? '✓' : '✗'}</td>`;
-      html += '<td></td>'; // Cellule vide pour aligner avec "Nettoyé"
+      html += '<td></td>';
       html += '</tr>';
     });
 
@@ -323,46 +342,45 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     e.preventDefault();
     setError(null);
 
-    // Validation
+    // Validation (simplifiée sans date, ajout désinfection?)
     if (!numeroVehicule) {
       setError("Le numéro de véhicule est obligatoire.");
       return;
     }
-    // Valider si au moins une zone a une date/matricule?
-    const isAnyZoneFilled = Object.values(zoneData).some(z => z.date && z.matricule);
-    if (!isAnyZoneFilled) {
-       setError("Veuillez remplir la date et le matricule pour au moins une zone.");
+    const isAnyZoneMatriculeFilled = Object.values(zoneData).some(z => z.matricule);
+    if (!isAnyZoneMatriculeFilled) {
+       setError("Veuillez remplir le matricule pour au moins une zone.");
        return;
      }
-     // Valider si au moins un item est coché?
      const isAnyItemChecked = Object.values(itemCheckedStatus).some(checked => checked);
-      if (!isAnyItemChecked) {
-        setError("Veuillez vérifier au moins un item de l'inventaire.");
-        return;
-      }
+     if (!isAnyItemChecked) {
+       setError("Veuillez vérifier au moins un item de l'inventaire.");
+       return;
+     }
 
     setIsSubmitting(true);
     try {
       const htmlContent = generateCleaningInventoryHTML();
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `inventaire_medical_${numeroVehicule}_${timestamp}.html`;
+      const fileName = `nettoyage_inventaire_${numeroVehicule}_${timestamp}.html`;
 
       const webhookData = {
-        type: 'InventaireMedical', // Assurez-vous que ce type est correct pour Make.com
+        type: 'NettoyageInventaire',
         numeroVehicule,
         dateTime: getCurrentDateTime(),
-        zoneCompletionData: zoneData, // Données par zone
-        itemCheckedStatuses: itemCheckedStatus, // Statut des items
+        zoneCompletionData: zoneData,
+        itemCheckedStatuses: itemCheckedStatus,
+        disinfectionCompleted: disinfectionStatus,
         htmlContent,
         fileName,
         mimeType: "text/html"
       };
 
       console.log("Envoi des données:", webhookData);
-      const success = await sendInspectionToMakecom('InventaireMedical', webhookData);
+      const success = await sendInspectionToMakecom('NettoyageInventaire', webhookData);
 
       if (success) {
-        onSubmissionComplete("L'inventaire médical a été envoyé avec succès.");
+        onSubmissionComplete("Le rapport de nettoyage et inventaire a été envoyé avec succès.");
       } else {
         throw new Error("L'envoi des données vers Make.com a échoué.");
       }
@@ -381,7 +399,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md mb-8 flex items-center justify-between">
         <div className="flex items-center">
           <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-3 filter brightness-0 invert" />
-          <h1 className="text-xl font-bold">INVENTAIRE MÉDICAL TRANSIT</h1> {/* Titre mis à jour */}
+          <h1 className="text-xl font-bold">NETTOYAGE ET INVENTAIRE</h1>
         </div>
         <button onClick={goBack} className="flex items-center text-white hover:text-gray-200 ml-4">
           <ChevronLeft size={24} className="mr-1" />
@@ -402,62 +420,73 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           </div>
         )}
 
-        <div className="mb-4">
-           <label htmlFor="numeroVehicule" className="block text-sm font-medium text-gray-700">Numéro de Véhicule</label>
-           <input
-             type="text"
-             id="numeroVehicule"
-             value={numeroVehicule}
-             onChange={(e) => handleVehiculeNumberChange(e.target.value)}
-             placeholder="Ex: 9123"
-             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-             required
-           />
-         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+             <label htmlFor="numeroVehicule" className="block text-sm font-medium text-gray-700">Numéro de Véhicule</label>
+             <input
+               type="text"
+               id="numeroVehicule"
+               value={numeroVehicule}
+               onChange={(e) => handleVehiculeNumberChange(e.target.value)}
+               placeholder="Ex: 9123"
+               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+               required
+             />
+           </div>
+           <div>
+             <label className="block text-sm font-medium text-gray-700">Date et Heure Actuelle</label>
+             <div className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 sm:text-sm">
+               {getCurrentDateTime()}
+             </div>
+           </div>
+        </div>
+
+        <div className="space-y-4 border-t pt-4">
+          <h3 className="text-md font-semibold text-gray-800">Désinfection de l'habitacle</h3>
+          <div className="flex items-center">
+            <input 
+              id="disinfection-avant"
+              type="checkbox" 
+              checked={disinfectionStatus.avant}
+              onChange={() => handleDisinfectionChange('avant')}
+              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
+            />
+            <label htmlFor="disinfection-avant" className="text-sm text-gray-700">Avant</label>
+          </div>
+          <div className="flex items-center">
+             <input 
+               id="disinfection-arriere"
+               type="checkbox" 
+               checked={disinfectionStatus.arriere}
+               onChange={() => handleDisinfectionChange('arriere')}
+               className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
+             />
+            <label htmlFor="disinfection-arriere" className="text-sm text-gray-700">Arrière</label>
+          </div>
+        </div>
 
         <h2 className="text-lg font-semibold border-t pt-4">Inventaire</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {/* Adapter les en-têtes pour la nouvelle structure */}
                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Matériel / Zone Info</th>
-                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Qté Attendue / Date Zone</th>
-                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Vérifié / Matricule Zone</th>
+                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Qté Attendue / Matricule Zone</th>
+                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Vérifié (Item)</th>
                 <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nettoyé (Zone)</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {INITIAL_INVENTORY_ITEMS.map((item, index) => {
                 const showZoneHeader = index === 0 || INITIAL_INVENTORY_ITEMS[index - 1].zone !== item.zone;
-                const currentZoneInfo = zoneData[item.zone]; // Données de la zone actuelle
-                const isItemChecked = !!itemCheckedStatus[item.id]; // Statut de l'item actuel
+                const currentZoneInfo = zoneData[item.zone];
+                const isItemChecked = !!itemCheckedStatus[item.id];
 
                 return (
                   <React.Fragment key={item.id}>
-                    {/* Ligne 1: En-tête Nom de Zone */}
-                    {showZoneHeader && (
-                      <tr>
-                        <td colSpan={4} className="bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-700 border-b border-gray-300">
-                          {item.zone}
-                        </td>
-                      </tr>
-                    )}
-                    {/* Ligne 2: En-tête Données de Zone (affiché une fois par zone) */}
                     {showZoneHeader && (
                        <tr className="bg-gray-50">
                          <td className="px-3 py-2 text-sm italic text-gray-600 border-r">Infos Zone:</td>
-                         {/* Date Input (Zone) */}
-                         <td className="px-3 py-2 border-r">
-                           <input
-                             type="date"
-                             aria-label={`Date pour ${item.zone}`}
-                             value={currentZoneInfo.date}
-                             onChange={(e) => handleZoneChange(item.zone, 'date', e.target.value)}
-                             className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                           />
-                         </td>
-                         {/* Matricule Input (Zone) */}
                          <td className="px-3 py-2 border-r">
                            <input
                              type="text"
@@ -468,7 +497,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                              className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                            />
                          </td>
-                         {/* Nettoyé Checkbox (Zone) */}
+                         <td className="px-3 py-2 border-r"></td>
                          <td className="px-2 py-2 text-center align-middle">
                            <input
                              type="checkbox"
@@ -480,17 +509,13 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                          </td>
                        </tr>
                     )}
-                    {/* Ligne 3: Item d'inventaire */}
                     <tr>
-                      {/* Matériel */}
                       <td className="px-3 py-2 whitespace-normal text-sm font-medium text-gray-900 border-r">
                         {item.material}
                       </td>
-                      {/* Qté Attendue */}
                       <td className="px-3 py-2 text-center text-sm text-gray-700 border-r">
                         {item.expectedQuantity}
                       </td>
-                      {/* Vérifié Checkbox (Item) */}
                       <td className="px-2 py-2 text-center border-r align-middle">
                          <input
                            type="checkbox"
@@ -500,7 +525,6 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                            className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                          />
                       </td>
-                      {/* Cellule vide pour aligner */}
                       <td></td> 
                     </tr>
                   </React.Fragment>
