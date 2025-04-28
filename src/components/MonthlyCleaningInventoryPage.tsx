@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { ChevronLeft, Send, AlertCircle, X } from 'lucide-react';
 
 // Interface Props (inchangée par cette demande)
@@ -21,8 +21,26 @@ interface InventoryItemRow {
   matricule: string; // Matricule par ligne
 }
 
+// Structure de l'état pour les données de zone
+interface ZoneData {
+  date: string;
+  matricule: string;
+  cleanedChecked: boolean;
+}
+
+// Structure de l'état pour le statut des items
+type ItemCheckedStatus = Record<string, boolean>; // key: item.id, value: isChecked
+
+// Structure des items initiaux (pour définir la liste et les zones)
+interface InitialInventoryItem {
+  id: string;
+  zone: string;
+  material: string;
+  expectedQuantity: string;
+}
+
 // Nouvelle liste d'items basée sur les images "Inventaire Médical Transit"
-const INITIAL_INVENTORY_ITEMS: Array<{ id: string; zone: string; material: string; expectedQuantity: string; }> = [
+const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   // ... (Toute la longue liste extraite des images - voir la tentative précédente) ...
   // Armoire / zone #1 (sous le siège capitaine)
   { id: 'z1_courroie_reg', zone: 'Armoire / zone #1', material: 'Courroie régulière', expectedQuantity: '' },
@@ -196,26 +214,42 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
   numeroVehicule,
   handleVehiculeNumberChange,
 }) => {
-  // État basé sur la nouvelle structure
-  const [inventoryItems, setInventoryItems] = useState<InventoryItemRow[]>(() =>
-    INITIAL_INVENTORY_ITEMS.map(item => ({
-      ...item,
-      date: '',
-      matricule: '',
-    }))
+  // Extraire les zones uniques pour initialiser l'état zoneData
+  const uniqueZones = useMemo(() => 
+     Array.from(new Set(INITIAL_INVENTORY_ITEMS.map(item => item.zone)))
+  , []);
+
+  // État pour les données par zone
+  const [zoneData, setZoneData] = useState<Record<string, ZoneData>>(() => 
+    uniqueZones.reduce((acc, zoneName) => {
+      acc[zoneName] = { date: '', matricule: '', cleanedChecked: false };
+      return acc;
+    }, {} as Record<string, ZoneData>)
   );
+
+  // État pour les cases à cocher des items individuels
+  const [itemCheckedStatus, setItemCheckedStatus] = useState<ItemCheckedStatus>({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Handler générique pour mettre à jour un champ d'une ligne (adapté pour éviter any)
-  const handleRowChange = useCallback((index: number, field: 'date' | 'matricule', value: string) => {
-    setInventoryItems(currentRows => {
-      const newRows = [...currentRows];
-      const rowToUpdate = { ...newRows[index] }; // Copier la ligne pour l'immutabilité
-      rowToUpdate[field] = value;
-      newRows[index] = rowToUpdate;
-      return newRows;
-    });
+  // Handler pour les changements dans les données de zone
+  const handleZoneChange = useCallback((zoneName: string, field: keyof ZoneData, value: string | boolean) => {
+    setZoneData(currentData => ({
+      ...currentData,
+      [zoneName]: {
+        ...currentData[zoneName],
+        [field]: value,
+      },
+    }));
+  }, []);
+
+  // Handler pour les changements des cases à cocher des items
+  const handleItemCheckChange = useCallback((itemId: string) => {
+    setItemCheckedStatus(currentStatus => ({
+      ...currentStatus,
+      [itemId]: !currentStatus[itemId], // Toggle check status
+    }));
   }, []);
 
   // Génération HTML mise à jour
@@ -231,10 +265,13 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         tr { page-break-inside: avoid; page-break-after: auto; }
         th, td { border: 1px solid #ddd; padding: 4px; vertical-align: top; text-align: left; }
         th { background-color: #f2f2f2; font-weight: bold; }
-        .zone-header { background-color: #e9ecef; font-weight: bold; font-size: 11px; padding: 6px; }
+        .zone-header-name { background-color: #e0e0e0; font-weight: bold; font-size: 11px; padding: 6px; }
+        .zone-header-data { background-color: #f8f8f8; font-size: 10px; }
         .material-col { min-width: 250px; }
         .qty-col { width: 80px; text-align: center; }
-        .date-col, .matricule-col { width: 100px; }
+        .check-col { width: 80px; text-align: center; }
+        .checked { color: green; font-weight: bold; }
+        .not-checked { color: red; }
         footer { text-align: center; margin-top: 15px; font-size: 10px; color: #666; }
       </style></head><body>
       <h1>Inventaire Médical Transit</h1>
@@ -243,24 +280,37 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         <p><strong>Rapport soumis le:</strong> ${getCurrentDateTime()}</p>
       </div>
       <table><thead><tr>
-        <th class="material-col">Matériel</th>
-        <th class="qty-col">Qté Attendue</th>
-        <th class="date-col">Date Vérifié</th>
-        <th class="matricule-col">Matricule Vérif.</th>
-      </tr></thead><tbody>
+          {/* En-têtes principaux */}
+          <th class="material-col">Matériel / Zone</th>
+          <th class="qty-col">Qté Attendue / Date</th>
+          <th class="check-col">Vérifié / Matricule</th>
+          <th class="check-col">Nettoyé (Zone)</th>
+        </tr></thead><tbody>
     `;
 
     let currentZone = '';
-    inventoryItems.forEach(item => {
+    INITIAL_INVENTORY_ITEMS.forEach(item => {
+      // Afficher l'en-tête de zone quand elle change
       if (item.zone !== currentZone) {
         currentZone = item.zone;
-        html += `<tr><td colspan="4" class="zone-header">${currentZone}</td></tr>`;
+        const zoneInfo = zoneData[currentZone];
+        // Ligne 1: Nom de la zone
+        html += `<tr><td colspan="4" class="zone-header-name">${currentZone}</td></tr>`;
+        // Ligne 2: Données de la zone
+        html += '<tr class="zone-header-data">';
+        html += '<td><i>Informations de zone</i></td>';
+        html += `<td>${zoneInfo.date || '-'}</td>`;
+        html += `<td>${zoneInfo.matricule || '-'}</td>`;
+        html += `<td class="check-col ${zoneInfo.cleanedChecked ? 'checked' : 'not-checked'}">${zoneInfo.cleanedChecked ? '✓' : '✗'}</td>`;
+        html += '</tr>';
       }
+      // Ligne de l'item
+      const isItemChecked = !!itemCheckedStatus[item.id];
       html += '<tr>';
       html += `<td class="material-col">${item.material}</td>`;
       html += `<td class="qty-col">${item.expectedQuantity}</td>`;
-      html += `<td class="date-col">${item.date || '-'}</td>`;
-      html += `<td class="matricule-col">${item.matricule || '-'}</td>`;
+      html += `<td class="check-col ${isItemChecked ? 'checked' : 'not-checked'}">${isItemChecked ? '✓' : '✗'}</td>`;
+      html += '<td></td>'; // Cellule vide pour aligner avec "Nettoyé"
       html += '</tr>';
     });
 
@@ -278,11 +328,18 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       setError("Le numéro de véhicule est obligatoire.");
       return;
     }
-    const isValid = inventoryItems.some(item => item.date && item.matricule);
-    if (!isValid) {
-       setError("Veuillez remplir la date et le matricule pour au moins un item de l'inventaire.");
+    // Valider si au moins une zone a une date/matricule?
+    const isAnyZoneFilled = Object.values(zoneData).some(z => z.date && z.matricule);
+    if (!isAnyZoneFilled) {
+       setError("Veuillez remplir la date et le matricule pour au moins une zone.");
        return;
      }
+     // Valider si au moins un item est coché?
+     const isAnyItemChecked = Object.values(itemCheckedStatus).some(checked => checked);
+      if (!isAnyItemChecked) {
+        setError("Veuillez vérifier au moins un item de l'inventaire.");
+        return;
+      }
 
     setIsSubmitting(true);
     try {
@@ -291,18 +348,17 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       const fileName = `inventaire_medical_${numeroVehicule}_${timestamp}.html`;
 
       const webhookData = {
-        type: 'InventaireMedical', // <- Nouveau type pour Make.com?
+        type: 'InventaireMedical', // Assurez-vous que ce type est correct pour Make.com
         numeroVehicule,
         dateTime: getCurrentDateTime(),
-        inventoryData: inventoryItems,
+        zoneCompletionData: zoneData, // Données par zone
+        itemCheckedStatuses: itemCheckedStatus, // Statut des items
         htmlContent,
         fileName,
         mimeType: "text/html"
       };
 
       console.log("Envoi des données:", webhookData);
-      // *** IMPORTANT: Assurez-vous que Make.com est configuré pour recevoir 'InventaireMedical' ***
-      // ou remettez 'NettoyageInventaire' si le webhook est le même
       const success = await sendInspectionToMakecom('InventaireMedical', webhookData);
 
       if (success) {
@@ -364,17 +420,22 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Matériel</th>
-                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Qté Attendue</th>
-                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Date Vérifié</th>
-                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricule Vérif.</th>
+                {/* Adapter les en-têtes pour la nouvelle structure */}
+                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Matériel / Zone Info</th>
+                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Qté Attendue / Date Zone</th>
+                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Vérifié / Matricule Zone</th>
+                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nettoyé (Zone)</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {inventoryItems.map((item, index) => {
-                const showZoneHeader = index === 0 || inventoryItems[index - 1].zone !== item.zone;
+              {INITIAL_INVENTORY_ITEMS.map((item, index) => {
+                const showZoneHeader = index === 0 || INITIAL_INVENTORY_ITEMS[index - 1].zone !== item.zone;
+                const currentZoneInfo = zoneData[item.zone]; // Données de la zone actuelle
+                const isItemChecked = !!itemCheckedStatus[item.id]; // Statut de l'item actuel
+
                 return (
                   <React.Fragment key={item.id}>
+                    {/* Ligne 1: En-tête Nom de Zone */}
                     {showZoneHeader && (
                       <tr>
                         <td colSpan={4} className="bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-700 border-b border-gray-300">
@@ -382,30 +443,65 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                         </td>
                       </tr>
                     )}
+                    {/* Ligne 2: En-tête Données de Zone (affiché une fois par zone) */}
+                    {showZoneHeader && (
+                       <tr className="bg-gray-50">
+                         <td className="px-3 py-2 text-sm italic text-gray-600 border-r">Infos Zone:</td>
+                         {/* Date Input (Zone) */}
+                         <td className="px-3 py-2 border-r">
+                           <input
+                             type="date"
+                             aria-label={`Date pour ${item.zone}`}
+                             value={currentZoneInfo.date}
+                             onChange={(e) => handleZoneChange(item.zone, 'date', e.target.value)}
+                             className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                           />
+                         </td>
+                         {/* Matricule Input (Zone) */}
+                         <td className="px-3 py-2 border-r">
+                           <input
+                             type="text"
+                             aria-label={`Matricule pour ${item.zone}`}
+                             value={currentZoneInfo.matricule}
+                             onChange={(e) => handleZoneChange(item.zone, 'matricule', e.target.value)}
+                             placeholder="A-1234"
+                             className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                           />
+                         </td>
+                         {/* Nettoyé Checkbox (Zone) */}
+                         <td className="px-2 py-2 text-center align-middle">
+                           <input
+                             type="checkbox"
+                             aria-label={`Zone ${item.zone} nettoyée`}
+                             checked={currentZoneInfo.cleanedChecked}
+                             onChange={(e) => handleZoneChange(item.zone, 'cleanedChecked', e.target.checked)}
+                             className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                           />
+                         </td>
+                       </tr>
+                    )}
+                    {/* Ligne 3: Item d'inventaire */}
                     <tr>
+                      {/* Matériel */}
                       <td className="px-3 py-2 whitespace-normal text-sm font-medium text-gray-900 border-r">
                         {item.material}
                       </td>
+                      {/* Qté Attendue */}
                       <td className="px-3 py-2 text-center text-sm text-gray-700 border-r">
                         {item.expectedQuantity}
                       </td>
-                      <td className="px-3 py-2 border-r">
-                        <input
-                          type="date"
-                          value={item.date}
-                          onChange={(e) => handleRowChange(index, 'date', e.target.value)}
-                          className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        />
+                      {/* Vérifié Checkbox (Item) */}
+                      <td className="px-2 py-2 text-center border-r align-middle">
+                         <input
+                           type="checkbox"
+                           aria-label={`Vérifier ${item.material}`}
+                           checked={isItemChecked}
+                           onChange={() => handleItemCheckChange(item.id)}
+                           className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                         />
                       </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          value={item.matricule}
-                          onChange={(e) => handleRowChange(index, 'matricule', e.target.value)}
-                          placeholder="A-1234"
-                          className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        />
-                      </td>
+                      {/* Cellule vide pour aligner */}
+                      <td></td> 
                     </tr>
                   </React.Fragment>
                 );
