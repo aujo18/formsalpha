@@ -550,6 +550,13 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                 return (
                   <React.Fragment key={item.id}>
                     {showZoneHeader && (
+                      <tr>
+                        <td colSpan={4} className="bg-gray-200 px-3 py-1.5 text-sm font-bold text-gray-800 border-b border-gray-300">
+                          {item.zone} 
+                        </td>
+                      </tr>
+                    )}
+                    {showZoneHeader && (
                        <tr className="bg-gray-50">
                          <td className="px-3 py-2 text-sm italic text-gray-600 border-r">Infos Zone:</td>
                          <td className="px-3 py-2 border-r">
