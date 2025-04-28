@@ -280,12 +280,13 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           </table>
         </div>
 
-        {/* Boutons Annuler/Soumettre */}
-        <div className="flex justify-center pt-6 border-t">
+        {/* Boutons Annuler/Soumettre - Remplacer par un conteneur sticky */}
+        <div className="sticky bottom-0 bg-white p-4 border-t mt-4 -mx-6 -mb-6 rounded-b-lg"> {/* Ajuster les marges négatives pour compenser le padding parent et arrondir les coins bas */} 
            <button 
              type="submit" 
              disabled={isSubmitting} 
-             className="w-full inline-flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#b22a2e] hover:bg-[#b22a2e]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#b22a2e] disabled:opacity-50"
+             // Style exact de MdsaInspectionPage (w-full, py-3, etc.)
+             className={`w-full ${isSubmitting ? 'bg-[#b22a2e]/70 cursor-not-allowed' : 'bg-[#b22a2e] hover:bg-[#b22a2e]/90'} text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#b22a2e]`}
            >
              {isSubmitting ? (
                <>
@@ -297,7 +298,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                </>
              ) : (
                <>
-                 <Send size={18} className="mr-2" />
+                 <Send size={20} className="mr-2" />
                  Soumettre
                </>
              )}
