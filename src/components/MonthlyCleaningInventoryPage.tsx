@@ -7,6 +7,8 @@ interface MonthlyCleaningInventoryPageProps {
   getCurrentDateTime: () => string;
   sendInspectionToMakecom: (formType: string, data: any) => Promise<boolean>;
   onSubmissionComplete: (message: string) => void;
+  numeroVehicule: string;
+  handleVehiculeNumberChange: (value: string) => void;
 }
 
 // Définir la structure d'une tâche
@@ -70,6 +72,8 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
   getCurrentDateTime,
   sendInspectionToMakecom,
   onSubmissionComplete,
+  numeroVehicule,
+  handleVehiculeNumberChange,
 }) => {
   // Initialiser l'état avec une ligne pour chaque tâche initiale
   const [taskRows, setTaskRows] = useState<TaskRowData[]>(() =>
@@ -114,7 +118,10 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         footer { text-align: center; margin-top: 15px; font-size: 10px; color: #666; }
       </style></head><body>
       <h1>Nettoyage et Inventaire Mensuel</h1>
-      <div class="info"><p><strong>Rapport soumis le:</strong> ${getCurrentDateTime()}</p></div>
+      <div class="info">
+        <p><strong>Véhicule #:</strong> ${numeroVehicule || 'Non spécifié'}</p>
+        <p><strong>Rapport soumis le:</strong> ${getCurrentDateTime()}</p>
+      </div>
       <table><thead><tr>
         <th class="task-col">Tâche</th>
         <th class="date-col">Date</th>
@@ -125,12 +132,22 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     `;
 
     taskRows.forEach(row => {
+      // Trouver la section de la tâche originale pour la condition
+      const taskInfo = TASKS.find(t => t.id === row.id);
+      const isArmoireSection = taskInfo?.section === 'Armoires';
+
       html += '<tr>';
       html += `<td class="task-col">${row.description}${row.details ? `<br><small>${row.details}</small>` : ''}</td>`;
       html += `<td class="date-col">${row.date || '-'}</td>`;
       html += `<td class="matricule-col">${row.matricule || '-'}</td>`;
-      html += `<td class="check-col ${row.transitChecked ? 'checked' : 'not-checked'}">${row.transitChecked ? '✓' : '✗'}</td>`;
-      html += `<td class="check-col ${row.mx151Checked ? 'checked' : 'not-checked'}">${row.mx151Checked ? '✓' : '✗'}</td>`;
+      // Condition pour les coches TRANSIT et MX-151
+      if (isArmoireSection) {
+        html += `<td class="check-col ${row.transitChecked ? 'checked' : 'not-checked'}">${row.transitChecked ? '✓' : '✗'}</td>`;
+        html += `<td class="check-col ${row.mx151Checked ? 'checked' : 'not-checked'}">${row.mx151Checked ? '✓' : '✗'}</td>`;
+      } else {
+        html += '<td class="check-col">-</td>'; // Afficher un tiret si pas section Armoires
+        html += '<td class="check-col">-</td>'; // Afficher un tiret si pas section Armoires
+      }
       html += '</tr>';
     });
 
@@ -155,13 +172,13 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     try {
       const htmlContent = generateCleaningInventoryHTML();
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      // Utiliser une date ou une référence générale pour le nom de fichier?
-      const fileName = `nettoyage_inventaire_${timestamp}.html`; 
+      const fileName = `nettoyage_inventaire_${numeroVehicule || 'NA'}_${timestamp}.html`;
 
       const webhookData = {
         type: 'NettoyageInventaire',
+        numeroVehicule,
         dateTime: getCurrentDateTime(),
-        tasksData: taskRows, // Envoyer le tableau complet des données par ligne
+        tasksData: taskRows,
         htmlContent,
         fileName,
         mimeType: "text/html"
@@ -220,6 +237,20 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           </div>
         )}
 
+        {/* Champ Numéro de Véhicule */}
+        <div className="mb-4">
+           <label htmlFor="numeroVehicule" className="block text-sm font-medium text-gray-700">Numéro de Véhicule</label>
+           <input
+             type="text"
+             id="numeroVehicule"
+             value={numeroVehicule}
+             onChange={(e) => handleVehiculeNumberChange(e.target.value)}
+             placeholder="Ex: 9123"
+             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+             required
+           />
+         </div>
+
         {/* Section Description des tâches - Nouvelle structure de table */}
         <h2 className="text-lg font-semibold border-t pt-4">Description des tâches</h2>
         <div className="overflow-x-auto">
@@ -234,52 +265,66 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {taskRows.map((row, index) => (
-                <tr key={row.id}>
-                  {/* Tâche Description */}
-                  <td className="px-3 py-2 whitespace-normal text-sm font-medium text-gray-900 border-r">
-                    {row.description}
-                    {row.details && <span className="block text-xs text-gray-500 mt-1">{row.details}</span>}
-                  </td>
-                  {/* Date Input */}
-                  <td className="px-3 py-2 border-r">
-                    <input
-                      type="date"
-                      value={row.date}
-                      onChange={(e) => handleRowChange(index, 'date', e.target.value)}
-                      className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </td>
-                  {/* Matricule Input */}
-                  <td className="px-3 py-2 border-r">
-                    <input
-                      type="text"
-                      value={row.matricule}
-                      onChange={(e) => handleRowChange(index, 'matricule', e.target.value)}
-                      placeholder="A-1234"
-                      className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </td>
-                  {/* Transit Checkbox */}
-                  <td className="px-2 py-2 text-center border-r align-middle">
-                    <input
-                      type="checkbox"
-                      checked={row.transitChecked}
-                      onChange={(e) => handleRowChange(index, 'transitChecked', e.target.checked)}
-                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                    />
-                  </td>
-                  {/* MX-151 Checkbox */}
-                  <td className="px-2 py-2 text-center align-middle">
-                     <input
-                       type="checkbox"
-                       checked={row.mx151Checked}
-                       onChange={(e) => handleRowChange(index, 'mx151Checked', e.target.checked)}
-                       className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                     />
-                  </td>
-                </tr>
-              ))}
+              {taskRows.map((row, index) => {
+                // Trouver la section de la tâche originale pour la condition
+                const taskInfo = TASKS.find(t => t.id === row.id);
+                const isArmoireSection = taskInfo?.section === 'Armoires';
+
+                return (
+                  <tr key={row.id}>
+                    {/* Tâche Description */}
+                    <td className="px-3 py-2 whitespace-normal text-sm font-medium text-gray-900 border-r">
+                      {row.description}
+                      {row.details && <span className="block text-xs text-gray-500 mt-1">{row.details}</span>}
+                    </td>
+                    {/* Date Input */}
+                    <td className="px-3 py-2 border-r">
+                      <input
+                        type="date"
+                        value={row.date}
+                        onChange={(e) => handleRowChange(index, 'date', e.target.value)}
+                        className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    </td>
+                    {/* Matricule Input */}
+                    <td className="px-3 py-2 border-r">
+                      <input
+                        type="text"
+                        value={row.matricule}
+                        onChange={(e) => handleRowChange(index, 'matricule', e.target.value)}
+                        placeholder="A-1234"
+                        className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    </td>
+                    {/* Transit Checkbox - Conditionnel */}
+                    <td className="px-2 py-2 text-center border-r align-middle">
+                      {isArmoireSection ? (
+                        <input
+                          type="checkbox"
+                          checked={row.transitChecked}
+                          onChange={(e) => handleRowChange(index, 'transitChecked', e.target.checked)}
+                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                      ) : (
+                        <span className="text-gray-400">-</span> // Afficher un tiret si pas applicable
+                      )}
+                    </td>
+                    {/* MX-151 Checkbox - Conditionnel */}
+                    <td className="px-2 py-2 text-center align-middle">
+                      {isArmoireSection ? (
+                        <input
+                          type="checkbox"
+                          checked={row.mx151Checked}
+                          onChange={(e) => handleRowChange(index, 'mx151Checked', e.target.checked)}
+                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                      ) : (
+                        <span className="text-gray-400">-</span> // Afficher un tiret si pas applicable
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
