@@ -536,13 +536,16 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                      className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                    />
                  </td>
-                 <td className="px-2 py-2 text-center align-middle">
+                 <td 
+                   className={`px-2 py-2 text-center align-middle cursor-pointer ${disinfectionState.avant.isChecked ? 'bg-green-100' : ''}`}
+                   onClick={() => handleDisinfectionChange('avant', 'isChecked', !disinfectionState.avant.isChecked)}
+                 >
                    <input
                      type="checkbox"
                      aria-label="Habitacle Avant Désinfecté"
                      checked={disinfectionState.avant.isChecked}
                      onChange={(e) => handleDisinfectionChange('avant', 'isChecked', e.target.checked)}
-                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
                    />
                  </td>
                </tr>
@@ -559,13 +562,16 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                       className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
                  </td>
-                 <td className="px-2 py-2 text-center align-middle">
+                 <td 
+                    className={`px-2 py-2 text-center align-middle cursor-pointer ${disinfectionState.arriere.isChecked ? 'bg-green-100' : ''}`}
+                    onClick={() => handleDisinfectionChange('arriere', 'isChecked', !disinfectionState.arriere.isChecked)}
+                 >
                     <input
                       type="checkbox"
                       aria-label="Habitacle Arrière Désinfecté"
                       checked={disinfectionState.arriere.isChecked}
                       onChange={(e) => handleDisinfectionChange('arriere', 'isChecked', e.target.checked)}
-                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
                     />
                  </td>
                </tr>
@@ -614,7 +620,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                          </td>
                          <td className="px-3 py-2 border-r"></td>
                          <td 
-                           className="px-2 py-2 text-center align-middle cursor-pointer" 
+                           className={`px-2 py-2 text-center align-middle cursor-pointer ${currentZoneInfo.cleanedChecked ? 'bg-green-100' : ''}`}
                            onClick={() => handleZoneChange(item.zone, 'cleanedChecked', !currentZoneInfo.cleanedChecked)}
                          >
                            <input
@@ -635,7 +641,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                         {item.expectedQuantity}
                       </td>
                       <td 
-                        className="px-2 py-2 text-center border-r align-middle cursor-pointer" 
+                        className={`px-2 py-2 text-center border-r align-middle cursor-pointer ${isItemChecked ? 'bg-green-100' : ''}`}
                         onClick={() => handleItemCheckChange(item.id)}
                       >
                          <input
