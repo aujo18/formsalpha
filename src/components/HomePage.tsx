@@ -74,7 +74,7 @@ const HomePage: React.FC<HomePageProps> = ({ onFormSelect }) => {
       </div>
       
       <footer className="mt-10 text-center text-gray-500 text-sm">
-        <p>© {new Date().getFullYear()} CAMBI · Inspection Laurentides-Lanaudière v1.7</p>
+        <p>© {new Date().getFullYear()} CAMBI · Inspection Laurentides-Lanaudière v1.8</p>
       </footer>
     </div>
   );

@@ -214,6 +214,39 @@ interface DisinfectionRow {
 
 type DisinfectionState = Record<'avant' | 'arriere', DisinfectionRow>;
 
+// Fonction utilitaire locale pour formater le matricule
+const formatMatriculeInput = (value: string): string => {
+  let sanitizedValue = value.replace(/[^a-zA-Z0-9-]/g, '');
+  if (sanitizedValue.length === 0) { return ''; }
+  const firstChar = sanitizedValue.charAt(0).toUpperCase();
+  // Si seulement la première lettre est entrée, on la retourne
+  if (sanitizedValue.length === 1 && /^[A-Z]$/.test(firstChar)) { return firstChar; }
+  // Si le 2ème caractère n'est pas un tiret, on l'ajoute (sauf si déjà présent)
+  if (sanitizedValue.length > 1 && sanitizedValue.charAt(1) !== '-') {
+    sanitizedValue = firstChar + '-' + sanitizedValue.substring(1);
+  } else if (sanitizedValue.length >= 2) {
+    // Assure que c'est bien Lettre-...
+     sanitizedValue = firstChar + sanitizedValue.substring(1);
+  }
+  // Appliquer regex pour Lettre-4chiffres max
+  const regex = /^([A-Z])-?(\d{0,4}).*$/;
+  const match = sanitizedValue.match(regex);
+  if (match) {
+    const letter = match[1];
+    const numbers = match[2];
+    return `${letter}-${numbers}`;
+  } else if (/^[A-Z]-?$/.test(sanitizedValue)) {
+    // Permettre "A-"
+    return sanitizedValue;
+   } else if (/^[A-Z]$/.test(firstChar)) {
+     // Si ça ne match pas mais commence par une lettre, retourner juste la lettre
+     return firstChar;
+   } else {
+     // Si invalide (commence par un chiffre ou autre), retourner vide
+     return '';
+   }
+};
+
 // Composant principal
 const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> = ({
   goBack,
@@ -247,15 +280,20 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Handler données zone (inchangé)
+  // Handler données de zone (utilise formatMatriculeInput)
   const handleZoneChange = useCallback((zoneName: string, field: 'matricule' | 'cleanedChecked', value: string | boolean) => {
-    setZoneData(currentData => ({
-      ...currentData,
-      [zoneName]: {
-        ...currentData[zoneName],
-        [field]: value,
-      },
-    }));
+    setZoneData(currentData => {
+      const updatedZoneData = { ...currentData[zoneName] };
+      if (field === 'matricule' && typeof value === 'string') {
+        updatedZoneData[field] = formatMatriculeInput(value);
+      } else if (field === 'cleanedChecked' && typeof value === 'boolean') {
+        updatedZoneData[field] = value;
+      }
+      return {
+        ...currentData,
+        [zoneName]: updatedZoneData,
+      };
+    });
   }, []);
 
   // Handler cases items (inchangé)
@@ -266,15 +304,20 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     }));
   }, []);
 
-  // Handler Désinfection (adapté)
+  // Handler Désinfection (utilise formatMatriculeInput)
   const handleDisinfectionChange = useCallback((part: 'avant' | 'arriere', field: 'matricule' | 'isChecked', value: string | boolean) => {
-    setDisinfectionState(currentState => ({
-      ...currentState,
-      [part]: {
-        ...currentState[part],
-        [field]: value,
-      },
-    }));
+    setDisinfectionState(currentState => {
+      const updatedPartData = { ...currentState[part] };
+      if (field === 'matricule' && typeof value === 'string') {
+        updatedPartData[field] = formatMatriculeInput(value);
+      } else if (field === 'isChecked' && typeof value === 'boolean') {
+        updatedPartData[field] = value;
+      }
+      return {
+        ...currentState,
+        [part]: updatedPartData,
+      };
+    });
   }, []);
 
   // Génération HTML mise à jour (Section Désinfection en Tableau)
@@ -427,7 +470,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md mb-8 flex items-center justify-between">
         <div className="flex items-center">
           <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-3 filter brightness-0 invert" />
-          <h1 className="text-xl font-bold">NETTOYAGE ET INVENTAIRE</h1>
+          <h1 className="text-xl font-bold">Nettoyage et Inventaire</h1>
         </div>
         <button onClick={goBack} className="flex items-center text-white hover:text-gray-200 ml-4">
           <ChevronLeft size={24} className="mr-1" />
