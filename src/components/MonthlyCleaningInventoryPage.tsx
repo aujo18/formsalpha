@@ -277,7 +277,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     }));
   }, []);
 
-  // Génération HTML mise à jour
+  // Génération HTML mise à jour (Section Désinfection en Tableau)
   const generateCleaningInventoryHTML = (): string => {
     let html = `
       <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nettoyage et Inventaire</title>
@@ -306,12 +306,6 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       <div class="info">
         <p><strong>Véhicule #:</strong> ${numeroVehicule || 'Non spécifié'}</p>
         <p><strong>Date et heure:</strong> ${getCurrentDateTime()}</p>
-      </div>
-
-      <div class="disinfection-section">
-        <p>Désinfection:</p>
-        <p>Habitacle Avant: ${disinfectionState.avant.isChecked ? '✓ Fait' : '✗ Non fait'}</p>
-        <p>Habitacle Arrière: ${disinfectionState.arriere.isChecked ? '✓ Fait' : '✗ Non fait'}</p>
       </div>
 
       <h2>Désinfection de l'habitacle</h2>
@@ -427,7 +421,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     }
   };
 
-  // Rendu JSX mis à jour
+  // Rendu JSX mis à jour (Section Désinfection en Tableau - Rétabli)
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md mb-8 flex items-center justify-between">
@@ -475,28 +469,65 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
            </div>
         </div>
 
-        <div className="space-y-4 border-t pt-4">
-          <h3 className="text-md font-semibold text-gray-800">Désinfection de l'habitacle</h3>
-          <div className="flex items-center">
-            <input 
-              id="disinfection-avant"
-              type="checkbox" 
-              checked={disinfectionState.avant.isChecked}
-              onChange={() => handleDisinfectionChange('avant', 'isChecked', true)}
-              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
-            />
-            <label htmlFor="disinfection-avant" className="text-sm text-gray-700">Avant</label>
-          </div>
-          <div className="flex items-center">
-             <input 
-               id="disinfection-arriere"
-               type="checkbox" 
-               checked={disinfectionState.arriere.isChecked}
-               onChange={() => handleDisinfectionChange('arriere', 'isChecked', true)}
-               className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
-             />
-            <label htmlFor="disinfection-arriere" className="text-sm text-gray-700">Arrière</label>
-          </div>
+        <div className="border-t pt-4">
+          <h3 className="text-md font-semibold text-gray-800 mb-3">Désinfection de l'habitacle</h3>
+          <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
+             <thead className="bg-gray-50">
+               <tr>
+                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Habitacle</th>
+                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Matricule</th>
+                 <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Désinfecté</th>
+               </tr>
+             </thead>
+             <tbody className="bg-white divide-y divide-gray-200">
+               {/* Ligne Avant */}
+               <tr>
+                 <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 border-r">Avant</td>
+                 <td className="px-3 py-2 border-r">
+                   <input
+                     type="text"
+                     aria-label="Matricule désinfection Avant"
+                     value={disinfectionState.avant.matricule}
+                     onChange={(e) => handleDisinfectionChange('avant', 'matricule', e.target.value)}
+                     placeholder="Matricule"
+                     className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                   />
+                 </td>
+                 <td className="px-2 py-2 text-center align-middle">
+                   <input
+                     type="checkbox"
+                     aria-label="Habitacle Avant Désinfecté"
+                     checked={disinfectionState.avant.isChecked}
+                     onChange={(e) => handleDisinfectionChange('avant', 'isChecked', e.target.checked)}
+                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                   />
+                 </td>
+               </tr>
+               {/* Ligne Arrière */}
+               <tr>
+                 <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 border-r">Arrière</td>
+                 <td className="px-3 py-2 border-r">
+                    <input
+                      type="text"
+                      aria-label="Matricule désinfection Arrière"
+                      value={disinfectionState.arriere.matricule}
+                      onChange={(e) => handleDisinfectionChange('arriere', 'matricule', e.target.value)}
+                      placeholder="Matricule"
+                      className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    />
+                 </td>
+                 <td className="px-2 py-2 text-center align-middle">
+                    <input
+                      type="checkbox"
+                      aria-label="Habitacle Arrière Désinfecté"
+                      checked={disinfectionState.arriere.isChecked}
+                      onChange={(e) => handleDisinfectionChange('arriere', 'isChecked', e.target.checked)}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    />
+                 </td>
+               </tr>
+             </tbody>
+          </table>
         </div>
 
         <h2 className="text-lg font-semibold border-t pt-4">Inventaire</h2>
