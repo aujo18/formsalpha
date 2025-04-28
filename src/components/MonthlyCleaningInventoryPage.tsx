@@ -191,7 +191,11 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md mb-8 flex items-center justify-between">
         {/* Logo et Titre à gauche */}
         <div className="flex items-center">
-          <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-3" /> {/* Ajout de marge à droite */}
+          <img 
+            src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" 
+            alt="Logo CAMBI" 
+            className="h-8 mr-3 filter brightness-0 invert" 
+          /> 
           <h1 className="text-xl font-bold">NETTOYAGE ET INVENTAIRE MENSUEL</h1>
         </div>
 
