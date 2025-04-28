@@ -187,17 +187,13 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
-      {/* En-tête mise à jour avec logo */}
+      {/* En-tête avec titre à côté du logo */}
       <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md mb-8 flex items-center justify-between">
-        {/* Logo CAMBI (comme dans HomePage) */}
+        {/* Logo et Titre à gauche */}
         <div className="flex items-center">
-          <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
-          {/* Optionnel: Ajouter un titre à côté du logo si désiré */}
-          {/* <h1 className="text-xl font-bold">Inspection...</h1> */}
+          <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-3" /> {/* Ajout de marge à droite */}
+          <h1 className="text-xl font-bold">NETTOYAGE ET INVENTAIRE MENSUEL</h1>
         </div>
-
-        {/* Titre du formulaire au centre */}
-        <h1 className="text-xl font-bold text-center flex-grow">NETTOYAGE ET INVENTAIRE MENSUEL</h1>
 
         {/* Bouton Retour à droite */}
         <button onClick={goBack} className="flex items-center text-white hover:text-gray-200 ml-4">
@@ -285,11 +281,12 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         </div>
 
         {/* Boutons Annuler/Soumettre */}
-        <div className="flex justify-end space-x-4 pt-6 border-t">
-           <button type="button" onClick={goBack} disabled={isSubmitting} className="inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-             Annuler
-           </button>
-           <button type="submit" disabled={isSubmitting} className="inline-flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#b22a2e] hover:bg-[#b22a2e]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#b22a2e] disabled:opacity-50">
+        <div className="flex justify-center pt-6 border-t">
+           <button 
+             type="submit" 
+             disabled={isSubmitting} 
+             className="w-full inline-flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#b22a2e] hover:bg-[#b22a2e]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#b22a2e] disabled:opacity-50"
+           >
              {isSubmitting ? (
                <>
                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
