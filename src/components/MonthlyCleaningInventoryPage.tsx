@@ -613,13 +613,16 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                            />
                          </td>
                          <td className="px-3 py-2 border-r"></td>
-                         <td className="px-2 py-2 text-center align-middle">
+                         <td 
+                           className="px-2 py-2 text-center align-middle cursor-pointer" 
+                           onClick={() => handleZoneChange(item.zone, 'cleanedChecked', !currentZoneInfo.cleanedChecked)}
+                         >
                            <input
-                             type="checkbox"
-                             aria-label={`Zone ${item.zone} nettoyée`}
-                             checked={currentZoneInfo.cleanedChecked}
-                             onChange={(e) => handleZoneChange(item.zone, 'cleanedChecked', e.target.checked)}
-                             className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                              type="checkbox"
+                              aria-label={`Zone ${item.zone} nettoyée`}
+                              checked={currentZoneInfo.cleanedChecked}
+                              onChange={(e) => handleZoneChange(item.zone, 'cleanedChecked', e.target.checked)}
+                              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
                            />
                          </td>
                        </tr>
@@ -631,13 +634,16 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                       <td className="px-3 py-2 text-center text-sm text-gray-700 border-r">
                         {item.expectedQuantity}
                       </td>
-                      <td className="px-2 py-2 text-center border-r align-middle">
+                      <td 
+                        className="px-2 py-2 text-center border-r align-middle cursor-pointer" 
+                        onClick={() => handleItemCheckChange(item.id)}
+                      >
                          <input
                            type="checkbox"
                            aria-label={`Vérifier ${item.material}`}
                            checked={isItemChecked}
                            onChange={() => handleItemCheckChange(item.id)}
-                           className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                           className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
                          />
                       </td>
                       <td></td> 
