@@ -532,7 +532,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                      aria-label="Matricule désinfection Avant"
                      value={disinfectionState.avant.matricule}
                      onChange={(e) => handleDisinfectionChange('avant', 'matricule', e.target.value)}
-                     placeholder="Matricule"
+                     placeholder="A-1234"
                      className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                    />
                  </td>
@@ -555,7 +555,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                       aria-label="Matricule désinfection Arrière"
                       value={disinfectionState.arriere.matricule}
                       onChange={(e) => handleDisinfectionChange('arriere', 'matricule', e.target.value)}
-                      placeholder="Matricule"
+                      placeholder="A-1234"
                       className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     />
                  </td>
