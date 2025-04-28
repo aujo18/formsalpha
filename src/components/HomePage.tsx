@@ -68,13 +68,13 @@ const HomePage: React.FC<HomePageProps> = ({ onFormSelect }) => {
             <ClipboardCheck size={48} className="text-[#006400]" />
           </div>
           <h2 className="text-xl font-semibold mb-2">Nettoyage et Inventaire</h2>
-          <p className="text-gray-600 text-sm mb-4">Vérification mensuelle du nettoyage et de l'inventaire.</p>
+          <p className="text-gray-600 text-sm mb-4">Vérification mensuelle de l'inventaire et du nettoyage.</p>
           <ChevronRight className="mt-auto text-[#006400]" />
         </button>
       </div>
       
       <footer className="mt-10 text-center text-gray-500 text-sm">
-        <p>© {new Date().getFullYear()} CAMBI · Inspection Laurentides-Lanaudière v1.8</p>
+        <p>© {new Date().getFullYear()} CAMBI · Inspection Laurentides-Lanaudière v1.9</p>
       </footer>
     </div>
   );
