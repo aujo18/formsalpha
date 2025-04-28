@@ -204,11 +204,15 @@ const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   { id: 'fin_drap_sterile', zone: 'Fin - Sans Zone', material: 'Drap stérile de 150 cm x 240 cm à usage unique pour les brûlés', expectedQuantity: '2' },
 ];
 
-// Etat pour la désinfection
-interface DisinfectionStatus {
-  avant: boolean;
-  arriere: boolean;
+// Nouvelle structure état Désinfection
+interface DisinfectionRow {
+  id: 'avant' | 'arriere';
+  label: string;
+  matricule: string;
+  isChecked: boolean;
 }
+
+type DisinfectionState = Record<'avant' | 'arriere', DisinfectionRow>;
 
 // Composant principal
 const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> = ({
@@ -223,7 +227,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
      Array.from(new Set(INITIAL_INVENTORY_ITEMS.map(item => item.zone)))
   , []);
 
-  // État pour les données par zone (SANS date initiale)
+  // État données par zone (inchangé)
   const [zoneData, setZoneData] = useState<Record<string, ZoneData>>(() => 
     uniqueZones.reduce((acc, zoneName) => {
       acc[zoneName] = { matricule: '', cleanedChecked: false };
@@ -231,16 +235,19 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     }, {} as Record<string, ZoneData>)
   );
 
-  // État cases à cocher items (inchangé)
+  // État cases items (inchangé)
   const [itemCheckedStatus, setItemCheckedStatus] = useState<ItemCheckedStatus>({});
 
-  // Nouvel état pour la désinfection
-  const [disinfectionStatus, setDisinfectionStatus] = useState<DisinfectionStatus>({ avant: false, arriere: false });
+  // État Désinfection (nouvelle structure)
+  const [disinfectionState, setDisinfectionState] = useState<DisinfectionState>({
+    avant: { id: 'avant', label: 'Avant', matricule: '', isChecked: false },
+    arriere: { id: 'arriere', label: 'Arrière', matricule: '', isChecked: false },
+  });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Handler données de zone (adapté SANS date)
+  // Handler données zone (inchangé)
   const handleZoneChange = useCallback((zoneName: string, field: 'matricule' | 'cleanedChecked', value: string | boolean) => {
     setZoneData(currentData => ({
       ...currentData,
@@ -259,11 +266,14 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     }));
   }, []);
 
-  // Nouveau handler pour les cases désinfection
-  const handleDisinfectionChange = useCallback((part: keyof DisinfectionStatus) => {
-    setDisinfectionStatus(currentStatus => ({
-      ...currentStatus,
-      [part]: !currentStatus[part],
+  // Handler Désinfection (adapté)
+  const handleDisinfectionChange = useCallback((part: 'avant' | 'arriere', field: 'matricule' | 'isChecked', value: string | boolean) => {
+    setDisinfectionState(currentState => ({
+      ...currentState,
+      [part]: {
+        ...currentState[part],
+        [field]: value,
+      },
     }));
   }, []);
 
@@ -290,6 +300,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         footer { text-align: center; margin-top: 15px; font-size: 10px; color: #666; }
         .disinfection-section { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
         .disinfection-section p { margin: 5px 0; font-weight: bold; }
+        .disinfection-table th, .disinfection-table td { padding: 5px; }
       </style></head><body>
       <h1>Nettoyage et Inventaire</h1>
       <div class="info">
@@ -299,10 +310,28 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
 
       <div class="disinfection-section">
         <p>Désinfection:</p>
-        <p>Habitacle Avant: ${disinfectionStatus.avant ? '✓ Fait' : '✗ Non fait'}</p>
-        <p>Habitacle Arrière: ${disinfectionStatus.arriere ? '✓ Fait' : '✗ Non fait'}</p>
+        <p>Habitacle Avant: ${disinfectionState.avant.isChecked ? '✓ Fait' : '✗ Non fait'}</p>
+        <p>Habitacle Arrière: ${disinfectionState.arriere.isChecked ? '✓ Fait' : '✗ Non fait'}</p>
       </div>
 
+      <h2>Désinfection de l'habitacle</h2>
+      <table class="disinfection-table" width="100%" border="1" style="border-collapse:collapse; margin-bottom: 15px;">
+        <thead><tr><th>Habitacle</th><th>Matricule</th><th>Désinfecté</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Avant</td>
+            <td>${disinfectionState.avant.matricule || '-'}</td>
+            <td style="text-align:center;">${disinfectionState.avant.isChecked ? '✓' : '✗'}</td>
+          </tr>
+          <tr>
+            <td>Arrière</td>
+            <td>${disinfectionState.arriere.matricule || '-'}</td>
+            <td style="text-align:center;">${disinfectionState.arriere.isChecked ? '✓' : '✗'}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Inventaire</h2>
       <table><thead><tr>
           <th class="material-col">Matériel / Zone</th>
           <th class="qty-col">Qté Attendue / Matricule Zone</th>
@@ -342,7 +371,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     e.preventDefault();
     setError(null);
 
-    // Validation (simplifiée sans date, ajout désinfection?)
+    // Validation (ajouter validation désinfection matricules?)
     if (!numeroVehicule) {
       setError("Le numéro de véhicule est obligatoire.");
       return;
@@ -357,6 +386,11 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
        setError("Veuillez vérifier au moins un item de l'inventaire.");
        return;
      }
+    // Validation pour les matricules de désinfection
+    if (!disinfectionState.avant.matricule || !disinfectionState.arriere.matricule) {
+      setError("Veuillez entrer le matricule pour la désinfection Avant et Arrière.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -365,12 +399,12 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       const fileName = `nettoyage_inventaire_${numeroVehicule}_${timestamp}.html`;
 
       const webhookData = {
-        type: 'NettoyageInventaire',
+        type: 'NettoyageInventaire', 
         numeroVehicule,
         dateTime: getCurrentDateTime(),
         zoneCompletionData: zoneData,
         itemCheckedStatuses: itemCheckedStatus,
-        disinfectionCompleted: disinfectionStatus,
+        disinfectionData: disinfectionState, // <- Envoi des données structurées désinfection
         htmlContent,
         fileName,
         mimeType: "text/html"
@@ -447,8 +481,8 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
             <input 
               id="disinfection-avant"
               type="checkbox" 
-              checked={disinfectionStatus.avant}
-              onChange={() => handleDisinfectionChange('avant')}
+              checked={disinfectionState.avant.isChecked}
+              onChange={() => handleDisinfectionChange('avant', 'isChecked', true)}
               className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
             />
             <label htmlFor="disinfection-avant" className="text-sm text-gray-700">Avant</label>
@@ -457,8 +491,8 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
              <input 
                id="disinfection-arriere"
                type="checkbox" 
-               checked={disinfectionStatus.arriere}
-               onChange={() => handleDisinfectionChange('arriere')}
+               checked={disinfectionState.arriere.isChecked}
+               onChange={() => handleDisinfectionChange('arriere', 'isChecked', true)}
                className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
              />
             <label htmlFor="disinfection-arriere" className="text-sm text-gray-700">Arrière</label>
@@ -470,7 +504,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Matériel / Zone Info</th>
+                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Matériel / Zone</th>
                 <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Qté Attendue / Matricule Zone</th>
                 <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Vérifié (Item)</th>
                 <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nettoyé (Zone)</th>
