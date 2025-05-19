@@ -54,7 +54,7 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
     { id: 'medkit_echelle_douleur', label: 'Échelle de douleur (Qté: 1)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_seringue_3ml', label: 'Seringue 3ml (Qté: 4)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_seringue_1ml', label: 'Seringue 1ml (Qté: 4)', category: 'Trousse à médicaments', checked: false },
-    { id: 'medkit_glucagon', label: 'Glucagon 1mg (Boitié orange) (Qté: 2)', category: 'Trousse à médicaments', checked: false },
+    { id: 'medkit_glucagon', label: 'Glucagon 1mg (Boitié orange) ou Baqsimi 3mg (Qté: 2)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_garrot_veineux', label: 'Garrot veineux (Qté: 1)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_naloxone', label: 'Naloxone 2 mg/2ml (Qté: 4)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_autopiqueur', label: 'Autopiqueur (Qté: 7)', category: 'Trousse à médicaments', checked: false },
