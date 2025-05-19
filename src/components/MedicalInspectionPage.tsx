@@ -77,10 +77,19 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
     );
   };
 
+  // Auto-check "Kit glycémie" if NORMAL, HIGH, or LOW values are entered
+  useEffect(() => {
+    if (glycemieNormal || glycemieHigh || glycemieLow) {
+      const glycemieItem = vehiculeItems.find(item => item.id === 'trousse7');
+      if (glycemieItem && !glycemieItem.checked) {
+        handleVehiculeCheckChange('trousse7');
+      }
+    }
+  }, [glycemieNormal, glycemieHigh, glycemieLow, vehiculeItems]);
+
   const validateVehiculeForm = (): string | null => {
     for (const item of vehiculeItems) {
       if (!item.checked) {
-        if (item.id === 'trousse7') continue; // Glycémie non obligatoire
         return `Veuillez cocher: ${item.label}`;
       }
       if (item.id === 'trousse3' && !cylindre1PSI) return "PSI cylindre 1 manquant";
