@@ -27,6 +27,16 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
   sendInspectionToMakecom,
   onSubmissionComplete
 }) => {
+  const ITEMS_REQUIRING_EXPIRATION = [
+    'medkit_salbutamol_125',
+    'medkit_salbutamol_25',
+    'medkit_aspirine',
+    'medkit_nitroglycerine_general',
+    'medkit_glucagon',
+    'medkit_naloxone',
+    'medkit_epinephrine',
+  ];
+
   // États spécifiques
   const [vehiculeItems, setVehiculeItems] = useState<CheckItem[]>([
     { id: 'trousse1', label: 'Trousse support vital', category: 'TROUSSES', checked: false },
@@ -48,7 +58,6 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
     { id: 'medkit_garrot_veineux', label: 'Garrot veineux (Qté: 1)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_naloxone', label: 'Naloxone 2 mg/2ml (Qté: 4)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_autopiqueur', label: 'Autopiqueur (Qté: 7)', category: 'Trousse à médicaments', checked: false },
-    { id: 'medkit_nitroglycerine_04mg', label: 'Nitroglycérine 0.4 mg (Qté: 2)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_bandelette_supp', label: 'Bandelette supplémentaire (Qté: 1)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_glucometre', label: 'Glucomètre (Qté: 1)', category: 'Trousse à médicaments', checked: false },
     { id: 'medkit_batterie_gluco', label: 'Batterie de rechange Glucomètre (Qté: 1)', category: 'Trousse à médicaments', checked: false },
@@ -83,6 +92,7 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
   const [cylindre1PSI, setCylindre1PSI] = useState('');
   const [cylindre2PSI, setCylindre2PSI] = useState('');
   const [grosCylindrePSI, setGrosCylindrePSI] = useState('');
+  const [expirationDates, setExpirationDates] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -95,6 +105,20 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
         item.id === itemId ? { ...item, checked: !item.checked } : item
       )
     );
+  };
+
+  const handleExpirationDateChange = (itemId: string, date: string) => {
+    // Basic validation for MM/AA format
+    const cleanedDate = date.replace(/[^0-9/]/g, '');
+    let formattedDate = cleanedDate;
+    if (cleanedDate.length === 2 && !cleanedDate.includes('/')) {
+      formattedDate = cleanedDate + '/';
+    }
+    if (cleanedDate.length > 2 && cleanedDate.charAt(2) !== '/') {
+      formattedDate = cleanedDate.substring(0,2) + '/' + cleanedDate.substring(2);
+    }
+    
+    setExpirationDates(prev => ({ ...prev, [itemId]: formattedDate.slice(0,5) })); // MM/AA is 5 chars
   };
 
   // Auto-check "Kit glycémie" if NORMAL, HIGH, or LOW values are entered
@@ -115,6 +139,18 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
       if (item.id === 'trousse3' && !cylindre1PSI) return "PSI cylindre 1 manquant";
       if (item.id === 'trousse4' && !cylindre2PSI) return "PSI cylindre 2 manquant";
       if (item.id === 'armoire15' && !grosCylindrePSI) return "PSI gros cylindre manquant";
+
+      if (ITEMS_REQUIRING_EXPIRATION.includes(item.id)) {
+        const expDate = expirationDates[item.id];
+        if (!expDate) {
+          return `Date d'expiration manquante pour ${item.label.replace(/ \\(Qté: [^)]+\\)/, '')}`;
+        }
+        // Validate MM/AA format more strictly
+        const datePattern = new RegExp("^(0[1-9]|1[0-2])\/([0-9]{2})$");
+        if (!datePattern.test(expDate)) {
+          return `Format de date d'expiration invalide pour ${item.label.replace(/ \\(Qté: [^)]+\\)/, '')} (attendu MM/AA)`;
+        }
+      }
     }
     if (!matricule) return "Matricule manquant";
     if (!numeroVehicule) return "Numéro véhicule manquant";
@@ -160,7 +196,12 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
         if (item.id === 'trousse3' && cylindre1PSI) itemLabel += ` (PSI: ${cylindre1PSI})`;
         else if (item.id === 'trousse4' && cylindre2PSI) itemLabel += ` (PSI: ${cylindre2PSI})`;
         else if (item.id === 'armoire15' && grosCylindrePSI) itemLabel += ` (PSI: ${grosCylindrePSI})`;
-        else if (item.id === 'trousse7' && (glycemieNormal || glycemieHigh || glycemieLow)) {
+        
+        if (ITEMS_REQUIRING_EXPIRATION.includes(item.id) && expirationDates[item.id]) {
+          itemLabel += ` (Exp: ${expirationDates[item.id]})`;
+        }
+        
+        if (item.id === 'trousse7' && (glycemieNormal || glycemieHigh || glycemieLow)) {
           itemLabel += ` (Normal: ${glycemieNormal || '-'}, High: ${glycemieHigh || '-'}, Low: ${glycemieLow || '-'})`;
         }
         html += `<tr><td>${itemLabel}</td><td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td></tr>`;
@@ -199,6 +240,7 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
         onSubmissionComplete("L'inspection Véhicule a été générée et envoyée avec succès.");
         setCylindre1PSI(''); setCylindre2PSI(''); setGrosCylindrePSI('');
         setGlycemieNormal(''); setGlycemieHigh(''); setGlycemieLow('');
+        setExpirationDates({}); // Reset expiration dates
         setVehiculeItems(prev => prev.map(item => ({ ...item, checked: false })));
       } else {
         throw new Error("L'envoi des données a échoué.");
@@ -272,6 +314,22 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
                             <div className="flex items-center"><span className="w-16 text-xs">NORMAL:</span><input type="number" value={glycemieNormal} onChange={e => setGlycemieNormal(e.target.value)} className="p-1 border rounded w-24" placeholder="mmol/L" aria-label="Glycemie Normal"/><span className="text-xs ml-2">(6,7-8,4)</span></div>
                             <div className="flex items-center"><span className="w-16 text-xs">HIGH:</span><input type="number" value={glycemieHigh} onChange={e => setGlycemieHigh(e.target.value)} className="p-1 border rounded w-24" placeholder="mmol/L" aria-label="Glycemie High"/><span className="text-xs ml-2">(19,4-24,3)</span></div>
                             <div className="flex items-center"><span className="w-16 text-xs">LOW:</span><input type="number" value={glycemieLow} onChange={e => setGlycemieLow(e.target.value)} className="p-1 border rounded w-24" placeholder="mmol/L" aria-label="Glycemie Low"/><span className="text-xs ml-2">(2,2-2,8)</span></div>
+                          </div>
+                        )}
+                        {item.checked && ITEMS_REQUIRING_EXPIRATION.includes(item.id) && (
+                          <div className="mt-2" onClick={e => e.stopPropagation()}>
+                            <label htmlFor={`exp-${item.id}`} className="block text-xs font-medium text-gray-600 mb-0.5">Date d'exp.:</label>
+                            <input
+                              type="text"
+                              id={`exp-${item.id}`}
+                              value={expirationDates[item.id] || ''}
+                              onChange={e => handleExpirationDateChange(item.id, e.target.value)}
+                              className="p-1 border rounded w-24 text-sm focus:ring-1 focus:ring-[#102947] focus:border-[#102947]"
+                              placeholder="MM/AA"
+                              required
+                              aria-label={`Date d'expiration pour ${item.label.replace(/ \\(Qté: [^)]+\\)/, '')}`}
+                              maxLength={5}
+                            />
                           </div>
                         )}
                       </td>
