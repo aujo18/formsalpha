@@ -145,10 +145,22 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
         if (!expDate) {
           return `Date d'expiration manquante pour ${item.label.replace(/ \\(Qté: [^)]+\\)/, '')}`;
         }
-        // Validate MM/AA format more strictly
         const datePattern = new RegExp("^(0[1-9]|1[0-2])\/([0-9]{2})$");
         if (!datePattern.test(expDate)) {
           return `Format de date d'expiration invalide pour ${item.label.replace(/ \\(Qté: [^)]+\\)/, '')} (attendu MM/AA)`;
+        }
+
+        // Check if the date is in the past
+        const [expMonthStr, expYearStr] = expDate.split('/');
+        const expMonth = parseInt(expMonthStr);
+        const expYear = parseInt(expYearStr); // This is YY
+
+        const today = new Date();
+        const currentMonth = today.getMonth() + 1; // JS months are 0-11, so add 1 for 1-12
+        const currentYearYY = today.getFullYear() % 100; // Get last two digits of current year
+
+        if (expYear < currentYearYY || (expYear === currentYearYY && expMonth < currentMonth)) {
+          return `Date d'expiration passée pour ${item.label.replace(/ \\(Qté: [^)]+\\)/, '')}`;
         }
       }
     }
@@ -201,8 +213,10 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
           itemLabel += ` (Exp: ${expirationDates[item.id]})`;
         }
         
-        if (item.id === 'trousse7' && (glycemieNormal || glycemieHigh || glycemieLow)) {
-          itemLabel += ` (Normal: ${glycemieNormal || '-'}, High: ${glycemieHigh || '-'}, Low: ${glycemieLow || '-'})`;
+        if (item.id === 'trousse7' && item.checked) {
+          itemLabel += ` (<span class="${glycemieNormal ? 'checked' : 'not-checked'}">Normal: ${glycemieNormal || '-'} ${glycemieNormal ? '✓' : '✗'}</span>, `;
+          itemLabel += `<span class="${glycemieHigh ? 'checked' : 'not-checked'}">High: ${glycemieHigh || '-'} ${glycemieHigh ? '✓' : '✗'}</span>, `;
+          itemLabel += `<span class="${glycemieLow ? 'checked' : 'not-checked'}">Low: ${glycemieLow || '-'} ${glycemieLow ? '✓' : '✗'}</span>)`;
         }
         html += `<tr><td>${itemLabel}</td><td class="${item.checked ? 'checked' : 'not-checked'}">${item.checked ? '✓' : '✗'}</td></tr>`;
       });
@@ -342,35 +356,4 @@ const MedicalInspectionPage: React.FC<MedicalInspectionPageProps> = ({
                           className="w-5 h-5 accent-[#102947] cursor-pointer"
                           required={item.id !== 'trousse7'} 
                           tabIndex={-1} 
-                          aria-labelledby={`lab-${item.id}`}
-                        />
-                        <span id={`lab-${item.id}`} className="sr-only">{item.label}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {error && <div role="alert" className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4 mb-4"><p>{error}</p></div>}
-        <div className="sticky bottom-0 bg-white p-4 border-t mt-4">
-          <button type="submit" className={`w-full ${isSubmitting ? 'bg-[#102947]/70 cursor-not-allowed' : 'bg-[#102947] hover:bg-[#102947]/90'} text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center`} disabled={isSubmitting}>
-            {isSubmitting ? <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>Traitement...</> : <><Send className="mr-2" size={20} />Envoyer</>}
-          </button>
-        </div>
-      </form>
-      {showConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4"><h3 id="confirm-title" className="text-lg font-semibold">Confirmation</h3><button onClick={() => setShowConfirmation(false)} className="text-gray-500 hover:text-gray-700" aria-label="Fermer"><X size={20} /></button></div>
-            <div className="mb-6"><div className="flex items-start mb-4"><AlertCircle className="text-[#102947] mr-3 mt-0.5 flex-shrink-0" size={24} aria-hidden="true" /><p>Finaliser et envoyer cette inspection au système central?</p></div></div>
-            <div className="flex justify-end space-x-4"><button onClick={() => setShowConfirmation(false)} className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100">Annuler</button><button onClick={confirmSubmit} className="px-4 py-2 bg-[#102947] text-white rounded-md hover:bg-[#102947]/90">Confirmer</button></div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default MedicalInspectionPage; 
+                          aria-labelledby={`
