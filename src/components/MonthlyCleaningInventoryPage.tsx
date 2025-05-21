@@ -11,30 +11,29 @@ interface MonthlyCleaningInventoryPageProps {
   handleVehiculeNumberChange: (value: string) => void;
   matricule: string; // Global matricule
   handleMatriculeChange: (value: string) => void; // Global matricule handler
+  pointDeService: string; // Added
+  setPointDeService: (value: string) => void; // Added
 }
 
-// Structure pour une ligne d'item d'inventaire (inchangée pour l'instant)
+// Structure pour une ligne d'item d'inventaire
 interface InventoryItemRow {
   id: string; 
   zone: string; 
   material: string; 
   expectedQuantity: string;
-  // date: string; // Supprimé
-  // matricule: string; // Supprimé, car global par zone maintenant
 }
 
-// Structure de l'état pour les données de zone (matricule et date par zone)
+// Structure de l'état pour les données de zone
 interface ZoneDataEntry {
-  // date: string; // Supprimé
   matricule: string;
   cleanedChecked: boolean;
 }
-type ZoneData = Record<string, ZoneDataEntry>; // key: zoneId
+type ZoneData = Record<string, ZoneDataEntry>; 
 
-// Structure de l'état pour le statut des items (vérifié/non vérifié)
-type ItemCheckedStatus = Record<string, boolean>; // key: item.id, value: isChecked
+// Structure de l'état pour le statut des items
+type ItemCheckedStatus = Record<string, boolean>; 
 
-// Structure des items initiaux (pour définir la liste et les zones)
+// Structure des items initiaux
 interface InitialInventoryItem {
   id: string;
   zone: string;
@@ -42,7 +41,6 @@ interface InitialInventoryItem {
   expectedQuantity: string;
 }
 
-// Nouvelle liste d'items basée sur les images "Inventaire Médical Transit"
 const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   // Armoire / zone #1 (sous le siège capitaine)
   { id: 'z1_courroie_reg', zone: 'Armoire / zone #1', material: 'Courroie régulière', expectedQuantity: '' },
@@ -145,7 +143,7 @@ const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   { id: 'z6s_stanhexidine', zone: 'Armoire / zone #6 (Suite)', material: 'Stanhexidine', expectedQuantity: '2' },
   { id: 'z6s_nacl_250_2', zone: 'Armoire / zone #6 (Suite)', material: 'NaCl 250 ml', expectedQuantity: '2' },
   { id: 'z6s_compresse_froide', zone: 'Armoire / zone #6 (Suite)', material: 'Compresse instantanée froide de type "cold pack"', expectedQuantity: '' },
-  { id: 'z6s_compresse_chaude', zone: 'Armoire / zone #6 (Suite)', material: 'Compresse instantanée froide de type "hot pack"', expectedQuantity: '' }, // Devrait probablement être "chaude"
+  { id: 'z6s_compresse_chaude', zone: 'Armoire / zone #6 (Suite)', material: 'Compresse instantanée froide de type "hot pack"', expectedQuantity: '' },
   { id: 'z7_guide', zone: 'Armoire / zone #7', material: 'Guide d\'inventaire', expectedQuantity: '1' },
   { id: 'z8_chasse_moustique', zone: 'Armoire / zone #8', material: 'Chasse-moustique', expectedQuantity: '1' },
   { id: 'z8_pen_light', zone: 'Armoire / zone #8', material: 'Pen light', expectedQuantity: '1' },
@@ -179,7 +177,6 @@ const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   { id: 'z12_essuie_glace', zone: 'Armoire / zone #12 (compartiment du cylindre d\'O2)', material: 'Essuie-glace : 20 pouces + 30 pouces', expectedQuantity: '1 de chaque' },
   { id: 'z12_pied_biche', zone: 'Armoire / zone #12 (compartiment du cylindre d\'O2)', material: 'Pied de biche (36 pouces)', expectedQuantity: '1' },
   { id: 'z12_cle_anglaise', zone: 'Armoire / zone #12 (compartiment du cylindre d\'O2)', material: 'Clé anglaise', expectedQuantity: '1' },
-  // Items "Fin - Sans Zone"
   { id: 'fin_papier_absorbant', zone: 'Fin - Sans Zone', material: 'Papier absorbant', expectedQuantity: '1' },
   { id: 'fin_bouteille_desinfectant', zone: 'Fin - Sans Zone', material: 'Bouteille de désinfectant', expectedQuantity: '1' },
   { id: 'fin_bouteille_neutralisateur', zone: 'Fin - Sans Zone', material: 'Bouteille de neutralisateur d\'odeur', expectedQuantity: '1' },
@@ -208,8 +205,7 @@ const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   { id: 'fin_drap_sterile', zone: 'Fin - Sans Zone', material: 'Drap stérile de 150 cm x 240 cm à usage unique pour les brûlés', expectedQuantity: '2' },
 ];
 
-
-// Structure pour les tâches de désinfection (simplifiée)
+// Structure pour les tâches de désinfection
 interface DisinfectionTask {
   id: 'avant' | 'arriere';
   label: string;
@@ -221,6 +217,34 @@ type DisinfectionState = {
   arriere: DisinfectionTask;
 };
 
+// Fonction pour formater le matricule de zone (Lettre-XXXX)
+const formatZoneMatriculeInput = (value: string): string => {
+  let sanitizedValue = value.replace(/[^a-zA-Z0-9-]/g, '');
+  if (!sanitizedValue) return '';
+
+  const firstChar = sanitizedValue.charAt(0).toUpperCase();
+  if (sanitizedValue.length === 1 && /^[A-Z]$/.test(firstChar)) {
+    return firstChar;
+  }
+
+  let numbersPart = sanitizedValue.substring(1);
+  if (sanitizedValue.length > 1 && sanitizedValue.charAt(1) !== '-' && /^[A-Z]/.test(firstChar)) {
+    numbersPart = '-' + sanitizedValue.substring(1);
+  }
+  
+  numbersPart = numbersPart.replace(/[^0-9]/g, ''); // Conserver uniquement les chiffres après le tiret (ou potentiel tiret)
+  
+  if (/^[A-Z]$/.test(firstChar)) {
+    let result = firstChar;
+    if (sanitizedValue.includes('-') || numbersPart.length > 0) {
+        result += '-';
+    }
+    result += numbersPart.substring(0, 4);
+    return result;
+  }
+  return sanitizedValue; // Fallback pour les cas non-standards ou en cours de frappe
+};
+
 
 const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> = ({
   goBack,
@@ -229,8 +253,10 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
   onSubmissionComplete,
   numeroVehicule,
   handleVehiculeNumberChange,
-  matricule, // Global matricule from props
-  handleMatriculeChange, // Global matricule handler from props
+  matricule, 
+  handleMatriculeChange,
+  pointDeService, // Added
+  setPointDeService, // Added
 }) => {
   const [zoneData, setZoneData] = useState<ZoneData>({});
   const [itemCheckedStatus, setItemCheckedStatus] = useState<ItemCheckedStatus>({});
@@ -250,7 +276,6 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     }));
   };
   
-  // Memoized grouped items to avoid re-computation on every render
   const groupedInventoryItems = useMemo(() => {
     return INITIAL_INVENTORY_ITEMS.reduce<Record<string, InitialInventoryItem[]>>((acc, item) => {
       const zone = item.zone || 'Inconnue';
@@ -260,7 +285,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       acc[zone].push(item);
       return acc;
     }, {});
-  }, []); // Empty dependency array means this runs once
+  }, []); 
 
 
   const handleZoneInputChange = useCallback((zoneId: string, field: keyof ZoneDataEntry, value: string | boolean) => {
@@ -268,7 +293,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       ...prev,
       [zoneId]: {
         ...prev[zoneId],
-        matricule: field === 'matricule' ? (value as string) : (prev[zoneId]?.matricule || ''),
+        matricule: field === 'matricule' ? formatZoneMatriculeInput(value as string) : (prev[zoneId]?.matricule || ''),
         cleanedChecked: field === 'cleanedChecked' ? (value as boolean) : (prev[zoneId]?.cleanedChecked || false),
       },
     }));
@@ -284,16 +309,28 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
 
   const validateForm = (): string | null => {
     if (!numeroVehicule) return "Le numéro de véhicule est requis.";
-    if (!matricule) return "Le matricule global est requis.";
+    if (!matricule) return "Le matricule global (employé) est requis.";
+    if (!pointDeService) return "Le point de service est requis.";
 
-    // Validation pour chaque zone: si "Nettoyé" est coché, le matricule de la zone est requis.
+    if (!disinfectionState.avant.isChecked) return `La tâche "${disinfectionState.avant.label}" doit être cochée.`;
+    if (!disinfectionState.arriere.isChecked) return `La tâche "${disinfectionState.arriere.label}" doit être cochée.`;
+
+    for (const item of INITIAL_INVENTORY_ITEMS) {
+      if (!itemCheckedStatus[item.id]) {
+        return `L'item "${item.material}" dans la zone "${item.zone}" doit être vérifié.`;
+      }
+    }
+    
     for (const zoneId of Object.keys(groupedInventoryItems)) {
         const currentZoneData = zoneData[zoneId];
         if (currentZoneData?.cleanedChecked && !currentZoneData.matricule) {
             return `Le matricule est requis pour la zone "${zoneId}" lorsque "Nettoyé" est coché.`;
         }
+        // Valider le format du matricule de zone s'il est rempli
+        if (currentZoneData?.matricule && !/^[A-Z]-\d{4}$/.test(currentZoneData.matricule)) {
+            return `Le format du matricule pour la zone "${zoneId}" est invalide. Attendu: une lettre, un tiret, et quatre chiffres (ex: A-1234).`;
+        }
     }
-    // Aucune autre validation spécifique pour l'instant (ex: tous les items cochés)
     return null;
   };
 
@@ -317,10 +354,11 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
           th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
           th { background-color: #102947; color: white; }
-          .zone-header td { background-color: #cfe2f3; font-weight: bold; font-size: 15px; } /* Light blue */
+          .zone-header td { background-color: #cfe2f3; font-weight: bold; font-size: 15px; } 
           .zone-details td { padding-left: 20px; font-style: italic; font-size: 12px; color: #555; }
           .item-row:nth-child(even) { background-color: #f9f9f9; }
-          .item-row:hover { background-color: #f1f1f1; }
+          .item-row:hover { background-color: #e8f5e9; } /* Light green for hover */
+          .item-row.checked-row { background-color: #d1fecb; } /* Slightly darker green for checked */
           .checked { color: green; font-weight: bold; }
           .not-checked { color: red; }
           .quantity { text-align: center; }
@@ -337,6 +375,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           <div class="info">
             <p><strong>Numéro du véhicule:</strong> ${numeroVehicule}</p>
             <p><strong>Matricule (global):</strong> ${matricule}</p>
+            <p><strong>Point de service:</strong> ${pointDeService}</p>
             <p><strong>Date et heure de soumission:</strong> ${getCurrentDateTime()}</p>
           </div>
 
@@ -365,7 +404,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     `;
 
     Object.entries(groupedInventoryItems).forEach(([zone, items]) => {
-      const currentZoneData = zoneData[zone] || { matricule: '', cleanedChecked: false };
+      const currentZoneData = zoneData[zone.replace(/[^a-zA-Z0-9]/g, '-')] || { matricule: '', cleanedChecked: false };
       html += `
         <tr class="zone-header">
           <td colspan="3">
@@ -378,7 +417,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       items.forEach(item => {
         const isChecked = !!itemCheckedStatus[item.id];
         html += `
-          <tr class="item-row">
+          <tr class="item-row ${isChecked ? 'checked-row' : ''}">
             <td>${item.material.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
             <td class="quantity">${item.expectedQuantity}</td>
             <td class="checkbox-cell ${isChecked ? 'checked' : 'not-checked'}">${isChecked ? '✓' : '✗'}</td>
@@ -404,16 +443,14 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
-      // Ne pas afficher la confirmation si validation échoue
       setShowConfirmation(false); 
       return;
     }
-    // Si validation OK, afficher la confirmation
     setShowConfirmation(true);
   };
 
   const confirmSubmit = async () => {
-    setShowConfirmation(false); // Cacher la modale de confirmation
+    setShowConfirmation(false); 
     setIsSubmitting(true);
     setError(null);
 
@@ -425,11 +462,12 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       const webhookData = {
         type: 'NettoyageInventaire', 
         numeroVehicule,
-        matricule, // Global matricule for the form
+        matricule, 
+        pointDeService, // Added
         dateTime: getCurrentDateTime(),
-        zoneCompletionData: zoneData, // Contains matricule per zone and cleaned status
-        itemCheckedStatuses: itemCheckedStatus, // Contains checked status for each inventory item
-        disinfectionData: { // Send disinfection status
+        zoneCompletionData: zoneData, 
+        itemCheckedStatuses: itemCheckedStatus, 
+        disinfectionData: { 
             avantEffectue: disinfectionState.avant.isChecked,
             arriereEffectue: disinfectionState.arriere.isChecked,
         },
@@ -443,14 +481,12 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
 
       if (success) {
         onSubmissionComplete("Le rapport de nettoyage et inventaire a été envoyé avec succès.");
-        // Réinitialiser les états spécifiques au formulaire
         setZoneData({});
         setItemCheckedStatus({});
         setDisinfectionState({
             avant: { id: 'avant', label: "Désinfection de l'habitacle avant", isChecked: false },
             arriere: { id: 'arriere', label: "Désinfection de l'habitacle arrière", isChecked: false },
         });
-        // La réinitialisation du numéro de véhicule et matricule global est gérée par onSubmissionComplete dans App.tsx
       } else {
         throw new Error("L'envoi des données vers Make.com a échoué.");
       }
@@ -458,8 +494,6 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       const error = err as Error;
       console.error('Erreur lors de la soumission:', error);
       setError(`Échec de la soumission: ${error.message}`);
-      // Optionnel: appeler onSubmissionComplete avec un message d'erreur si vous voulez centraliser la gestion des messages
-      // onSubmissionComplete(`Échec Nettoyage/Inventaire: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -477,7 +511,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-20">
         {/* Section Informations Générales */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div>
             <label htmlFor="numeroVehiculeNettoyage" className="block text-sm font-medium text-gray-700 mb-1">Numéro de Véhicule :</label>
             <input
@@ -503,6 +537,21 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
             />
           </div>
           <div>
+            <label htmlFor="pointDeServiceNettoyage" className="block text-sm font-medium text-gray-700 mb-1">Point de service (PDS) :</label>
+            <select 
+              id="pointDeServiceNettoyage" 
+              value={pointDeService} 
+              onChange={(e) => setPointDeService(e.target.value)} 
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#102947]" 
+              required
+            >
+              <option value="">Sélectionner PDS</option>
+              <option value="Sainte-Adèle">Sainte-Adèle</option>
+              <option value="Grenville">Grenville</option>
+              <option value="Saint-Donat">Saint-Donat</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date et Heure Actuelle :</label>
             <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-100">
               {getCurrentDateTime()}
@@ -514,16 +563,25 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         <div className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
             <h2 className="text-lg font-semibold text-[#102947] mb-3 border-b pb-2">Tâches de Désinfection</h2>
             {(['avant', 'arriere'] as const).map((taskId) => (
-                <div key={taskId} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                    <label htmlFor={`disinfection-${taskId}`} className="text-sm text-gray-700">
+                <div 
+                  key={taskId} 
+                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleDisinfectionChange(taskId)}
+                  role="checkbox"
+                  aria-checked={disinfectionState[taskId].isChecked}
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleDisinfectionChange(taskId); }}
+                >
+                    <label htmlFor={`disinfection-${taskId}`} className="text-sm text-gray-700 cursor-pointer">
                         {disinfectionState[taskId].label} :
                     </label>
                     <input
                         type="checkbox"
                         id={`disinfection-${taskId}`}
                         checked={disinfectionState[taskId].isChecked}
-                        onChange={() => handleDisinfectionChange(taskId)}
+                        onChange={() => handleDisinfectionChange(taskId)} // Keep direct change too for accessibility
                         className="w-5 h-5 accent-[#102947] cursor-pointer rounded border-gray-300 focus:ring-[#102947]"
+                        tabIndex={-1} // Remove from tab order as row is focusable
                     />
                 </div>
             ))}
@@ -534,7 +592,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         <h2 className="text-lg font-semibold text-[#102947] mb-4 border-b pb-2">Inventaire par Zone</h2>
         <div className="space-y-8">
           {Object.entries(groupedInventoryItems).map(([zone, items]) => {
-            const zoneId = zone.replace(/[^a-zA-Z0-9]/g, '-'); // Create a unique ID for the zone
+            const zoneId = zone.replace(/[^a-zA-Z0-9]/g, '-'); 
             const currentZoneData = zoneData[zoneId] || { matricule: '', cleanedChecked: false };
             
             return (
@@ -552,14 +610,14 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                       />
                       <label htmlFor={`cleaned-${zoneId}`} className="text-sm font-medium text-gray-700">Nettoyé</label>
                     </div>
-                    {/* Matricule per zone is now conditional on "Nettoyé" being checked, but kept for data structure */}
                      <input
                         type="text"
-                        placeholder="Matricule (zone)"
+                        placeholder="Ex: A-1234"
                         value={currentZoneData.matricule}
                         onChange={(e) => handleZoneInputChange(zoneId, 'matricule', e.target.value)}
                         className="p-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#102947] focus:border-[#102947] w-32"
-                        disabled={!currentZoneData.cleanedChecked} // Disable if "Nettoyé" is not checked
+                        disabled={!currentZoneData.cleanedChecked} 
+                        maxLength={6} // L-XXXX
                       />
                   </div>
                 </div>
@@ -570,7 +628,15 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                   </thead>
                   <tbody>
                     {items.map((item, index) => (
-                      <tr key={item.id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                      <tr 
+                        key={item.id} 
+                        className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} ${itemCheckedStatus[item.id] ? 'bg-green-100 hover:bg-green-200' : 'hover:bg-gray-100'} cursor-pointer transition-colors`}
+                        onClick={() => handleItemCheckChange(item.id)}
+                        role="checkbox"
+                        aria-checked={!!itemCheckedStatus[item.id]}
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleItemCheckChange(item.id); }}
+                      >
                         <td className="py-2 px-3 text-sm text-gray-700 w-3/5">{item.material}</td>
                         <td className="py-2 px-3 text-sm text-gray-600 text-center w-1/5">{item.expectedQuantity}</td>
                         <td className="py-2 px-3 text-center w-1/5">
@@ -578,9 +644,12 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                             type="checkbox"
                             id={`item-${item.id}`}
                             checked={!!itemCheckedStatus[item.id]}
-                            onChange={() => handleItemCheckChange(item.id)}
+                            onChange={() => handleItemCheckChange(item.id)} // Keep for direct click on checkbox
                             className="w-5 h-5 accent-[#102947] cursor-pointer rounded border-gray-300 focus:ring-[#102947]"
+                            tabIndex={-1} // Remove from tab order as row is focusable
+                            aria-labelledby={`material-label-${item.id}`}
                           />
+                          <span id={`material-label-${item.id}`} className="sr-only">{item.material}</span>
                         </td>
                       </tr>
                     ))}
