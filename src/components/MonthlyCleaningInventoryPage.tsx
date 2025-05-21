@@ -253,10 +253,10 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
   onSubmissionComplete,
   numeroVehicule,
   handleVehiculeNumberChange,
-  matricule, 
+  matricule,
   handleMatriculeChange,
-  pointDeService, 
-  setPointDeService, 
+  pointDeService,
+  setPointDeService,
 }) => {
   const [zoneData, setZoneData] = useState<ZoneData>({});
   const [itemCheckedStatus, setItemCheckedStatus] = useState<ItemCheckedStatus>({});
@@ -275,7 +275,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       [taskId]: { ...prev[taskId], isChecked: !prev[taskId].isChecked },
     }));
   };
-  
+
   const groupedInventoryItems = useMemo(() => {
     return INITIAL_INVENTORY_ITEMS.reduce<Record<string, InitialInventoryItem[]>>((acc, item) => {
       const zone = item.zone || 'Inconnue';
@@ -285,7 +285,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       acc[zone].push(item);
       return acc;
     }, {});
-  }, []); 
+  }, []);
 
 
   const handleZoneInputChange = useCallback((zoneId: string, field: keyof ZoneDataEntry, value: string | boolean) => {
@@ -305,7 +305,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       [itemId]: !prev[itemId],
     }));
   }, []);
-  
+
 
   const validateForm = (): string | null => {
     if (!numeroVehicule) return "Le numéro de véhicule est requis.";
@@ -320,7 +320,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         return `L'item "${item.material}" dans la zone "${item.zone}" doit être vérifié.`;
       }
     }
-    
+
     for (const zoneId of Object.keys(groupedInventoryItems)) {
         const currentZoneData = zoneData[zoneId];
         if (currentZoneData?.cleanedChecked && !currentZoneData.matricule) {
@@ -353,7 +353,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
           th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
           th { background-color: #102947; color: white; }
-          .zone-header td { background-color: #cfe2f3; font-weight: bold; font-size: 15px; } 
+          .zone-header td { background-color: #cfe2f3; font-weight: bold; font-size: 15px; }
           .zone-details td { padding-left: 20px; font-style: italic; font-size: 12px; color: #555; }
           .item-row { transition: background-color 0.2s ease-in-out; }
           .item-row:nth-child(even) { background-color: #f9f9f9; }
@@ -412,48 +412,28 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     `;
 
     Object.entries(groupedInventoryItems).forEach(([zone, items]) => {
-      const currentZoneData = zoneData[zone.replace(/[^a-zA-Z0-9]/g, '-')] || { matricule: '', cleanedChecked: false };
+      const zoneIdHtml = zone.replace(/[^a-zA-Z0-9]/g, '-'); // Create a safe ID for HTML context if needed, not used directly in currentZoneData lookup
+      const currentZoneData = zoneData[zoneIdHtml] || { matricule: '', cleanedChecked: false }; // Use the modified zoneId for lookup if that's the key in zoneData
       html += `
         <tr class="zone-header">
           <td colspan="3">
-            ${zone} 
+            ${zone}
             <span class="${currentZoneData.cleanedChecked ? 'checked' : 'not-checked'}">(Nettoyé: ${currentZoneData.cleanedChecked ? 'Oui ✓' : 'Non ✗'})</span>
             ${currentZoneData.matricule ? `(Matricule: ${currentZoneData.matricule})` : ''}
           </td>
         </tr>
       `;
-      items.forEach(item => {
+      items.forEach(item => { // Removed 'index' here as it's not used in this HTML string generation
         const isChecked = !!itemCheckedStatus[item.id];
         html += `
-          <tr class="item-row border-b border-gray-100 cursor-pointer ${
-            isChecked
-              ? 'bg-green-100 hover:bg-green-200'
-              : (index % 2 === 0 ? 'bg-white hover:bg-gray-100' : 'bg-gray-50/50 hover:bg-gray-100')
-          }`}
-          onClick={() => handleItemCheckChange(item.id)}
-          role="checkbox"
-          aria-checked={isChecked}
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleItemCheckChange(item.id); }}
-        >
-          <td className="py-2 px-3 text-sm text-gray-700 w-3/5 select-none">{item.material}</td>
-          <td className="py-2 px-3 text-sm text-gray-600 text-center w-1/5 select-none">{item.expectedQuantity}</td>
-          <td className="py-2 px-3 text-center w-1/5">
-            <input
-              type="checkbox"
-              id={`item-${item.id}`}
-              checked={isChecked}
-              readOnly
-              className="w-5 h-5 accent-[#102947] rounded border-gray-300 focus:ring-[#102947]"
-              tabIndex={-1}
-              aria-labelledby={`material-label-${item.id}`}
-            />
-            <span id={`material-label-${item.id}`} className="sr-only">{item.material}</span>
-          </td>
-        </tr>
-      `;
+          <tr class="item-row ${isChecked ? 'checked-row' : ''}">
+            <td>${item.material.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+            <td class="quantity">${item.expectedQuantity}</td>
+            <td class="checkbox-cell ${isChecked ? 'checked' : 'not-checked'}">${isChecked ? '✓' : '✗'}</td>
+          </tr>
+        `;
+      });
     });
-  });
 
     html += `
             </tbody>
@@ -472,14 +452,14 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
-      setShowConfirmation(false); 
+      setShowConfirmation(false);
       return;
     }
     setShowConfirmation(true);
   };
 
   const confirmSubmit = async () => {
-    setShowConfirmation(false); 
+    setShowConfirmation(false);
     setIsSubmitting(true);
     setError(null);
 
@@ -489,14 +469,14 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       const fileName = `nettoyage_inventaire_${numeroVehicule}_${timestamp}.html`;
 
       const webhookData = {
-        type: 'NettoyageInventaire', 
+        type: 'NettoyageInventaire',
         numeroVehicule,
-        matricule, 
-        pointDeService, 
+        matricule,
+        pointDeService,
         dateTime: getCurrentDateTime(),
-        zoneCompletionData: zoneData, 
-        itemCheckedStatuses: itemCheckedStatus, 
-        disinfectionData: { 
+        zoneCompletionData: zoneData,
+        itemCheckedStatuses: itemCheckedStatus,
+        disinfectionData: {
             avantEffectue: disinfectionState.avant.isChecked,
             arriereEffectue: disinfectionState.arriere.isChecked,
         },
@@ -527,7 +507,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-6">
       <header className="bg-[#102947] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
@@ -567,11 +547,11 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           </div>
           <div>
             <label htmlFor="pointDeServiceNettoyage" className="block text-sm font-medium text-gray-700 mb-1">Point de service (PDS) :</label>
-            <select 
-              id="pointDeServiceNettoyage" 
-              value={pointDeService} 
-              onChange={(e) => setPointDeService(e.target.value)} 
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#102947]" 
+            <select
+              id="pointDeServiceNettoyage"
+              value={pointDeService}
+              onChange={(e) => setPointDeService(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#102947]"
               required
             >
               <option value="">Sélectionner PDS</option>
@@ -592,8 +572,8 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         <div className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
             <h2 className="text-lg font-semibold text-[#102947] mb-3 border-b pb-2">Tâches de Désinfection</h2>
             {(['avant', 'arriere'] as const).map((taskId) => (
-                <div 
-                  key={taskId} 
+                <div
+                  key={taskId}
                   className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handleDisinfectionChange(taskId)}
                   role="checkbox"
@@ -608,9 +588,9 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                         type="checkbox"
                         id={`disinfection-${taskId}`}
                         checked={disinfectionState[taskId].isChecked}
-                        readOnly // Input is controlled by row click, make it readOnly or visually hidden but accessible
+                        readOnly
                         className="w-5 h-5 accent-[#102947] pointer-events-none rounded border-gray-300 focus:ring-[#102947]"
-                        tabIndex={-1} 
+                        tabIndex={-1}
                     />
                 </div>
             ))}
@@ -621,9 +601,9 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         <h2 className="text-lg font-semibold text-[#102947] mb-4 border-b pb-2">Inventaire par Zone</h2>
         <div className="space-y-8">
           {Object.entries(groupedInventoryItems).map(([zone, items]) => {
-            const zoneId = zone.replace(/[^a-zA-Z0-9]/g, '-'); 
+            const zoneId = zone.replace(/[^a-zA-Z0-9]/g, '-');
             const currentZoneData = zoneData[zoneId] || { matricule: '', cleanedChecked: false };
-            
+
             return (
               <div key={zoneId} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 pb-2 border-b border-gray-300">
@@ -645,8 +625,8 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                         value={currentZoneData.matricule}
                         onChange={(e) => handleZoneInputChange(zoneId, 'matricule', e.target.value)}
                         className="p-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#102947] focus:border-[#102947] w-32"
-                        disabled={!currentZoneData.cleanedChecked} 
-                        maxLength={6} 
+                        disabled={!currentZoneData.cleanedChecked}
+                        maxLength={6}
                       />
                   </div>
                 </div>
@@ -677,4 +657,80 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                           <td className="py-2 px-3 text-center w-1/5">
                             <input
                               type="checkbox"
-                              id={`
+                              id={`item-${item.id}`}
+                              checked={isChecked}
+                              readOnly
+                              className="w-5 h-5 accent-[#102947] rounded border-gray-300 focus:ring-[#102947]"
+                              tabIndex={-1}
+                              aria-labelledby={`material-label-${item.id}`}
+                            />
+                            <span id={`material-label-${item.id}`} className="sr-only">{item.material}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+        </div>
+
+        {error && (
+          <div role="alert" className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-6 mb-4">
+            <p>{error}</p>
+          </div>
+        )}
+
+        <div className="sticky bottom-0 bg-white p-4 border-t mt-6 -mx-4 md:-mx-6">
+          <button
+            type="submit"
+            className={`w-full ${isSubmitting ? 'bg-[#102947]/70 cursor-not-allowed' : 'bg-[#102947] hover:bg-[#102947]/90'} text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center text-base`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>Traitement...</>
+            ) : (
+              <><Send className="mr-2" size={20} />Soumettre</>
+            )}
+          </button>
+        </div>
+      </form>
+
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title-cleaning">
+          <div className="bg-white rounded-lg p-6 shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 id="confirm-title-cleaning" className="text-lg font-semibold text-gray-800">Confirmation</h3>
+              <button onClick={() => setShowConfirmation(false)} className="text-gray-400 hover:text-gray-600" aria-label="Fermer">
+                <X size={22} />
+              </button>
+            </div>
+            <div className="mb-6">
+              <div className="flex items-start">
+                <AlertCircle className="text-[#102947] mr-3 mt-1 flex-shrink-0" size={24} aria-hidden="true" />
+                <p className="text-gray-700">Êtes-vous sûr de vouloir finaliser et envoyer ce rapport de nettoyage et inventaire ?</p>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowConfirmation(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmSubmit}
+                className="px-4 py-2 bg-[#102947] text-white text-sm font-medium rounded-md hover:bg-[#102947]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#102947]"
+              >
+                Confirmer et Envoyer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MonthlyCleaningInventoryPage;
