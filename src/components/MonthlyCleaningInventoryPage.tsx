@@ -232,7 +232,7 @@ const formatZoneMatriculeInput = (value: string): string => {
     numbersPart = '-' + sanitizedValue.substring(1);
   }
   
-  numbersPart = numbersPart.replace(/[^0-9]/g, ''); // Conserver uniquement les chiffres après le tiret (ou potentiel tiret)
+  numbersPart = numbersPart.replace(/[^0-9]/g, ''); 
   
   if (/^[A-Z]$/.test(firstChar)) {
     let result = firstChar;
@@ -242,7 +242,7 @@ const formatZoneMatriculeInput = (value: string): string => {
     result += numbersPart.substring(0, 4);
     return result;
   }
-  return sanitizedValue; // Fallback pour les cas non-standards ou en cours de frappe
+  return sanitizedValue; 
 };
 
 
@@ -255,8 +255,8 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
   handleVehiculeNumberChange,
   matricule, 
   handleMatriculeChange,
-  pointDeService, // Added
-  setPointDeService, // Added
+  pointDeService, 
+  setPointDeService, 
 }) => {
   const [zoneData, setZoneData] = useState<ZoneData>({});
   const [itemCheckedStatus, setItemCheckedStatus] = useState<ItemCheckedStatus>({});
@@ -326,7 +326,6 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         if (currentZoneData?.cleanedChecked && !currentZoneData.matricule) {
             return `Le matricule est requis pour la zone "${zoneId}" lorsque "Nettoyé" est coché.`;
         }
-        // Valider le format du matricule de zone s'il est rempli
         if (currentZoneData?.matricule && !/^[A-Z]-\d{4}$/.test(currentZoneData.matricule)) {
             return `Le format du matricule pour la zone "${zoneId}" est invalide. Attendu: une lettre, un tiret, et quatre chiffres (ex: A-1234).`;
         }
@@ -356,9 +355,18 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
           th { background-color: #102947; color: white; }
           .zone-header td { background-color: #cfe2f3; font-weight: bold; font-size: 15px; } 
           .zone-details td { padding-left: 20px; font-style: italic; font-size: 12px; color: #555; }
+          .item-row { transition: background-color 0.2s ease-in-out; }
           .item-row:nth-child(even) { background-color: #f9f9f9; }
-          .item-row:hover { background-color: #e8f5e9; } /* Light green for hover */
-          .item-row.checked-row { background-color: #d1fecb; } /* Slightly darker green for checked */
+          .item-row:nth-child(odd) { background-color: #fff; }
+          .item-row.checked-row {
+            background-color: #d1fecb !important; /* Ensure green overrides alternating color */
+          }
+          .item-row.checked-row:hover {
+            background-color: #b7e6b3 !important; /* Darker green on hover for checked rows */
+          }
+          .item-row:not(.checked-row):hover {
+            background-color: #e8f5e9; /* Light green for hover on unchecked */
+          }
           .checked { color: green; font-weight: bold; }
           .not-checked { color: red; }
           .quantity { text-align: center; }
@@ -463,7 +471,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
         type: 'NettoyageInventaire', 
         numeroVehicule,
         matricule, 
-        pointDeService, // Added
+        pointDeService, 
         dateTime: getCurrentDateTime(),
         zoneCompletionData: zoneData, 
         itemCheckedStatuses: itemCheckedStatus, 
@@ -565,23 +573,23 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
             {(['avant', 'arriere'] as const).map((taskId) => (
                 <div 
                   key={taskId} 
-                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-100"
+                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handleDisinfectionChange(taskId)}
                   role="checkbox"
                   aria-checked={disinfectionState[taskId].isChecked}
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleDisinfectionChange(taskId); }}
                 >
-                    <label htmlFor={`disinfection-${taskId}`} className="text-sm text-gray-700 cursor-pointer">
+                    <label htmlFor={`disinfection-${taskId}`} className="text-sm text-gray-700 cursor-pointer select-none">
                         {disinfectionState[taskId].label} :
                     </label>
                     <input
                         type="checkbox"
                         id={`disinfection-${taskId}`}
                         checked={disinfectionState[taskId].isChecked}
-                        onChange={() => handleDisinfectionChange(taskId)} // Keep direct change too for accessibility
-                        className="w-5 h-5 accent-[#102947] cursor-pointer rounded border-gray-300 focus:ring-[#102947]"
-                        tabIndex={-1} // Remove from tab order as row is focusable
+                        readOnly // Input is controlled by row click, make it readOnly or visually hidden but accessible
+                        className="w-5 h-5 accent-[#102947] pointer-events-none rounded border-gray-300 focus:ring-[#102947]"
+                        tabIndex={-1} 
                     />
                 </div>
             ))}
@@ -606,9 +614,9 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                         id={`cleaned-${zoneId}`}
                         checked={currentZoneData.cleanedChecked}
                         onChange={(e) => handleZoneInputChange(zoneId, 'cleanedChecked', e.target.checked)}
-                        className="w-4 h-4 accent-[#102947] text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
+                        className="w-4 h-4 accent-[#102947] text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2 cursor-pointer"
                       />
-                      <label htmlFor={`cleaned-${zoneId}`} className="text-sm font-medium text-gray-700">Nettoyé</label>
+                      <label htmlFor={`cleaned-${zoneId}`} className="text-sm font-medium text-gray-700 cursor-pointer select-none">Nettoyé</label>
                     </div>
                      <input
                         type="text"
@@ -617,7 +625,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                         onChange={(e) => handleZoneInputChange(zoneId, 'matricule', e.target.value)}
                         className="p-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#102947] focus:border-[#102947] w-32"
                         disabled={!currentZoneData.cleanedChecked} 
-                        maxLength={6} // L-XXXX
+                        maxLength={6} 
                       />
                   </div>
                 </div>
@@ -627,32 +635,35 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                     <tr><th>Matériel</th><th>Qté Attendue</th><th>Vérifié</th></tr>
                   </thead>
                   <tbody>
-                    {items.map((item, index) => (
-                      <tr 
-                        key={item.id} 
-                        className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} ${itemCheckedStatus[item.id] ? 'bg-green-100 hover:bg-green-200' : 'hover:bg-gray-100'} cursor-pointer transition-colors`}
-                        onClick={() => handleItemCheckChange(item.id)}
-                        role="checkbox"
-                        aria-checked={!!itemCheckedStatus[item.id]}
-                        tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleItemCheckChange(item.id); }}
-                      >
-                        <td className="py-2 px-3 text-sm text-gray-700 w-3/5">{item.material}</td>
-                        <td className="py-2 px-3 text-sm text-gray-600 text-center w-1/5">{item.expectedQuantity}</td>
-                        <td className="py-2 px-3 text-center w-1/5">
-                          <input
-                            type="checkbox"
-                            id={`item-${item.id}`}
-                            checked={!!itemCheckedStatus[item.id]}
-                            onChange={() => handleItemCheckChange(item.id)} // Keep for direct click on checkbox
-                            className="w-5 h-5 accent-[#102947] cursor-pointer rounded border-gray-300 focus:ring-[#102947]"
-                            tabIndex={-1} // Remove from tab order as row is focusable
-                            aria-labelledby={`material-label-${item.id}`}
-                          />
-                          <span id={`material-label-${item.id}`} className="sr-only">{item.material}</span>
-                        </td>
-                      </tr>
-                    ))}
+                    {items.map((item, index) => {
+                      const isChecked = !!itemCheckedStatus[item.id];
+                      return (
+                        <tr 
+                          key={item.id} 
+                          className={`item-row border-b border-gray-100 ${isChecked ? 'checked-row' : (index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50')} cursor-pointer`}
+                          onClick={() => handleItemCheckChange(item.id)}
+                          role="checkbox"
+                          aria-checked={isChecked}
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleItemCheckChange(item.id); }}
+                        >
+                          <td className="py-2 px-3 text-sm text-gray-700 w-3/5 select-none">{item.material}</td>
+                          <td className="py-2 px-3 text-sm text-gray-600 text-center w-1/5 select-none">{item.expectedQuantity}</td>
+                          <td className="py-2 px-3 text-center w-1/5">
+                            <input
+                              type="checkbox"
+                              id={`item-${item.id}`}
+                              checked={isChecked}
+                              readOnly // Controlled by row click
+                              className="w-5 h-5 accent-[#102947] pointer-events-none rounded border-gray-300 focus:ring-[#102947]"
+                              tabIndex={-1} 
+                              aria-labelledby={`material-label-${item.id}`}
+                            />
+                            <span id={`material-label-${item.id}`} className="sr-only">{item.material}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -675,7 +686,7 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
             {isSubmitting ? (
               <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>Traitement...</>
             ) : (
-              <><Send className="mr-2" size={20} />Soumettre le rapport</>
+              <><Send className="mr-2" size={20} />Soumettre</>
             )}
           </button>
         </div>
