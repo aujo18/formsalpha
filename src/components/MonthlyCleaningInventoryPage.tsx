@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { ChevronLeft, Send, AlertCircle, X } from 'lucide-react';
 
-// Interface Props (inchangée par cette demande)
+// Interface Props
 interface MonthlyCleaningInventoryPageProps {
   goBack: () => void;
   getCurrentDateTime: () => string;
@@ -9,25 +9,29 @@ interface MonthlyCleaningInventoryPageProps {
   onSubmissionComplete: (message: string) => void;
   numeroVehicule: string;
   handleVehiculeNumberChange: (value: string) => void;
+  matricule: string; // Global matricule
+  handleMatriculeChange: (value: string) => void; // Global matricule handler
 }
 
-// Nouvelle structure pour une ligne d'item d'inventaire
+// Structure pour une ligne d'item d'inventaire (inchangée pour l'instant)
 interface InventoryItemRow {
-  id: string; // Unique ID
-  zone: string; // Ex: "Armoire / zone #1", "Armoire / zone #3 (Tablette Supérieure)"
-  material: string; // Description
-  expectedQuantity: string; // Quantité attendue (texte pour flexibilité)
-  date: string; // Date par ligne
-  matricule: string; // Matricule par ligne
+  id: string; 
+  zone: string; 
+  material: string; 
+  expectedQuantity: string;
+  // date: string; // Supprimé
+  // matricule: string; // Supprimé, car global par zone maintenant
 }
 
-// Structure de l'état pour les données de zone
-interface ZoneData {
+// Structure de l'état pour les données de zone (matricule et date par zone)
+interface ZoneDataEntry {
+  // date: string; // Supprimé
   matricule: string;
   cleanedChecked: boolean;
 }
+type ZoneData = Record<string, ZoneDataEntry>; // key: zoneId
 
-// Structure de l'état pour le statut des items
+// Structure de l'état pour le statut des items (vérifié/non vérifié)
 type ItemCheckedStatus = Record<string, boolean>; // key: item.id, value: isChecked
 
 // Structure des items initiaux (pour définir la liste et les zones)
@@ -40,7 +44,6 @@ interface InitialInventoryItem {
 
 // Nouvelle liste d'items basée sur les images "Inventaire Médical Transit"
 const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
-  // ... (Toute la longue liste extraite des images - voir la tentative précédente) ...
   // Armoire / zone #1 (sous le siège capitaine)
   { id: 'z1_courroie_reg', zone: 'Armoire / zone #1', material: 'Courroie régulière', expectedQuantity: '' },
   { id: 'z1_courroie_ancrage', zone: 'Armoire / zone #1', material: 'Courroie d\'ancrage', expectedQuantity: '' },
@@ -142,7 +145,7 @@ const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   { id: 'z6s_stanhexidine', zone: 'Armoire / zone #6 (Suite)', material: 'Stanhexidine', expectedQuantity: '2' },
   { id: 'z6s_nacl_250_2', zone: 'Armoire / zone #6 (Suite)', material: 'NaCl 250 ml', expectedQuantity: '2' },
   { id: 'z6s_compresse_froide', zone: 'Armoire / zone #6 (Suite)', material: 'Compresse instantanée froide de type "cold pack"', expectedQuantity: '' },
-  { id: 'z6s_compresse_chaude', zone: 'Armoire / zone #6 (Suite)', material: 'Compresse instantanée froide de type "hot pack"', expectedQuantity: '' },
+  { id: 'z6s_compresse_chaude', zone: 'Armoire / zone #6 (Suite)', material: 'Compresse instantanée froide de type "hot pack"', expectedQuantity: '' }, // Devrait probablement être "chaude"
   { id: 'z7_guide', zone: 'Armoire / zone #7', material: 'Guide d\'inventaire', expectedQuantity: '1' },
   { id: 'z8_chasse_moustique', zone: 'Armoire / zone #8', material: 'Chasse-moustique', expectedQuantity: '1' },
   { id: 'z8_pen_light', zone: 'Armoire / zone #8', material: 'Pen light', expectedQuantity: '1' },
@@ -176,6 +179,7 @@ const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   { id: 'z12_essuie_glace', zone: 'Armoire / zone #12 (compartiment du cylindre d\'O2)', material: 'Essuie-glace : 20 pouces + 30 pouces', expectedQuantity: '1 de chaque' },
   { id: 'z12_pied_biche', zone: 'Armoire / zone #12 (compartiment du cylindre d\'O2)', material: 'Pied de biche (36 pouces)', expectedQuantity: '1' },
   { id: 'z12_cle_anglaise', zone: 'Armoire / zone #12 (compartiment du cylindre d\'O2)', material: 'Clé anglaise', expectedQuantity: '1' },
+  // Items "Fin - Sans Zone"
   { id: 'fin_papier_absorbant', zone: 'Fin - Sans Zone', material: 'Papier absorbant', expectedQuantity: '1' },
   { id: 'fin_bouteille_desinfectant', zone: 'Fin - Sans Zone', material: 'Bouteille de désinfectant', expectedQuantity: '1' },
   { id: 'fin_bouteille_neutralisateur', zone: 'Fin - Sans Zone', material: 'Bouteille de neutralisateur d\'odeur', expectedQuantity: '1' },
@@ -204,50 +208,20 @@ const INITIAL_INVENTORY_ITEMS: InitialInventoryItem[] = [
   { id: 'fin_drap_sterile', zone: 'Fin - Sans Zone', material: 'Drap stérile de 150 cm x 240 cm à usage unique pour les brûlés', expectedQuantity: '2' },
 ];
 
-// Nouvelle structure état Désinfection
-interface DisinfectionRow {
+
+// Structure pour les tâches de désinfection (simplifiée)
+interface DisinfectionTask {
   id: 'avant' | 'arriere';
   label: string;
-  matricule: string;
   isChecked: boolean;
 }
 
-type DisinfectionState = Record<'avant' | 'arriere', DisinfectionRow>;
-
-// Fonction utilitaire locale pour formater le matricule
-const formatMatriculeInput = (value: string): string => {
-  let sanitizedValue = value.replace(/[^a-zA-Z0-9-]/g, '');
-  if (sanitizedValue.length === 0) { return ''; }
-  const firstChar = sanitizedValue.charAt(0).toUpperCase();
-  // Si seulement la première lettre est entrée, on la retourne
-  if (sanitizedValue.length === 1 && /^[A-Z]$/.test(firstChar)) { return firstChar; }
-  // Si le 2ème caractère n'est pas un tiret, on l'ajoute (sauf si déjà présent)
-  if (sanitizedValue.length > 1 && sanitizedValue.charAt(1) !== '-') {
-    sanitizedValue = firstChar + '-' + sanitizedValue.substring(1);
-  } else if (sanitizedValue.length >= 2) {
-    // Assure que c'est bien Lettre-...
-     sanitizedValue = firstChar + sanitizedValue.substring(1);
-  }
-  // Appliquer regex pour Lettre-4chiffres max
-  const regex = /^([A-Z])-?(\d{0,4}).*$/;
-  const match = sanitizedValue.match(regex);
-  if (match) {
-    const letter = match[1];
-    const numbers = match[2];
-    return `${letter}-${numbers}`;
-  } else if (/^[A-Z]-?$/.test(sanitizedValue)) {
-    // Permettre "A-"
-    return sanitizedValue;
-   } else if (/^[A-Z]$/.test(firstChar)) {
-     // Si ça ne match pas mais commence par une lettre, retourner juste la lettre
-     return firstChar;
-   } else {
-     // Si invalide (commence par un chiffre ou autre), retourner vide
-     return '';
-   }
+type DisinfectionState = {
+  avant: DisinfectionTask;
+  arriere: DisinfectionTask;
 };
 
-// Composant principal
+
 const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> = ({
   goBack,
   getCurrentDateTime,
@@ -255,181 +229,194 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
   onSubmissionComplete,
   numeroVehicule,
   handleVehiculeNumberChange,
+  matricule, // Global matricule from props
+  handleMatriculeChange, // Global matricule handler from props
 }) => {
-  const uniqueZones = useMemo(() => 
-     Array.from(new Set(INITIAL_INVENTORY_ITEMS.map(item => item.zone)))
-  , []);
-
-  // État données par zone (inchangé)
-  const [zoneData, setZoneData] = useState<Record<string, ZoneData>>(() => 
-    uniqueZones.reduce((acc, zoneName) => {
-      acc[zoneName] = { matricule: '', cleanedChecked: false };
-      return acc;
-    }, {} as Record<string, ZoneData>)
-  );
-
-  // État cases items (inchangé)
+  const [zoneData, setZoneData] = useState<ZoneData>({});
   const [itemCheckedStatus, setItemCheckedStatus] = useState<ItemCheckedStatus>({});
-
-  // État Désinfection (nouvelle structure)
-  const [disinfectionState, setDisinfectionState] = useState<DisinfectionState>({
-    avant: { id: 'avant', label: 'Avant', matricule: '', isChecked: false },
-    arriere: { id: 'arriere', label: 'Arrière', matricule: '', isChecked: false },
-  });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
-  // Handler données de zone (utilise formatMatriculeInput)
-  const handleZoneChange = useCallback((zoneName: string, field: 'matricule' | 'cleanedChecked', value: string | boolean) => {
-    setZoneData(currentData => {
-      const updatedZoneData = { ...currentData[zoneName] };
-      if (field === 'matricule' && typeof value === 'string') {
-        updatedZoneData[field] = formatMatriculeInput(value);
-      } else if (field === 'cleanedChecked' && typeof value === 'boolean') {
-        updatedZoneData[field] = value;
+  const [disinfectionState, setDisinfectionState] = useState<DisinfectionState>({
+    avant: { id: 'avant', label: "Désinfection de l'habitacle avant", isChecked: false },
+    arriere: { id: 'arriere', label: "Désinfection de l'habitacle arrière", isChecked: false },
+  });
+
+  const handleDisinfectionChange = (taskId: 'avant' | 'arriere') => {
+    setDisinfectionState(prev => ({
+      ...prev,
+      [taskId]: { ...prev[taskId], isChecked: !prev[taskId].isChecked },
+    }));
+  };
+  
+  // Memoized grouped items to avoid re-computation on every render
+  const groupedInventoryItems = useMemo(() => {
+    return INITIAL_INVENTORY_ITEMS.reduce<Record<string, InitialInventoryItem[]>>((acc, item) => {
+      const zone = item.zone || 'Inconnue';
+      if (!acc[zone]) {
+        acc[zone] = [];
       }
-      return {
-        ...currentData,
-        [zoneName]: updatedZoneData,
-      };
-    });
-  }, []);
+      acc[zone].push(item);
+      return acc;
+    }, {});
+  }, []); // Empty dependency array means this runs once
 
-  // Handler cases items (inchangé)
-  const handleItemCheckChange = useCallback((itemId: string) => {
-    setItemCheckedStatus(currentStatus => ({
-      ...currentStatus,
-      [itemId]: !currentStatus[itemId], // Toggle check status
+
+  const handleZoneInputChange = useCallback((zoneId: string, field: keyof ZoneDataEntry, value: string | boolean) => {
+    setZoneData(prev => ({
+      ...prev,
+      [zoneId]: {
+        ...prev[zoneId],
+        matricule: field === 'matricule' ? (value as string) : (prev[zoneId]?.matricule || ''),
+        cleanedChecked: field === 'cleanedChecked' ? (value as boolean) : (prev[zoneId]?.cleanedChecked || false),
+      },
     }));
   }, []);
 
-  // Handler Désinfection (utilise formatMatriculeInput)
-  const handleDisinfectionChange = useCallback((part: 'avant' | 'arriere', field: 'matricule' | 'isChecked', value: string | boolean) => {
-    setDisinfectionState(currentState => {
-      const updatedPartData = { ...currentState[part] };
-      if (field === 'matricule' && typeof value === 'string') {
-        updatedPartData[field] = formatMatriculeInput(value);
-      } else if (field === 'isChecked' && typeof value === 'boolean') {
-        updatedPartData[field] = value;
-      }
-      return {
-        ...currentState,
-        [part]: updatedPartData,
-      };
-    });
+  const handleItemCheckChange = useCallback((itemId: string) => {
+    setItemCheckedStatus(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }));
   }, []);
+  
 
-  // Génération HTML mise à jour (Section Désinfection en Tableau)
+  const validateForm = (): string | null => {
+    if (!numeroVehicule) return "Le numéro de véhicule est requis.";
+    if (!matricule) return "Le matricule global est requis.";
+
+    // Validation pour chaque zone: si "Nettoyé" est coché, le matricule de la zone est requis.
+    for (const zoneId of Object.keys(groupedInventoryItems)) {
+        const currentZoneData = zoneData[zoneId];
+        if (currentZoneData?.cleanedChecked && !currentZoneData.matricule) {
+            return `Le matricule est requis pour la zone "${zoneId}" lorsque "Nettoyé" est coché.`;
+        }
+    }
+    // Aucune autre validation spécifique pour l'instant (ex: tous les items cochés)
+    return null;
+  };
+
+
   const generateCleaningInventoryHTML = (): string => {
     let html = `
-      <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nettoyage et Inventaire</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 15px; color: #333; font-size: 10px; }
-        h1 { color: #b22a2e; text-align: center; margin-bottom: 15px; }
-        .info { margin-bottom: 15px; }
-        .info p { margin: 4px 0; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; page-break-inside: auto; }
-        tr { page-break-inside: avoid; page-break-after: auto; }
-        th, td { border: 1px solid #ddd; padding: 4px; vertical-align: top; text-align: left; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .zone-header-name { background-color: #e0e0e0; font-weight: bold; font-size: 11px; padding: 6px; }
-        .zone-header-data { background-color: #f8f8f8; font-size: 10px; }
-        .material-col { min-width: 250px; }
-        .qty-col { width: 80px; text-align: center; }
-        .check-col { width: 80px; text-align: center; }
-        .checked { color: green; font-weight: bold; }
-        .not-checked { color: red; }
-        footer { text-align: center; margin-top: 15px; font-size: 10px; color: #666; }
-        .disinfection-section { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
-        .disinfection-section p { margin: 5px 0; font-weight: bold; }
-        .disinfection-table th, .disinfection-table td { padding: 5px; }
-      </style></head><body>
-      <h1>Nettoyage et Inventaire</h1>
-      <div class="info">
-        <p><strong>Véhicule #:</strong> ${numeroVehicule || 'Non spécifié'}</p>
-        <p><strong>Date et heure:</strong> ${getCurrentDateTime()}</p>
-      </div>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Rapport de Nettoyage et Inventaire Mensuel</title>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; color: #333; background-color: #f4f4f4; }
+          .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+          h1, h2 { color: #102947; text-align: center; }
+          h1 { margin-bottom: 10px; }
+          h2 { margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #102947; padding-bottom: 5px; }
+          .info { margin-bottom: 20px; padding: 10px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9; }
+          .info p { margin: 8px 0; font-size: 14px; }
+          .info strong { color: #102947; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+          th { background-color: #102947; color: white; }
+          .zone-header td { background-color: #cfe2f3; font-weight: bold; font-size: 15px; } /* Light blue */
+          .zone-details td { padding-left: 20px; font-style: italic; font-size: 12px; color: #555; }
+          .item-row:nth-child(even) { background-color: #f9f9f9; }
+          .item-row:hover { background-color: #f1f1f1; }
+          .checked { color: green; font-weight: bold; }
+          .not-checked { color: red; }
+          .quantity { text-align: center; }
+          .checkbox-cell { text-align: center; }
+          footer { text-align: center; margin-top: 30px; font-size: 12px; color: #777; }
+          .disinfection-section { margin-bottom: 20px; padding: 15px; border: 1px solid #cfe2f3; border-radius: 5px; background-color: #e7f3fe; }
+          .disinfection-section h3 { color: #102947; margin-top: 0; margin-bottom: 10px; font-size: 16px; }
+          .disinfection-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Nettoyage et Inventaire Mensuel</h1>
+          <div class="info">
+            <p><strong>Numéro du véhicule:</strong> ${numeroVehicule}</p>
+            <p><strong>Matricule (global):</strong> ${matricule}</p>
+            <p><strong>Date et heure de soumission:</strong> ${getCurrentDateTime()}</p>
+          </div>
 
-      <h2>Désinfection de l'habitacle</h2>
-      <table class="disinfection-table" width="100%" border="1" style="border-collapse:collapse; margin-bottom: 15px;">
-        <thead><tr><th>Habitacle</th><th>Matricule</th><th>Désinfecté</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>Avant</td>
-            <td>${disinfectionState.avant.matricule || '-'}</td>
-            <td style="text-align:center;">${disinfectionState.avant.isChecked ? '✓' : '✗'}</td>
-          </tr>
-          <tr>
-            <td>Arrière</td>
-            <td>${disinfectionState.arriere.matricule || '-'}</td>
-            <td style="text-align:center;">${disinfectionState.arriere.isChecked ? '✓' : '✗'}</td>
-          </tr>
-        </tbody>
-      </table>
+          <h2>Tâches de Désinfection</h2>
+          <div class="disinfection-section">
+            <div class="disinfection-item">
+              <span>${disinfectionState.avant.label}</span>
+              <span class="${disinfectionState.avant.isChecked ? 'checked' : 'not-checked'}">${disinfectionState.avant.isChecked ? 'Effectué ✓' : 'Non effectué ✗'}</span>
+            </div>
+            <div class="disinfection-item">
+              <span>${disinfectionState.arriere.label}</span>
+              <span class="${disinfectionState.arriere.isChecked ? 'checked' : 'not-checked'}">${disinfectionState.arriere.isChecked ? 'Effectué ✓' : 'Non effectué ✗'}</span>
+            </div>
+          </div>
 
-      <h2>Inventaire</h2>
-      <table><thead><tr>
-          <th class="material-col">Matériel / Zone</th>
-          <th class="qty-col">Qté Attendue / Matricule Zone</th>
-          <th class="check-col">Vérifié (Item)</th>
-          <th class="check-col">Nettoyé (Zone)</th>
-        </tr></thead><tbody>
+          <h2>Inventaire par Zone</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Matériel</th>
+                <th class="quantity">Qté Attendue</th>
+                <th class="checkbox-cell">Vérifié</th>
+              </tr>
+            </thead>
+            <tbody>
     `;
 
-    let currentZone = '';
-    INITIAL_INVENTORY_ITEMS.forEach(item => {
-      if (item.zone !== currentZone) {
-        currentZone = item.zone;
-        const zoneInfo = zoneData[currentZone];
-        html += `<tr><td colspan="4" class="zone-header-name">${currentZone}</td></tr>`;
-        html += '<tr class="zone-header-data">';
-        html += '<td><i>Informations de zone</i></td>';
-        html += `<td>${zoneInfo.matricule || '-'}</td>`;
-        html += '<td></td>';
-        html += `<td class="check-col ${zoneInfo.cleanedChecked ? 'checked' : 'not-checked'}">${zoneInfo.cleanedChecked ? '✓' : '✗'}</td>`;
-        html += '</tr>';
-      }
-      const isItemChecked = !!itemCheckedStatus[item.id];
-      html += '<tr>';
-      html += `<td class="material-col">${item.material}</td>`;
-      html += `<td class="qty-col">${item.expectedQuantity}</td>`;
-      html += `<td class="check-col ${isItemChecked ? 'checked' : 'not-checked'}">${isItemChecked ? '✓' : '✗'}</td>`;
-      html += '<td></td>';
-      html += '</tr>';
+    Object.entries(groupedInventoryItems).forEach(([zone, items]) => {
+      const currentZoneData = zoneData[zone] || { matricule: '', cleanedChecked: false };
+      html += `
+        <tr class="zone-header">
+          <td colspan="3">
+            ${zone} 
+            <span class="${currentZoneData.cleanedChecked ? 'checked' : 'not-checked'}">(Nettoyé: ${currentZoneData.cleanedChecked ? 'Oui ✓' : 'Non ✗'})</span>
+            ${currentZoneData.matricule ? `(Matricule: ${currentZoneData.matricule})` : ''}
+          </td>
+        </tr>
+      `;
+      items.forEach(item => {
+        const isChecked = !!itemCheckedStatus[item.id];
+        html += `
+          <tr class="item-row">
+            <td>${item.material.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
+            <td class="quantity">${item.expectedQuantity}</td>
+            <td class="checkbox-cell ${isChecked ? 'checked' : 'not-checked'}">${isChecked ? '✓' : '✗'}</td>
+          </tr>
+        `;
+      });
     });
 
-    html += `</tbody></table><footer>Rapport généré le ${getCurrentDateTime()}</footer></body></html>`;
+    html += `
+            </tbody>
+          </table>
+          <footer>Rapport généré le ${getCurrentDateTime()}</footer>
+        </div>
+      </body>
+      </html>
+    `;
     return html;
   };
 
-  // Soumission mise à jour
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-
-    // Validation (ajouter validation désinfection matricules?)
-    if (!numeroVehicule) {
-      setError("Le numéro de véhicule est obligatoire.");
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      // Ne pas afficher la confirmation si validation échoue
+      setShowConfirmation(false); 
       return;
     }
-    const isAnyZoneMatriculeFilled = Object.values(zoneData).some(z => z.matricule);
-    if (!isAnyZoneMatriculeFilled) {
-       setError("Veuillez remplir le matricule pour au moins une zone.");
-       return;
-     }
-     const isAnyItemChecked = Object.values(itemCheckedStatus).some(checked => checked);
-     if (!isAnyItemChecked) {
-       setError("Veuillez vérifier au moins un item de l'inventaire.");
-       return;
-     }
-    // Validation pour les matricules de désinfection
-    if (!disinfectionState.avant.matricule || !disinfectionState.arriere.matricule) {
-      setError("Veuillez entrer le matricule pour la désinfection Avant et Arrière.");
-      return;
-    }
+    // Si validation OK, afficher la confirmation
+    setShowConfirmation(true);
+  };
 
+  const confirmSubmit = async () => {
+    setShowConfirmation(false); // Cacher la modale de confirmation
     setIsSubmitting(true);
+    setError(null);
+
     try {
       const htmlContent = generateCleaningInventoryHTML();
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -438,10 +425,14 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       const webhookData = {
         type: 'NettoyageInventaire', 
         numeroVehicule,
+        matricule, // Global matricule for the form
         dateTime: getCurrentDateTime(),
-        zoneCompletionData: zoneData,
-        itemCheckedStatuses: itemCheckedStatus,
-        disinfectionData: disinfectionState, // <- Envoi des données structurées désinfection
+        zoneCompletionData: zoneData, // Contains matricule per zone and cleaned status
+        itemCheckedStatuses: itemCheckedStatus, // Contains checked status for each inventory item
+        disinfectionData: { // Send disinfection status
+            avantEffectue: disinfectionState.avant.isChecked,
+            arriereEffectue: disinfectionState.arriere.isChecked,
+        },
         htmlContent,
         fileName,
         mimeType: "text/html"
@@ -452,6 +443,14 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
 
       if (success) {
         onSubmissionComplete("Le rapport de nettoyage et inventaire a été envoyé avec succès.");
+        // Réinitialiser les états spécifiques au formulaire
+        setZoneData({});
+        setItemCheckedStatus({});
+        setDisinfectionState({
+            avant: { id: 'avant', label: "Désinfection de l'habitacle avant", isChecked: false },
+            arriere: { id: 'arriere', label: "Désinfection de l'habitacle arrière", isChecked: false },
+        });
+        // La réinitialisation du numéro de véhicule et matricule global est gérée par onSubmissionComplete dans App.tsx
       } else {
         throw new Error("L'envoi des données vers Make.com a échoué.");
       }
@@ -459,231 +458,192 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       const error = err as Error;
       console.error('Erreur lors de la soumission:', error);
       setError(`Échec de la soumission: ${error.message}`);
+      // Optionnel: appeler onSubmissionComplete avec un message d'erreur si vous voulez centraliser la gestion des messages
+      // onSubmissionComplete(`Échec Nettoyage/Inventaire: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Rendu JSX mis à jour (Section Désinfection en Tableau - Rétabli)
+  
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-8">
-      <header className="bg-[#b22a2e] text-white p-4 rounded-lg shadow-md mb-8 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-6">
+      <header className="bg-[#102947] text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-3 filter brightness-0 invert" />
-          <h1 className="text-xl font-bold">Nettoyage et Inventaire</h1>
+          <img src="https://res.cloudinary.com/dxyvj8rka/image/upload/f_auto,q_auto/v1/cambi/iazjhbzvu6dv5fad398u" alt="Logo CAMBI" className="h-8 mr-2 filter brightness-0 invert" />
+          <h1 className="text-xl font-bold">Nettoyage et inventaire</h1>
         </div>
-        <button onClick={goBack} className="flex items-center text-white hover:text-gray-200 ml-4">
-          <ChevronLeft size={24} className="mr-1" />
-          Retour
-        </button>
+        <button onClick={goBack} className="flex items-center text-white"><ChevronLeft size={20} /> Retour</button>
       </header>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md space-y-6">
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative flex justify-between items-center" role="alert">
-            <div>
-              <strong className="font-bold"><AlertCircle size={18} className="inline mr-2" /> Erreur: </strong>
-              <span className="block sm:inline">{error}</span>
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-20">
+        {/* Section Informations Générales */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <label htmlFor="numeroVehiculeNettoyage" className="block text-sm font-medium text-gray-700 mb-1">Numéro de Véhicule :</label>
+            <input
+              type="text"
+              id="numeroVehiculeNettoyage"
+              value={numeroVehicule}
+              onChange={(e) => handleVehiculeNumberChange(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#102947]"
+              required
+              placeholder="Ex: 9198"
+            />
+          </div>
+          <div>
+            <label htmlFor="matriculeGlobalNettoyage" className="block text-sm font-medium text-gray-700 mb-1">Matricule (Employé):</label>
+            <input
+              type="text"
+              id="matriculeGlobalNettoyage"
+              value={matricule}
+              onChange={(e) => handleMatriculeChange(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#102947]"
+              required
+              placeholder="Ex: N-0100"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date et Heure Actuelle :</label>
+            <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-100">
+              {getCurrentDateTime()}
             </div>
-            <button onClick={() => setError(null)} className="text-red-700 hover:text-red-900">
-               <X size={20} />
-            </button>
+          </div>
+        </div>
+
+        {/* Section Désinfection */}
+        <div className="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h2 className="text-lg font-semibold text-[#102947] mb-3 border-b pb-2">Tâches de Désinfection</h2>
+            {(['avant', 'arriere'] as const).map((taskId) => (
+                <div key={taskId} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                    <label htmlFor={`disinfection-${taskId}`} className="text-sm text-gray-700">
+                        {disinfectionState[taskId].label} :
+                    </label>
+                    <input
+                        type="checkbox"
+                        id={`disinfection-${taskId}`}
+                        checked={disinfectionState[taskId].isChecked}
+                        onChange={() => handleDisinfectionChange(taskId)}
+                        className="w-5 h-5 accent-[#102947] cursor-pointer rounded border-gray-300 focus:ring-[#102947]"
+                    />
+                </div>
+            ))}
+        </div>
+
+
+        {/* Section Inventaire par Zone */}
+        <h2 className="text-lg font-semibold text-[#102947] mb-4 border-b pb-2">Inventaire par Zone</h2>
+        <div className="space-y-8">
+          {Object.entries(groupedInventoryItems).map(([zone, items]) => {
+            const zoneId = zone.replace(/[^a-zA-Z0-9]/g, '-'); // Create a unique ID for the zone
+            const currentZoneData = zoneData[zoneId] || { matricule: '', cleanedChecked: false };
+            
+            return (
+              <div key={zoneId} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 pb-2 border-b border-gray-300">
+                  <h3 className="text-md font-semibold text-[#102947] mb-2 sm:mb-0">{zone}</h3>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`cleaned-${zoneId}`}
+                        checked={currentZoneData.cleanedChecked}
+                        onChange={(e) => handleZoneInputChange(zoneId, 'cleanedChecked', e.target.checked)}
+                        className="w-4 h-4 accent-[#102947] text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
+                      />
+                      <label htmlFor={`cleaned-${zoneId}`} className="text-sm font-medium text-gray-700">Nettoyé</label>
+                    </div>
+                    {/* Matricule per zone is now conditional on "Nettoyé" being checked, but kept for data structure */}
+                     <input
+                        type="text"
+                        placeholder="Matricule (zone)"
+                        value={currentZoneData.matricule}
+                        onChange={(e) => handleZoneInputChange(zoneId, 'matricule', e.target.value)}
+                        className="p-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#102947] focus:border-[#102947] w-32"
+                        disabled={!currentZoneData.cleanedChecked} // Disable if "Nettoyé" is not checked
+                      />
+                  </div>
+                </div>
+
+                <table className="min-w-full">
+                  <thead className="sr-only">
+                    <tr><th>Matériel</th><th>Qté Attendue</th><th>Vérifié</th></tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item, index) => (
+                      <tr key={item.id} className={`border-b border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                        <td className="py-2 px-3 text-sm text-gray-700 w-3/5">{item.material}</td>
+                        <td className="py-2 px-3 text-sm text-gray-600 text-center w-1/5">{item.expectedQuantity}</td>
+                        <td className="py-2 px-3 text-center w-1/5">
+                          <input
+                            type="checkbox"
+                            id={`item-${item.id}`}
+                            checked={!!itemCheckedStatus[item.id]}
+                            onChange={() => handleItemCheckChange(item.id)}
+                            className="w-5 h-5 accent-[#102947] cursor-pointer rounded border-gray-300 focus:ring-[#102947]"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+        </div>
+
+        {error && (
+          <div role="alert" className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-6 mb-4">
+            <p>{error}</p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-             <label htmlFor="numeroVehicule" className="block text-sm font-medium text-gray-700">Numéro de Véhicule</label>
-             <input
-               type="text"
-               id="numeroVehicule"
-               value={numeroVehicule}
-               onChange={(e) => handleVehiculeNumberChange(e.target.value)}
-               placeholder="Ex: 9123"
-               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-               required
-             />
-           </div>
-           <div>
-             <label className="block text-sm font-medium text-gray-700">Date et Heure Actuelle</label>
-             <div className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 sm:text-sm">
-               {getCurrentDateTime()}
-             </div>
-           </div>
+        <div className="sticky bottom-0 bg-white p-4 border-t mt-6 -mx-4 md:-mx-6">
+          <button 
+            type="submit" 
+            className={`w-full ${isSubmitting ? 'bg-[#102947]/70 cursor-not-allowed' : 'bg-[#102947] hover:bg-[#102947]/90'} text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center text-base`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>Traitement...</>
+            ) : (
+              <><Send className="mr-2" size={20} />Soumettre le rapport</>
+            )}
+          </button>
         </div>
-
-        <div className="border-t pt-4">
-          <h3 className="text-md font-semibold text-gray-800 mb-3">Désinfection de l'habitacle</h3>
-          <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
-             <thead className="bg-gray-50">
-               <tr>
-                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Habitacle</th>
-                 <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Matricule</th>
-                 <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Désinfecté</th>
-               </tr>
-             </thead>
-             <tbody className="bg-white divide-y divide-gray-200">
-               {/* Ligne Avant */}
-               <tr>
-                 <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 border-r">Avant</td>
-                 <td className="px-3 py-2 border-r">
-                   <input
-                     type="text"
-                     aria-label="Matricule désinfection Avant"
-                     value={disinfectionState.avant.matricule}
-                     onChange={(e) => handleDisinfectionChange('avant', 'matricule', e.target.value)}
-                     placeholder="A-1234"
-                     className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                   />
-                 </td>
-                 <td 
-                   className={`px-2 py-2 text-center align-middle cursor-pointer ${disinfectionState.avant.isChecked ? 'bg-green-100' : ''}`}
-                   onClick={() => handleDisinfectionChange('avant', 'isChecked', !disinfectionState.avant.isChecked)}
-                 >
-                   <input
-                     type="checkbox"
-                     aria-label="Habitacle Avant Désinfecté"
-                     checked={disinfectionState.avant.isChecked}
-                     onChange={(e) => handleDisinfectionChange('avant', 'isChecked', e.target.checked)}
-                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
-                   />
-                 </td>
-               </tr>
-               {/* Ligne Arrière */}
-               <tr>
-                 <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 border-r">Arrière</td>
-                 <td className="px-3 py-2 border-r">
-                    <input
-                      type="text"
-                      aria-label="Matricule désinfection Arrière"
-                      value={disinfectionState.arriere.matricule}
-                      onChange={(e) => handleDisinfectionChange('arriere', 'matricule', e.target.value)}
-                      placeholder="A-1234"
-                      className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                 </td>
-                 <td 
-                    className={`px-2 py-2 text-center align-middle cursor-pointer ${disinfectionState.arriere.isChecked ? 'bg-green-100' : ''}`}
-                    onClick={() => handleDisinfectionChange('arriere', 'isChecked', !disinfectionState.arriere.isChecked)}
-                 >
-                    <input
-                      type="checkbox"
-                      aria-label="Habitacle Arrière Désinfecté"
-                      checked={disinfectionState.arriere.isChecked}
-                      onChange={(e) => handleDisinfectionChange('arriere', 'isChecked', e.target.checked)}
-                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
-                    />
-                 </td>
-               </tr>
-             </tbody>
-          </table>
-        </div>
-
-        <h2 className="text-lg font-semibold border-t pt-4">Inventaire</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Matériel / Zone</th>
-                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Qté Attendue / Matricule Zone</th>
-                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">Vérifié (Item)</th>
-                <th scope="col" className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Nettoyé (Zone)</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {INITIAL_INVENTORY_ITEMS.map((item, index) => {
-                const showZoneHeader = index === 0 || INITIAL_INVENTORY_ITEMS[index - 1].zone !== item.zone;
-                const currentZoneInfo = zoneData[item.zone];
-                const isItemChecked = !!itemCheckedStatus[item.id];
-
-                return (
-                  <React.Fragment key={item.id}>
-                    {showZoneHeader && (
-                      <tr>
-                        <td colSpan={4} className="bg-gray-200 px-3 py-1.5 text-sm font-bold text-gray-800 border-b border-gray-300">
-                          {item.zone} 
-                        </td>
-                      </tr>
-                    )}
-                    {showZoneHeader && (
-                       <tr className="bg-gray-50">
-                         <td className="px-3 py-2 text-sm italic text-gray-600 border-r">Infos Zone:</td>
-                         <td className="px-3 py-2 border-r">
-                           <input
-                             type="text"
-                             aria-label={`Matricule pour ${item.zone}`}
-                             value={currentZoneInfo.matricule}
-                             onChange={(e) => handleZoneChange(item.zone, 'matricule', e.target.value)}
-                             placeholder="A-1234"
-                             className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                           />
-                         </td>
-                         <td className="px-3 py-2 border-r"></td>
-                         <td 
-                           className={`px-2 py-2 text-center align-middle cursor-pointer ${currentZoneInfo.cleanedChecked ? 'bg-green-100' : ''}`}
-                           onClick={() => handleZoneChange(item.zone, 'cleanedChecked', !currentZoneInfo.cleanedChecked)}
-                         >
-                           <input
-                              type="checkbox"
-                              aria-label={`Zone ${item.zone} nettoyée`}
-                              checked={currentZoneInfo.cleanedChecked}
-                              onChange={(e) => handleZoneChange(item.zone, 'cleanedChecked', e.target.checked)}
-                              className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
-                           />
-                         </td>
-                       </tr>
-                    )}
-                    <tr>
-                      <td className="px-3 py-2 whitespace-normal text-sm font-medium text-gray-900 border-r">
-                        {item.material}
-                      </td>
-                      <td className="px-3 py-2 text-center text-sm text-gray-700 border-r">
-                        {item.expectedQuantity}
-                      </td>
-                      <td 
-                        className={`px-2 py-2 text-center border-r align-middle cursor-pointer ${isItemChecked ? 'bg-green-100' : ''}`}
-                        onClick={() => handleItemCheckChange(item.id)}
-                      >
-                         <input
-                           type="checkbox"
-                           aria-label={`Vérifier ${item.material}`}
-                           checked={isItemChecked}
-                           onChange={() => handleItemCheckChange(item.id)}
-                           className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
-                         />
-                      </td>
-                      <td></td> 
-                    </tr>
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="sticky bottom-0 bg-white p-4 border-t mt-4 -mx-6 -mb-6 rounded-b-lg"> 
-            <button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className={`w-full ${isSubmitting ? 'bg-[#b22a2e]/70 cursor-not-allowed' : 'bg-[#b22a2e] hover:bg-[#b22a2e]/90'} text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#b22a2e]`}
-            >
-              {isSubmitting ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Envoi en cours...
-                </>
-              ) : (
-                <>
-                  <Send size={20} className="mr-2" />
-                  Soumettre
-                </>
-              )}
-            </button>
-          </div>
       </form>
+
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title-cleaning">
+          <div className="bg-white rounded-lg p-6 shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 id="confirm-title-cleaning" className="text-lg font-semibold text-gray-800">Confirmation</h3>
+              <button onClick={() => setShowConfirmation(false)} className="text-gray-400 hover:text-gray-600" aria-label="Fermer">
+                <X size={22} />
+              </button>
+            </div>
+            <div className="mb-6">
+              <div className="flex items-start">
+                <AlertCircle className="text-[#102947] mr-3 mt-1 flex-shrink-0" size={24} aria-hidden="true" />
+                <p className="text-gray-700">Êtes-vous sûr de vouloir finaliser et envoyer ce rapport de nettoyage et inventaire ?</p>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button 
+                onClick={() => setShowConfirmation(false)} 
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={confirmSubmit} 
+                className="px-4 py-2 bg-[#102947] text-white text-sm font-medium rounded-md hover:bg-[#102947]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#102947]"
+              >
+                Confirmer et Envoyer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

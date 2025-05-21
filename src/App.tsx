@@ -28,7 +28,7 @@ function App() {
   const API_URL_MDSA = 'https://hook.us1.make.com/6npqjkskt1d71ir3aypy7h6434s98b8u';
   const API_URL_VEHICULE = 'https://hook.us2.make.com/c2vcdzy31bs3wmtubt46jx4a4f61xirq';
   const API_URL_DEFECTUOSITES = 'https://hook.us1.make.com/3xist7l1lcnruqvffssuyfv9sddmjxom';
-  const API_URL_CLEANING_INVENTORY = 'https://hook.example.com/votre_webhook_ici'; // <-- REMPLACEZ CETTE URL
+  const API_URL_CLEANING_INVENTORY = 'https://hook.us2.make.com/vr2qgdl4qkr74wsyh3m3oci9gvu93hnt'; // <-- REMPLACEZ CETTE URL
 
   // Fonction utilitaire partagée
   const getCurrentDateTime = () => {
