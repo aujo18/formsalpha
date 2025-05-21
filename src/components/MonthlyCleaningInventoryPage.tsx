@@ -425,14 +425,35 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
       items.forEach(item => {
         const isChecked = !!itemCheckedStatus[item.id];
         html += `
-          <tr class="item-row ${isChecked ? 'checked-row' : ''}">
-            <td>${item.material.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>
-            <td class="quantity">${item.expectedQuantity}</td>
-            <td class="checkbox-cell ${isChecked ? 'checked' : 'not-checked'}">${isChecked ? '✓' : '✗'}</td>
-          </tr>
-        `;
-      });
+          <tr class="item-row border-b border-gray-100 cursor-pointer ${
+            isChecked
+              ? 'bg-green-100 hover:bg-green-200'
+              : (index % 2 === 0 ? 'bg-white hover:bg-gray-100' : 'bg-gray-50/50 hover:bg-gray-100')
+          }`}
+          onClick={() => handleItemCheckChange(item.id)}
+          role="checkbox"
+          aria-checked={isChecked}
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleItemCheckChange(item.id); }}
+        >
+          <td className="py-2 px-3 text-sm text-gray-700 w-3/5 select-none">{item.material}</td>
+          <td className="py-2 px-3 text-sm text-gray-600 text-center w-1/5 select-none">{item.expectedQuantity}</td>
+          <td className="py-2 px-3 text-center w-1/5">
+            <input
+              type="checkbox"
+              id={`item-${item.id}`}
+              checked={isChecked}
+              readOnly
+              className="w-5 h-5 accent-[#102947] rounded border-gray-300 focus:ring-[#102947]"
+              tabIndex={-1}
+              aria-labelledby={`material-label-${item.id}`}
+            />
+            <span id={`material-label-${item.id}`} className="sr-only">{item.material}</span>
+          </td>
+        </tr>
+      `;
     });
+  });
 
     html += `
             </tbody>
@@ -638,9 +659,13 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                     {items.map((item, index) => {
                       const isChecked = !!itemCheckedStatus[item.id];
                       return (
-                        <tr 
-                          key={item.id} 
-                          className={`item-row border-b border-gray-100 ${isChecked ? 'checked-row' : (index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50')} cursor-pointer`}
+                        <tr
+                          key={item.id}
+                          className={`item-row border-b border-gray-100 cursor-pointer ${
+                            isChecked
+                              ? 'bg-green-100 hover:bg-green-200'
+                              : (index % 2 === 0 ? 'bg-white hover:bg-gray-100' : 'bg-gray-50/50 hover:bg-gray-100')
+                          }`}
                           onClick={() => handleItemCheckChange(item.id)}
                           role="checkbox"
                           aria-checked={isChecked}
@@ -652,80 +677,4 @@ const MonthlyCleaningInventoryPage: React.FC<MonthlyCleaningInventoryPageProps> 
                           <td className="py-2 px-3 text-center w-1/5">
                             <input
                               type="checkbox"
-                              id={`item-${item.id}`}
-                              checked={isChecked}
-                              readOnly // Controlled by row click
-                              className="w-5 h-5 accent-[#102947] pointer-events-none rounded border-gray-300 focus:ring-[#102947]"
-                              tabIndex={-1} 
-                              aria-labelledby={`material-label-${item.id}`}
-                            />
-                            <span id={`material-label-${item.id}`} className="sr-only">{item.material}</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            );
-          })}
-        </div>
-
-        {error && (
-          <div role="alert" className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-6 mb-4">
-            <p>{error}</p>
-          </div>
-        )}
-
-        <div className="sticky bottom-0 bg-white p-4 border-t mt-6 -mx-4 md:-mx-6">
-          <button 
-            type="submit" 
-            className={`w-full ${isSubmitting ? 'bg-[#102947]/70 cursor-not-allowed' : 'bg-[#102947] hover:bg-[#102947]/90'} text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center text-base`}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>Traitement...</>
-            ) : (
-              <><Send className="mr-2" size={20} />Soumettre</>
-            )}
-          </button>
-        </div>
-      </form>
-
-      {showConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="confirm-title-cleaning">
-          <div className="bg-white rounded-lg p-6 shadow-xl max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 id="confirm-title-cleaning" className="text-lg font-semibold text-gray-800">Confirmation</h3>
-              <button onClick={() => setShowConfirmation(false)} className="text-gray-400 hover:text-gray-600" aria-label="Fermer">
-                <X size={22} />
-              </button>
-            </div>
-            <div className="mb-6">
-              <div className="flex items-start">
-                <AlertCircle className="text-[#102947] mr-3 mt-1 flex-shrink-0" size={24} aria-hidden="true" />
-                <p className="text-gray-700">Êtes-vous sûr de vouloir finaliser et envoyer ce rapport de nettoyage et inventaire ?</p>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3">
-              <button 
-                onClick={() => setShowConfirmation(false)} 
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                Annuler
-              </button>
-              <button 
-                onClick={confirmSubmit} 
-                className="px-4 py-2 bg-[#102947] text-white text-sm font-medium rounded-md hover:bg-[#102947]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#102947]"
-              >
-                Confirmer et Envoyer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default MonthlyCleaningInventoryPage; 
+                              id={`
