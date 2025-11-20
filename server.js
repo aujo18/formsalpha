@@ -104,8 +104,17 @@ async function createServer() {
   app.use(cors());
   app.use(express.json());
 
-  // API route pour l'envoi d'inspection
+  // Middleware de logging pour déboguer
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      console.log(`[API] ${req.method} ${req.path}`);
+    }
+    next();
+  });
+
+  // API route pour l'envoi d'inspection - DOIT être avant le middleware Vite
   app.post('/api/send-inspection', async (req, res) => {
+    console.log('[API] Route /api/send-inspection appelée');
     try {
       const { formType, payload } = req.body;
 
@@ -178,8 +187,21 @@ async function createServer() {
     appType: 'spa',
   });
 
-  // Utiliser le middleware Vite pour servir les assets et le HMR
-  app.use(vite.middlewares);
+  // Handler 404 pour les routes API non trouvées
+  app.use('/api', (req, res) => {
+    console.error(`[API] Route API non trouvée: ${req.method} ${req.path}`);
+    res.status(404).json({ error: `Route API non trouvée: ${req.method} ${req.path}` });
+  });
+
+  // Middleware pour exclure les routes API du traitement Vite
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      // Si c'est une route API qui n'a pas été traitée, elle devrait déjà avoir été catchée par le handler 404 ci-dessus
+      return next();
+    }
+    // Pour toutes les autres routes, utiliser le middleware Vite
+    return vite.middlewares(req, res, next);
+  });
 
   return app;
 }
