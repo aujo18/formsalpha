@@ -15,7 +15,7 @@ const HomePage: React.FC<HomePageProps> = ({ onFormSelect }) => {
         </div>
       </header>
       
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Bouton MDSA */}
         <button 
           onClick={() => onFormSelect('form1')}
@@ -71,13 +71,27 @@ const HomePage: React.FC<HomePageProps> = ({ onFormSelect }) => {
           <p className="text-gray-600 text-sm mb-4">Vérification mensuelle de l'inventaire et du nettoyage.</p>
           <ChevronRight className="mt-auto text-[#006400]" />
         </button>
+
+        {/* Bouton Test Resend */}
+        <button 
+          onClick={() => onFormSelect('resend-test')}
+          className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow flex flex-col items-center text-center border border-dashed border-[#1f2937]/30"
+          aria-label="Tester l'envoi Resend"
+        >
+          <div className="bg-[#1f2937]/10 p-4 rounded-full mb-4">
+            <ClipboardCheck size={48} className="text-[#1f2937]" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Test d'envoi Resend</h2>
+          <p className="text-gray-600 text-sm mb-4">Envoyer un courriel de validation via la configuration actuelle.</p>
+          <ChevronRight className="mt-auto text-[#1f2937]" />
+        </button>
       </div>
       
       <footer className="mt-10 text-center text-gray-500 text-sm">
-        <p>© {new Date().getFullYear()} CAMBI · Inspection Laurentides-Lanaudière v2.3</p>
+        <p>© {new Date().getFullYear()} CAMBI · Inspection Laurentides-Lanaudière v2.4</p>
       </footer>
     </div>
-  );t
+  );
 };
 
 export default HomePage; 

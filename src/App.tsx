@@ -7,6 +7,7 @@ import MdsaInspectionPage from './components/MdsaInspectionPage';
 import MedicalInspectionPage from './components/MedicalInspectionPage';
 import MechanicalInspectionPage from './components/MechanicalInspectionPage';
 import MonthlyCleaningInventoryPage from './components/MonthlyCleaningInventoryPage';
+import ResendTestPage from './components/ResendTestPage';
 
 // Importer les types (si nécessaire, sinon les composants les importent)
 // import { CheckItem } from './types';
@@ -213,6 +214,16 @@ function App() {
   if (currentForm === 'form4') {
     // Passer les commonProps qui incluent maintenant sendInspection... et onSubmission...
     return <MonthlyCleaningInventoryPage {...commonProps} />;
+  }
+
+  if (currentForm === 'resend-test') {
+    return (
+      <ResendTestPage
+        goBack={goBack}
+        getCurrentDateTime={getCurrentDateTime}
+        sendInspectionToMakecom={sendInspectionToMakecom}
+      />
+    );
   }
 
   // Fallback si currentForm a une valeur inattendue
