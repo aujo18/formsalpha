@@ -100,17 +100,31 @@ function App() {
         }),
       });
 
+      const contentType = response.headers.get('content-type');
       if (!response.ok) {
         let errorMessage = `Erreur serveur (${response.status})`;
-        try {
+        if (contentType?.includes('application/json')) {
           const errorData = (await response.json()) as SendInspectionResponse;
           if (errorData?.error) {
             errorMessage = errorData.error;
           }
-        } catch {
-          // ignore JSON parsing errors
+        } else {
+          const text = await response.text();
+          if (text) {
+            errorMessage += ` – ${text.slice(0, 200)}`;
+          }
         }
         throw new Error(errorMessage);
+      }
+
+      if (!contentType?.includes('application/json')) {
+        const body = await response.text();
+        throw new Error('Réponse invalide du serveur (JSON attendu). Contenu reçu: ' + body.slice(0, 120));
+      }
+
+      const data = (await response.json()) as SendInspectionResponse;
+      if (!data?.success) {
+        throw new Error(data?.error || 'Réponse inattendue du serveur.');
       }
 
       return true;
