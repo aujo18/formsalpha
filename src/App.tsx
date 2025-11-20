@@ -84,8 +84,10 @@ function App() {
     }
   };
 
-  // Fonction d'envoi partagée (via fonction serverless)
+  // Fonction d'envoi partagée (via serveur API séparé, proxy Vite en dev)
   const sendInspectionToMakecom = async (formType: string, payload: InspectionPayload): Promise<boolean> => {
+    // En dev, Vite proxy redirige /api vers le serveur API sur port 3001
+    // En prod, utiliser VITE_API_BASE_URL si défini, sinon utiliser le même domaine
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
 
     try {
