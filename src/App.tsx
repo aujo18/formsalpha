@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import axios from 'axios'; // Assurer que seul axios est importé, pas isAxiosError
+import axios, { AxiosError } from 'axios'; // Utilisé pour les appels à l'API Resend
 
 // Importer les nouveaux composants
 import HomePage from './components/HomePage'; // Assurez-vous que ce composant existe et est correct
@@ -24,11 +24,29 @@ function App() {
   const [submissionDateTime, setSubmissionDateTime] = useState('');
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
 
-  // URLs des API d'intégration (peuvent être déplacées dans un fichier config)
-  const API_URL_MDSA = 'https://hook.us1.make.com/6npqjkskt1d71ir3aypy7h6434s98b8u';
-  const API_URL_VEHICULE = 'https://hook.us2.make.com/c2vcdzy31bs3wmtubt46jx4a4f61xirq';
-  const API_URL_DEFECTUOSITES = 'https://hook.us1.make.com/3xist7l1lcnruqvffssuyfv9sddmjxom';
-  const API_URL_CLEANING_INVENTORY = 'https://hook.us2.make.com/vr2qgdl4qkr74wsyh3m3oci9gvu93hnt'; // <-- REMPLACEZ CETTE URL
+  // Configuration Resend
+  const RESEND_API_URL = 'https://api.resend.com/emails';
+  const RESEND_API_KEY = 're_Dvt67PKr_3nrJf1tvYVcaEw2GByDSS3Sp';
+  const RESEND_FROM_EMAIL = 'nepasrepondre@Inspection.cambi.app';
+  const RESEND_TO_EMAIL = 'nicolas.cuerrier@tap.cambi.ca';
+  const FORM_SUBJECTS: Record<string, string> = {
+    MDSA: 'Inspection MDSA',
+    'Véhicule': 'Inspection Médicale',
+    Defectuosites: 'Inspection mécanique',
+    NettoyageInventaire: 'Nettoyage et inventaire',
+  };
+
+  interface InspectionPayload {
+    htmlContent?: string;
+    matricule?: string;
+    pointDeService?: string;
+    dateTime?: string;
+    numeroIdentifiant?: string;
+    numeroVehicule?: string;
+    numeroMoniteur?: string;
+    numero?: string;
+    [key: string]: unknown;
+  }
 
   // Fonction utilitaire partagée
   const getCurrentDateTime = () => {
@@ -72,52 +90,119 @@ function App() {
     }
   };
 
-  // Fonction d'envoi partagée
-  const sendInspectionToMakecom = async (formType: string, webhookData: any): Promise<boolean> => {
-    let webhookUrl = '';
-    switch (formType) {
-      case 'MDSA': webhookUrl = API_URL_MDSA; break;
-      case 'Véhicule': webhookUrl = API_URL_VEHICULE; break;
-      case 'Defectuosites': webhookUrl = API_URL_DEFECTUOSITES; break;
-      case 'NettoyageInventaire': webhookUrl = API_URL_CLEANING_INVENTORY; break; // <-- Nouveau cas
-      default: 
-        console.error(`Type de formulaire inconnu pour webhook: ${formType}`);
-        throw new Error(`Type de formulaire inconnu pour webhook: ${formType}`);
+  // Helpers pour formatter le rapport dans l'email
+  const extractBodyContent = (html?: string) => {
+    if (!html) return '';
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch && bodyMatch[1]) {
+      return bodyMatch[1];
     }
+    return html;
+  };
 
-    console.log(`Envoi vers ${webhookUrl} pour ${formType}`);
+  const extractStyles = (html?: string) => {
+    if (!html) return '';
+    const matches = html.match(/<style[^>]*>[\s\S]*?<\/style>/gi);
+    return matches ? matches.join('\n') : '';
+  };
+
+  const buildSummaryTable = (rows: { label: string; value: string }[]) => `
+    <table style="width:100%; border-collapse:collapse; margin:16px 0; font-size:14px;">
+      ${rows
+        .map(
+          (row) => `
+            <tr>
+              <td style="width:35%; padding:8px; border:1px solid #e5e7eb; background:#f9fafb; font-weight:600;">${row.label}</td>
+              <td style="padding:8px; border:1px solid #e5e7eb;">${row.value || 'Non précisé'}</td>
+            </tr>
+          `,
+        )
+        .join('')}
+    </table>
+  `;
+
+  // Fonction d'envoi partagée (désormais via Resend)
+  const sendInspectionToMakecom = async (formType: string, payload: InspectionPayload): Promise<boolean> => {
+    const subjectBase = FORM_SUBJECTS[formType] || `Inspection ${formType}`;
+    const identifier =
+      payload?.numeroIdentifiant ||
+      payload?.numeroVehicule ||
+      payload?.numeroMoniteur ||
+      payload?.numero ||
+      '';
+    const subject = identifier ? `${subjectBase} - ${identifier}` : subjectBase;
+    const summaryRows = [
+      { label: 'Formulaire', value: subjectBase },
+      { label: 'Type', value: formType },
+      { label: 'Identifiant', value: identifier || 'Non précisé' },
+      { label: 'Matricule', value: payload?.matricule || matricule || 'Non précisé' },
+      { label: 'Point de service', value: payload?.pointDeService || pointDeService || 'Non précisé' },
+      { label: 'Date de soumission', value: payload?.dateTime || getCurrentDateTime() },
+    ];
+
+    const reportStyles = extractStyles(payload?.htmlContent);
+    const reportBody = extractBodyContent(payload?.htmlContent);
+    const htmlReportSection = payload?.htmlContent
+      ? `
+        <div style="border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-top:12px;">
+          ${reportStyles}
+          ${reportBody}
+        </div>
+      `
+      : '<p style="margin-top:12px;">Aucun rapport HTML fourni.</p>';
+
+    const emailHtml = `
+      <div style="font-family:Arial, sans-serif; color:#1f2937;">
+        <p>Bonjour,</p>
+        <p>Un nouveau formulaire a été soumis via l'application d'inspection.</p>
+        ${buildSummaryTable(summaryRows)}
+        <h3 style="margin-top:24px; font-size:16px; font-weight:600;">Rapport détaillé</h3>
+        ${htmlReportSection}
+      </div>
+    `;
 
     try {
-        const response = await axios.post(webhookUrl, webhookData, {
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        console.log(`Réponse ${formType} - Status:`, response.status);
-        console.log(`Réponse complète ${formType}:`, response.data);
+      const response = await axios.post<{ id?: string }>(
+        RESEND_API_URL,
+        {
+          from: `CAMBI Inspections <${RESEND_FROM_EMAIL}>`,
+          to: [RESEND_TO_EMAIL],
+          subject,
+          html: emailHtml,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
 
-        if (response.status < 200 || response.status >= 300) {
-            throw new Error(`Erreur serveur: ${response.status} - ${response.data}`);
-        }
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(`Erreur serveur Resend: ${response.status} - ${response.data}`);
+      }
 
-        console.log(`Données envoyées avec succès pour ${formType}`);
-        return true;
+      console.log(`Email envoyé via Resend pour ${formType} (ID: ${response.data?.id || 'inconnu'})`);
+      return true;
     } catch (error) {
-        console.error(`Erreur détaillée lors de l'envoi pour ${formType}:`, error);
-        let errorMessage = 'Erreur inconnue';
-        // Vérifier si l'objet error a la propriété isAxiosError et qu'elle est true
-        if (typeof error === 'object' && error !== null && 'isAxiosError' in error && (error as any).isAxiosError) {
-            // Si c'est une erreur Axios, essayer d'extraire des détails
-            const axiosError = error as any; // Caster en any pour accéder aux propriétés spécifiques d'Axios
-            errorMessage = axiosError.response?.data?.message || axiosError.response?.data || axiosError.message || 'Erreur Axios inconnue';
-        } else if (error instanceof Error) { // Si c'est une erreur standard
-            errorMessage = error.message;
-        } else if (typeof error === 'string') { // Si c'est une chaîne
-            errorMessage = error;
+      console.error(`Erreur lors de l'envoi via Resend (${formType}):`, error);
+      let errorMessage = 'Erreur inconnue';
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ message?: string } | string>;
+        const responseData = axiosError.response?.data;
+        let responseMessage: string | undefined;
+        if (typeof responseData === 'string') {
+          responseMessage = responseData;
+        } else if (responseData && typeof responseData === 'object') {
+          responseMessage = responseData.message;
         }
-        // Gérer les autres types d'erreurs si nécessaire...
-
-        console.error(`Problème lors de l'envoi de l'inspection ${formType}: ${errorMessage}`);
-        throw new Error(`Échec de l'envoi (${formType}): ${errorMessage}`);
+        errorMessage = responseMessage || axiosError.message || 'Erreur Axios inconnue';
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      throw new Error(`Échec de l'envoi (${formType}): ${errorMessage}`);
     }
   };
 
