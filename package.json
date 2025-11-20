@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:api\" \"npm run dev:vite\"",
+    "dev": "node setup-env.js && concurrently --kill-others-on-fail --names \"API,VITE\" --prefix-colors \"blue,green\" \"npm run dev:api\" \"npm run dev:vite\"",
     "dev:api": "node api-server.js",
-    "dev:vite": "vite",
+    "dev:vite": "sleep 2 && vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

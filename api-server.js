@@ -21,6 +21,12 @@ const FORM_SUBJECTS = {
 app.use(cors());
 app.use(express.json());
 
+// Middleware de logging pour toutes les requêtes
+app.use((req, res, next) => {
+  console.log(`[API] ${req.method} ${req.path} - Headers:`, JSON.stringify(req.headers).slice(0, 200));
+  next();
+});
+
 const extractBodyContent = (html) => {
   if (!html) return '';
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
