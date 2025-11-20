@@ -27,7 +27,7 @@ function App() {
   // Configuration Resend
   const RESEND_API_URL = 'https://api.resend.com/emails';
   const RESEND_API_KEY = 're_Dvt67PKr_3nrJf1tvYVcaEw2GByDSS3Sp';
-  const RESEND_FROM_EMAIL = 'nepasrepondre@Inspection.cambi.app';
+  const RESEND_FROM_EMAIL = 'nepasrepondre@inspection.cambi.app';
   const RESEND_TO_EMAIL = 'nicolas.cuerrier@tap.cambi.ca';
   const FORM_SUBJECTS: Record<string, string> = {
     MDSA: 'Inspection MDSA',
