@@ -3,13 +3,8 @@ import { createServer as createViteServer } from 'vite';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
 const RESEND_FROM_EMAIL = 'nepasrepondre@inspection.cambi.app';
@@ -101,6 +96,7 @@ const buildEmailHtml = (formType, payload) => {
 async function createServer() {
   const app = express();
 
+  // Middleware de base
   app.use(cors());
   app.use(express.json());
 
@@ -112,19 +108,24 @@ async function createServer() {
     next();
   });
 
-  // API route pour l'envoi d'inspection - DOIT être avant le middleware Vite
+  // ===== ROUTES API - DOIVENT ÊTRE AVANT LE MIDDLEWARE VITE =====
+  
+  // Route API pour l'envoi d'inspection
   app.post('/api/send-inspection', async (req, res) => {
-    console.log('[API] Route /api/send-inspection appelée');
+    console.log('[API] ✅ Route /api/send-inspection appelée');
+    console.log('[API] Body:', JSON.stringify(req.body).slice(0, 200));
+    
     try {
       const { formType, payload } = req.body;
 
       if (!formType || !payload) {
+        console.error('[API] ❌ Paramètres manquants:', { formType, hasPayload: !!payload });
         return res.status(400).json({ error: 'Paramètres formType et payload requis' });
       }
 
       const apiKey = process.env.RESEND_API_KEY;
       if (!apiKey) {
-        console.error('[API] RESEND_API_KEY manquante dans les variables d\'environnement');
+        console.error('[API] ❌ RESEND_API_KEY manquante');
         return res.status(500).json({ error: 'RESEND_API_KEY manquante sur le serveur' });
       }
 
@@ -138,6 +139,7 @@ async function createServer() {
       const subject = identifier ? `${subjectBase} - ${identifier}` : subjectBase;
       const emailHtml = buildEmailHtml(formType, payload);
 
+      console.log(`[API] 📧 Envoi email Resend pour ${formType}...`);
       const response = await axios.post(
         RESEND_API_URL,
         {
@@ -158,7 +160,7 @@ async function createServer() {
         throw new Error(`Erreur serveur Resend: ${response.status} - ${response.data}`);
       }
 
-      console.log(`[API] Email envoyé via Resend pour ${formType} (ID: ${response.data?.id || 'inconnu'})`);
+      console.log(`[API] ✅ Email envoyé via Resend pour ${formType} (ID: ${response.data?.id || 'inconnu'})`);
       return res.status(200).json({ success: true, id: response.data?.id });
     } catch (error) {
       let errorMessage = 'Erreur inconnue';
@@ -176,31 +178,35 @@ async function createServer() {
         errorMessage = error.message;
       }
 
-      console.error(`[API] Échec de l'envoi ${req.body?.formType || 'inconnu'}: ${errorMessage}`);
+      console.error(`[API] ❌ Échec de l'envoi ${req.body?.formType || 'inconnu'}: ${errorMessage}`);
       return res.status(500).json({ error: errorMessage });
     }
   });
 
+  // Handler 404 pour les routes API non trouvées
+  app.use('/api', (req, res) => {
+    console.error(`[API] ❌ Route API non trouvée: ${req.method} ${req.path}`);
+    res.status(404).json({ error: `Route API non trouvée: ${req.method} ${req.path}` });
+  });
+
+  // ===== MIDDLEWARE VITE - APRÈS TOUTES LES ROUTES API =====
+  
   // Créer le serveur Vite en mode middleware
   const vite = await createViteServer({
     server: { middlewareMode: true },
     appType: 'spa',
   });
 
-  // Handler 404 pour les routes API non trouvées
-  app.use('/api', (req, res) => {
-    console.error(`[API] Route API non trouvée: ${req.method} ${req.path}`);
-    res.status(404).json({ error: `Route API non trouvée: ${req.method} ${req.path}` });
-  });
-
-  // Middleware pour exclure les routes API du traitement Vite
+  // Appliquer le middleware Vite UNIQUEMENT aux routes qui ne sont PAS /api
   app.use((req, res, next) => {
+    // Si c'est une route API, ne PAS passer par Vite
     if (req.path.startsWith('/api')) {
-      // Si c'est une route API qui n'a pas été traitée, elle devrait déjà avoir été catchée par le handler 404 ci-dessus
-      return next();
+      // Ne devrait jamais arriver ici car les routes API sont gérées ci-dessus
+      console.error(`[API] ⚠️ Route API atteinte dans middleware Vite: ${req.method} ${req.path}`);
+      return res.status(404).json({ error: 'Route API non trouvée' });
     }
     // Pour toutes les autres routes, utiliser le middleware Vite
-    return vite.middlewares(req, res, next);
+    vite.middlewares(req, res, next);
   });
 
   return app;
@@ -211,6 +217,6 @@ createServer().then((app) => {
   app.listen(port, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${port}`);
     console.log(`📧 API Resend configurée: ${process.env.RESEND_API_KEY ? '✅ Clé trouvée' : '❌ Clé manquante (définir RESEND_API_KEY)'}`);
+    console.log(`📝 Routes API disponibles: POST /api/send-inspection`);
   });
 });
-
